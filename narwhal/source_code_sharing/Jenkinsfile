@@ -1,0 +1,239 @@
+pipeline {
+	agent {
+		label 'bob4'
+	}
+	
+	environment {
+		GITHUB_KNOWN_HOSTS = "|1|9jdFWI7J5bs9QKEWctRqNg2cO2Y=|KjcVFV8qS/3DPnLZOQLweHOx+lA= ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl"
+		SSH_PRIV_KEY = credentials('liferay-continuous-integration-hu')
+		GIT_SSH_COMMAND='ssh -i ${SSH_PRIV_KEY} -o UserKnownHostsFile=${WORKSPACE}/.ssh/known_hosts'
+	}
+
+	options { 
+		disableConcurrentBuilds() 
+	}
+
+	parameters {
+		string(
+			defaultValue: null,
+			description: 'The hotfix will be copied regardless of the .patch.requirements property.', 
+			name: 'TAG_FORCE_COPY' 
+		)
+
+		booleanParam(
+			defaultValue: true,
+			description: 'Parameter', 
+			name: 'RUN_SCRIPT_VERSIONS' 
+		)
+
+		string(
+			defaultValue: '7.[0-9].[0-9] 7.[0-9].1[0-9] 2023',
+			description: '', 
+			name: 'VERSIONS_VERSION'
+		)
+
+		booleanParam(
+			defaultValue: true,
+			description: '', 
+			name: 'RUN_SCRIPT_HOTFIXES' 
+		)
+
+		string(
+			defaultValue: 'liferay-hotfix-2115-7413.zip,liferay-hotfix-2116-7413.zip,liferay-hotfix-1629-7413.zip,liferay-hotfix-239-7310.zip',
+			description: 'Comma-separated list of zip files that are not processed.', 
+			name: 'IGNORE_ZIP_FILES'
+		)
+
+		string(
+			defaultValue: '7.3.10 7.4.13 2023.q3',
+			description: '', 
+			name: 'HOTFIXES_VERSION'
+		)
+
+		booleanParam(
+			defaultValue: false,
+			description: '', 
+			name: 'DEBUG_MODE'
+		)
+
+		booleanParam(
+			defaultValue: false,
+			description: '', 
+			name: 'NO_PUSH'
+		)
+
+		booleanParam(
+			defaultValue: false,
+			description: '', 
+			name: 'REMOVE_DXP_REPO'
+		)
+
+		booleanParam(
+			defaultValue: false,
+			description: '', 
+			name: 'REMOVE_EE_REPO' 
+		)
+
+		booleanParam(
+			defaultValue: false,
+			description: '', 
+			name: 'REMOVE_LOG_DIR'
+		)
+
+		string(
+			defaultValue: 'liferay',
+			description: 'The Github project you want to use', 
+			name: 'GITHUB_PROJECT'
+		)
+		
+		string(
+			defaultValue: '1 min',
+			description: '',
+			name: 'ZIP_LIST_RETENTION_TIME' 
+		)
+	}
+
+	stages {
+		stage ('Prepare environment') {
+			steps {
+				sh '''
+				echo "REMOVE_LOG_DIR is set to: ${REMOVE_LOG_DIR}."
+
+				if [ "${REMOVE_LOG_DIR}" = "true" ]
+				then
+					rm -rf ./logs
+				fi
+				'''
+
+				sh '''
+				install -d .ssh -m 0700
+				echo "${GITHUB_KNOWN_HOSTS}" > .ssh/known_hosts
+				'''
+
+				sh '''
+				REPO_NAME_DXP="liferay-dxp"
+
+				echo "REMOVE_DXP_REPO is set to: ${REMOVE_DXP_REPO}".
+				echo "GITHUB_PROJECT is set to: ${GITHUB_PROJECT}".
+
+				if [ "${REMOVE_DXP_REPO}" = "true" ]
+				then
+					rm -rf "${REPO_NAME_DXP}"
+					git clone "git@github.com:${GITHUB_PROJECT}/${REPO_NAME_DXP}"
+				fi
+				'''
+
+				sh '''
+				REPO_NAME_EE="liferay-portal-ee"
+
+				echo "REMOVE_EE_REPO is set to: ${REMOVE_EE_REPO}"
+
+				if [ "${REMOVE_EE_REPO}" = "true" ]
+				then
+					rm -rf "${REPO_NAME_EE}"
+				fi
+				'''
+			}
+		}
+
+		stage ('Run update_hotfixes script') {
+			steps {
+				sh '''
+				ARGUMENTS=""
+
+				SCRIPT_PATH="./narwhal/source_code_sharing"
+
+				echo "DEBUG_MODE set to: '${DEBUG_MODE}'"
+
+				if [ "${DEBUG_MODE}" = "true" ]
+				then
+					ARGUMENTS="${ARGUMENTS} --debug"
+				fi
+
+				echo "NO_PUSH set to: '${NO_PUSH}'"
+
+				if [ "${NO_PUSH}" = "true" ]
+				then
+					ARGUMENTS="${ARGUMENTS} --no-push"
+				fi
+
+				echo "RUN_SCRIPT_HOTFIXES set to: '${RUN_SCRIPT_HOTFIXES}'"
+				
+				if [ "${RUN_SCRIPT_HOTFIXES}" = "true" ]
+				then
+					"${SCRIPT_PATH}/update_liferay_dxp_source_code_of_hotfixes.sh" \
+						--ignore-zip-files "${IGNORE_ZIP_FILES}" \
+						--logdir "logs/${BUILD_NUMBER}" \
+						--version "${HOTFIXES_VERSION}" \
+						--zip-list-retention-time "${ZIP_LIST_RETENTION_TIME}" \
+						${ARGUMENTS}
+				fi
+				'''
+			}
+		}
+
+		stage ('Run update_versions script') {
+			steps {
+				sh '''
+				ARGUMENTS=""
+
+				SCRIPT_PATH="./narwhal/source_code_sharing"
+
+				echo "DEBUG_MODE set to: '${DEBUG_MODE}'"
+
+				if [ "${DEBUG_MODE}" = "true" ]
+				then
+					ARGUMENTS="${ARGUMENTS} --debug"
+				fi
+
+				echo "NO_PUSH set to: '${NO_PUSH}'"
+
+				if [ "${NO_PUSH}" = "true" ]
+				then
+					ARGUMENTS="${ARGUMENTS} --no-push"
+				fi
+
+				echo "RUN_SCRIPT_VERSIONS set to: '${RUN_SCRIPT_VERSIONS}'"
+				
+				if [ "${RUN_SCRIPT_VERSIONS}" = "true" ]
+				then
+					"${SCRIPT_PATH}/update_liferay_dxp_source_code_of_versions.sh" \
+						--logdir "logs/${BUILD_NUMBER}" \
+						--version "${VERSIONS_VERSION}" \
+						${ARGUMENTS}
+				fi
+				'''
+			}
+		}
+	}
+
+
+	post {
+		always {
+			archiveArtifacts artifacts: 'logs/latest/*.txt'
+
+			sh '''
+			rm -f logs/latest
+			ln -r -s "logs/${BUILD_NUMBER}" logs/latest
+			'''
+		}
+
+		failure {
+			emailext body: '''${SCRIPT, template="groovy-html.template"}''',
+			mimeType: 'text/html',
+			recipientProviders: [[$class: 'CulpritsRecipientProvider']],
+			replyTo: "gyula.pete@liferay.com szantina.szanto@liferay.com tamas.papp@liferay.com",
+			subject: "[SCS] [${BUILD_NUMBER}] Build failed",
+			to: "gyula.pete@liferay.com szantina.szanto@liferay.com tamas.papp@liferay.com"
+		}
+
+		fixed {
+			emailext body: 'Back to normal: ${BUILD_URL}',
+			mimeType: 'text/html',
+			recipientProviders: [[$class: 'CulpritsRecipientProvider']],
+			replyTo: "gyula.pete@liferay.com szantina.szanto@liferay.com tamas.papp@liferay.com",
+			subject: "[SCS] [${BUILD_NUMBER}] Back to normal",
+			to: "gyula.pete@liferay.com szantina.szanto@liferay.com tamas.papp@liferay.com"
+		}
+	}
+}
