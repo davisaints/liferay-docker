@@ -131,7 +131,7 @@ function get_new_tags {
 	# shellcheck disable=SC2013
 	for tag_name in $(cat "${TAGS_FILE_EE}")
 	do
-		if (! grep -qw "${tag_name}" "${TAGS_FILE_DXP}")
+		if (! grep -qw "^${tag_name}$" "${TAGS_FILE_DXP}")
 		then
 			echo "${tag_name}" >> "${TAGS_FILE_NEW}"
 		fi
