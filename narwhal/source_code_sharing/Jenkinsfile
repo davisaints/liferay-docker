@@ -205,17 +205,16 @@ pipeline {
 				'''
 			}
 		}
-
 	}
 
 	post {
 		always {
-			archiveArtifacts artifacts: 'logs/latest/*.txt'
-
 			sh '''
 			rm -f logs/latest
 			ln -r -s "logs/${BUILD_NUMBER}" logs/latest
 			'''
+
+			archiveArtifacts artifacts: 'logs/latest/*.txt'
 		}
 
 		failure {
