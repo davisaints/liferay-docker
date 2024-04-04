@@ -1,6 +1,6 @@
 pipeline {
 	agent {
-		label 'bob4'
+		label 'bob5'
 	}
 
 	environment {
@@ -221,18 +221,18 @@ pipeline {
 			emailext body: '''${SCRIPT, template="groovy-html.template"}''',
 			mimeType: 'text/html',
 			recipientProviders: [[$class: 'CulpritsRecipientProvider']],
-			replyTo: "gyula.pete@liferay.com szantina.szanto@liferay.com tamas.papp@liferay.com",
+			replyTo: "gyula.pete@liferay.com szantina.szanto@liferay.com",
 			subject: "[SCS] [${BUILD_NUMBER}] Build failed",
-			to: "gyula.pete@liferay.com szantina.szanto@liferay.com tamas.papp@liferay.com"
+			to: "gyula.pete@liferay.com szantina.szanto@liferay.com"
 		}
 
 		fixed {
 			emailext body: 'Back to normal: ${BUILD_URL}',
 			mimeType: 'text/html',
 			recipientProviders: [[$class: 'CulpritsRecipientProvider']],
-			replyTo: "gyula.pete@liferay.com szantina.szanto@liferay.com tamas.papp@liferay.com",
+			replyTo: "gyula.pete@liferay.com szantina.szanto@liferay.com",
 			subject: "[SCS] [${BUILD_NUMBER}] Back to normal",
-			to: "gyula.pete@liferay.com szantina.szanto@liferay.com tamas.papp@liferay.com"
+			to: "gyula.pete@liferay.com szantina.szanto@liferay.com"
 		}
 	}
 }
