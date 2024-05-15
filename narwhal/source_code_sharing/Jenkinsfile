@@ -206,33 +206,4 @@ pipeline {
 			}
 		}
 	}
-
-	post {
-		always {
-			sh '''
-			rm -f logs/latest
-			ln -r -s "logs/${BUILD_NUMBER}" logs/latest
-			'''
-
-			archiveArtifacts artifacts: 'logs/latest/*.txt'
-		}
-
-		failure {
-			emailext body: '''${SCRIPT, template="groovy-html.template"}''',
-			mimeType: 'text/html',
-			recipientProviders: [[$class: 'CulpritsRecipientProvider']],
-			replyTo: "gyula.pete@liferay.com szantina.szanto@liferay.com",
-			subject: "[SCS] [${BUILD_NUMBER}] Build failed",
-			to: "gyula.pete@liferay.com szantina.szanto@liferay.com"
-		}
-
-		fixed {
-			emailext body: 'Back to normal: ${BUILD_URL}',
-			mimeType: 'text/html',
-			recipientProviders: [[$class: 'CulpritsRecipientProvider']],
-			replyTo: "gyula.pete@liferay.com szantina.szanto@liferay.com",
-			subject: "[SCS] [${BUILD_NUMBER}] Back to normal",
-			to: "gyula.pete@liferay.com szantina.szanto@liferay.com"
-		}
-	}
 }
