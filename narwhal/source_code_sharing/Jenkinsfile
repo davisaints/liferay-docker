@@ -5,7 +5,7 @@ pipeline {
 
 	environment {
 		GITHUB_KNOWN_HOSTS = "|1|9jdFWI7J5bs9QKEWctRqNg2cO2Y=|KjcVFV8qS/3DPnLZOQLweHOx+lA= ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl"
-		SSH_PRIV_KEY = credentials('liferay-continuous-integration-hu')
+		SSH_PRIV_KEY = credentials('bf4bf1da-3b6d-4059-ab95-a4b80d255c9b')
 		GIT_SSH_COMMAND='ssh -i ${SSH_PRIV_KEY} -o UserKnownHostsFile=${WORKSPACE}/.ssh/known_hosts'
 	}
 
