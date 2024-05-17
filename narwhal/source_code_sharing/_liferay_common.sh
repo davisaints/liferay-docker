@@ -60,12 +60,7 @@ function lc_clone_repository {
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	if [ -e "/home/me/dev/projects/${repository_name}" ]
-	then
-		echo "Copying Git repository from /home/me/dev/projects/${repository_name}."
-
-		cp -a "/home/me/dev/projects/${repository_name}" "${repository_path}"
-	elif [ -e "/opt/github/source-code-sharing/${repository_name}" ]
+	if [ -e "/opt/github/source-code-sharing/${repository_name}" ]
 	then
 		echo "Copying Git repository from /opt/github/source-code-sharing/${repository_name}."
 
@@ -106,9 +101,9 @@ function lc_date {
 			/bin/date
 		elif [ -e /bin/date ]
 		then
-			/bin/date --iso-8601=seconds
+			/bin/date -Iseconds
 		else
-			/usr/bin/date --iso-8601=seconds
+			/usr/bin/date -Iseconds
 		fi
 	else
 		if [ "$(uname)" == "Darwin" ]
