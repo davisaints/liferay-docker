@@ -51,7 +51,7 @@ pipeline {
 		)
 
 		booleanParam(
-			defaultValue: true,
+			defaultValue: false,
 			description: '',
 			name: 'DEBUG_MODE'
 		)
@@ -162,7 +162,7 @@ pipeline {
 				if [ "${RUN_SCRIPT_VERSIONS}" = "true" ]
 				then
 					"${SCRIPT_PATH}/update_liferay_dxp_source_code_of_versions.sh" \
-						--logdir "logs/${BUILD_NUMBER}" \
+						--logdir "${PWD}/logs/${BUILD_NUMBER}" \
 						--version "${VERSIONS_VERSION}" \
 						${ARGUMENTS}
 				fi
@@ -197,13 +197,24 @@ pipeline {
 				then
 					"${SCRIPT_PATH}/update_liferay_dxp_source_code_of_hotfixes.sh" \
 						--ignore-zip-files "${IGNORE_ZIP_FILES}" \
-						--logdir "logs/${BUILD_NUMBER}" \
+						--logdir "${PWD}/logs/${BUILD_NUMBER}" \
 						--version "${HOTFIXES_VERSION}" \
 						--zip-list-retention-time "${ZIP_LIST_RETENTION_TIME}" \
 						${ARGUMENTS}
 				fi
 				'''
 			}
+		}
+	}
+
+	post {
+		always {
+			sh '''
+			rm -f logs/latest
+			ln -r -s "logs/${BUILD_NUMBER}" logs/latest
+			'''
+
+			archiveArtifacts artifacts: 'logs/latest/*.txt'
 		}
 	}
 }
