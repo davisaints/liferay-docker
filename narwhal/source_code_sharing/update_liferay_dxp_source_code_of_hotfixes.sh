@@ -274,12 +274,7 @@ function get_hotfix_zip_list_file {
 
 		if [[ "${release_version}" == 20* ]]
 		then
-			local zip_directory_name
-
-			for zip_directory_name in $(lc_curl "${zip_directory_url}/" - | grep -E -o "20[0-9]+\.q[0-9]\.[0-9]+" | uniq)
-			do
-				lc_curl "${zip_directory_url}/${zip_directory_name}/" - | grep -E -o "liferay-dxp-20[a-z0-9\.]+-hotfix-[0-9]{0,9}.zip" | sed "s@^@${zip_directory_name}/@"
-			done | uniq - "${zip_list_file}"
+			lc_curl "${zip_directory_url}/" - | grep -E -o "liferay-dxp-20[a-z0-9\.]+-hotfix-[0-9]{0,9}.zip" | uniq - "${zip_list_file}"
 		else
 			lc_curl "${zip_directory_url}/" - | grep -E -o "liferay-hotfix-[0-9-]+.zip" | uniq - "${zip_list_file}"
 		fi
@@ -352,7 +347,7 @@ function process_version_list {
 		then
 			local zip_directory_url="https://files.liferay.com/private/ee/fix-packs/${release_version}/hotfix"
 		else
-			local zip_directory_url="https://releases.liferay.com/dxp/hotfix"
+			local zip_directory_url="https://releases.liferay.com/dxp/hotfix/${release_version}"
 		fi
 
 		lc_time_run get_hotfix_zip_list_file "${release_version}" "${zip_list_file}"

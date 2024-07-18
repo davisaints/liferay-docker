@@ -39,7 +39,7 @@ pipeline {
 		)
 
 		string(
-			defaultValue: 'liferay-hotfix-2115-7413.zip,liferay-hotfix-2116-7413.zip,liferay-hotfix-1629-7413.zip,liferay-hotfix-239-7310.zip,liferay-hotfix-5146-7413.zip,2023.q4.2/liferay-dxp-2023.q4.2-hotfix-224.zip,2024.q1.7/liferay-dxp-2024.q1.7-hotfix-46.zip,2024.q1.8/liferay-dxp-2024.q1.8-hotfix-15.zip,2024.q1.7/liferay-dxp-2024.q1.7-hotfix-55.zip',
+			defaultValue: 'liferay-hotfix-2115-7413.zip,liferay-hotfix-2116-7413.zip,liferay-hotfix-1629-7413.zip,liferay-hotfix-239-7310.zip,liferay-hotfix-5146-7413.zip,liferay-dxp-2023.q4.2-hotfix-224.zip,liferay-dxp-2024.q1.7-hotfix-46.zip,liferay-dxp-2024.q1.8-hotfix-15.zip,liferay-dxp-2024.q1.7-hotfix-55.zip',
 			description: 'Comma-separated list of zip files that are not processed.',
 			name: 'IGNORE_ZIP_FILES'
 		)
