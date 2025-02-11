@@ -6,6 +6,7 @@ source _test_common.sh
 function main {
 	set_up
 
+	test_add_lts_suffix
 	test_set_parent_image
 
 	tear_down
@@ -17,6 +18,13 @@ function set_up {
 
 function tear_down {
 	unset TEMP_DIR
+}
+
+function test_add_lts_suffix {
+	_test_add_lts_suffix "2025.q1.0" "2025.q1.0-LTS"
+	_test_add_lts_suffix "2025.q2.0" "2025.q2.0"
+	_test_add_lts_suffix "2025.q3.0" "2025.q3.0"
+	_test_add_lts_suffix "2025.q4.0" "2025.q4.0"
 }
 
 function test_set_parent_image {
@@ -35,6 +43,16 @@ function test_set_parent_image {
 function _set_dockerfile {
 	echo -e "FROM --platform=amd64 liferay/${1}:latest AS liferay-${1}\n" > "${3}"
 	echo -e "FROM liferay-${2}\n" >> "${3}"
+}
+
+function _test_add_lts_suffix {
+	LIFERAY_DOCKER_RELEASE_VERSION="${1}"
+
+	echo -e "Running _test_add_lts_suffix for ${LIFERAY_DOCKER_RELEASE_VERSION}.\n"
+
+	add_lts_suffix
+
+	assert_equals ${LIFERAY_DOCKER_RELEASE_VERSION} "${2}"
 }
 
 function _test_set_parent_image {
