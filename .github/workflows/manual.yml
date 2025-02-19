@@ -1,0 +1,18 @@
+name: Release
+
+jobs:
+    release:
+        env:
+            LIFERAY_RELEASE_GITHUB_PAT: ${{ secrets.LIFERAY_RELEASE_GITHUB_PAT }}
+        if: (github.repository == 'liferay-release/liferay-docker')
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v2
+            - name: Execute trigger_job.sh
+              run: ./trigger_job.sh
+              shell: bash
+
+on:
+  pull_request:
+        types: [opened, reopened]
