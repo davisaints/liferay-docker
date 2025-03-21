@@ -61,34 +61,19 @@ function add_patcher_project_version {
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	local patcher_product_version_label="Quarterly Releases"
-	local patcher_project_version="${_PRODUCT_VERSION}"
-	local root_patcher_project_version_name=""
-
-	if [[ "${patcher_project_version}" == 7.3.* ]]
-	then
-		patcher_product_version_label="DXP 7.3"
-		patcher_project_version="fix-pack-dxp-$(echo "${_PRODUCT_VERSION}" | cut -d 'u' -f 2)-7310"
-		root_patcher_project_version_name="fix-pack-base-7310"
-	elif [[ "${patcher_project_version}" == 7.4.* ]]
-	then
-		patcher_product_version_label="DXP 7.4"
-		root_patcher_project_version_name="7.4.13-ga1"
-	fi
-
 	local add_by_name_response=$(\
 		curl \
 			"https://patcher.liferay.com/api/jsonws/osb-patcher-portlet.project_versions/addByName" \
-			--data-raw "combinedBranch=true&committish=${patcher_project_version}&fixedIssues=&name=${patcher_project_version}&productVersionLabel=${patcher_product_version_label}&repositoryName=liferay-portal-ee&rootPatcherProjectVersionName=${root_patcher_project_version_name}" \
+			--data-raw "combinedBranch=true&committish=$(get_patcher_project_version)&fixedIssues=&name=$(get_patcher_project_version)&productVersionLabel=$(get_patcher_product_version_label)&repositoryName=liferay-portal-ee&rootPatcherProjectVersionName=$(get_root_patcher_project_version_name)" \
 			--max-time 10 \
 			--retry 3 \
 			--user "${LIFERAY_RELEASE_PATCHER_PORTAL_EMAIL_ADDRESS}:${LIFERAY_RELEASE_PATCHER_PORTAL_PASSWORD}")
 
 	if [ $(echo "${add_by_name_response}" | jq -r '.status') -eq 200 ]
 	then
-		lc_log INFO "Added Liferay Patcher project version ${patcher_project_version}."
+		lc_log INFO "Added Liferay Patcher project version $(get_patcher_project_version)."
 
-		add_fixed_issues_to_patcher_project_version $(echo "${add_by_name_response}" | jq -r '.data.patcherProjectVersionId') "${patcher_project_version}"
+		add_fixed_issues_to_patcher_project_version $(echo "${add_by_name_response}" | jq -r '.data.patcherProjectVersionId') "$(get_patcher_project_version)"
 	else
 		lc_log ERROR "Unable to add Liferay Patcher project ${patcher_project_version}:"
 
@@ -119,6 +104,39 @@ function check_url {
 		lc_log DEBUG "Unable to access ${file_url}."
 
 		return "${LIFERAY_COMMON_EXIT_CODE_MISSING_RESOURCE}"
+	fi
+}
+
+function get_patcher_product_version_label {
+	if [[ "${_ARTIFACT_VERSION}" == 7.3.* ]]
+	then
+		echo "DXP 7.3"
+	elif [[ "${_ARTIFACT_VERSION}" == 7.4.* ]]
+	then
+		echo "DXP 7.4"
+	else
+		echo "Quarterly Releases"
+	fi
+}
+
+function get_patcher_project_version {
+	if [[ "${_ARTIFACT_VERSION}" == 7.3.* ]]
+	then
+		echo "fix-pack-dxp-$(echo "${_ARTIFACT_VERSION}" | cut -d 'u' -f 2)-7310"
+	else
+		echo "${_ARTIFACT_VERSION}"
+	fi
+}
+
+function get_root_patcher_project_version_name {
+	if [[ "${_ARTIFACT_VERSION}" == 7.3.* ]]
+	then
+		echo "fix-pack-base-7310"
+	elif [[ "${_ARTIFACT_VERSION}" == 7.4.* ]]
+	then
+		echo "7.4.13-ga1"
+	else
+		echo ""
 	fi
 }
 
