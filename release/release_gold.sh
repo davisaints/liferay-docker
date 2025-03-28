@@ -320,7 +320,23 @@ function reference_new_releases {
 	fi
 
 	local base_url="http://mirrors.lax.liferay.com/releases.liferay.com"
-	local previous_product_version="$(grep "portal.latest.bundle.version\[master\]=" "build.properties" | cut -d "=" -f 2)"
+
+	local product_group_version="${_PRODUCT_VERSION%.*}"
+
+	local previous_product_version="$(\
+		grep "portal.latest.bundle.version\[${product_group_version}" \
+			"build.properties" | \
+			tail -1 | \
+			cut -d '=' -f 2)"
+
+	local is_new_quarter="false"
+
+	if [ -z "${previous_product_version}" ]
+	then
+		previous_product_version="$(grep "portal.latest.bundle.version\[master\]=" "build.properties" | cut -d '=' -f 2)"
+
+		is_new_quarter="true"
+	fi
 
 	for component in osgi sql tools
 	do
@@ -360,10 +376,19 @@ function reference_new_releases {
 		"${_PRODUCT_VERSION}" \
 		"portal.latest.bundle.version\[${previous_product_version}\]="
 
-	replace_property \
-		"portal.latest.bundle.version\[master\]" \
-		"${_PRODUCT_VERSION}" \
-		"portal.latest.bundle.version\[master\]=${previous_product_version}"
+	local latest_product_group_version="$(\
+		grep "portal.latest.bundle.version\[master\]=" \
+			"build.properties" | \
+			cut -d '=' -f 2 | \
+			cut -d '.' -f 1,2)"
+
+	if [ "${product_group_version}" == "${latest_product_group_version}" ] || [ "${is_new_quarter}" == "true" ] 
+	then
+		replace_property \
+			"portal.latest.bundle.version\[master\]" \
+			"${_PRODUCT_VERSION}" \
+			"portal.latest.bundle.version\[master\]=${previous_product_version}"
+	fi
 
 	local previous_quarterly_release_branch="$(\
 		grep "portal.latest.bundle.version" \
@@ -374,7 +399,7 @@ function reference_new_releases {
 
 	local quarterly_release_branch="release-$(echo "${_PRODUCT_VERSION}" | cut -d '.' -f 1,2)"
 
-	if [ "${quarterly_release_branch}" == "${previous_quarterly_release_branch}" ]
+	if [ "${is_new_quarter}" == "false" ]
 	then
 		replace_property \
 			"portal.latest.bundle.version\[${quarterly_release_branch}\]" \

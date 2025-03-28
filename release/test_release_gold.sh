@@ -138,17 +138,15 @@ function _test_prepare_next_release_branch {
 }
 
 function test_reference_new_releases {
-	lc_cd "test-dependencies/actual"
+	_test_reference_new_releases "2024.q3.13"
 
-	_PRODUCT_VERSION="2024.q3.13"
+	git restore "test-dependencies/actual/build.properties"
 
-	reference_new_releases --test 1> /dev/null
+	_test_reference_new_releases "2025.q1.1-lts"
 
-	lc_cd "${_PROJECTS_DIR}/liferay-docker/release"
+	git restore "test-dependencies/actual/build.properties"
 
-	assert_equals \
-		test-dependencies/actual/build.properties \
-		test-dependencies/expected/build.properties
+	_test_reference_new_releases "2025.q2.1"
 }
 
 function test_update_release_info_date {
@@ -181,6 +179,24 @@ function _test_not_reference_new_releases {
 	reference_new_releases --test 1> /dev/null
 
 	assert_equals "${?}" "${2}"
+}
+
+function _test_reference_new_releases {
+	_PRODUCT_VERSION="${1}"
+
+	echo -e "Running _test_reference_new_releases for ${_PRODUCT_VERSION}.\n"
+
+	lc_cd "test-dependencies/actual"
+
+	reference_new_releases --test 1> /dev/null
+
+	lc_cd "${_PROJECTS_DIR}/liferay-docker/release"
+
+	local build_properties_file="build_${1//./_}.properties"
+
+	assert_equals \
+		"test-dependencies/actual/build.properties" \
+		"test-dependencies/expected/${build_properties_file}"
 }
 
 function _test_not_update_release_info_date {
