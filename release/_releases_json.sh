@@ -90,13 +90,15 @@ function _process_new_product {
 			end
 		)" "${releases_json}" > temp_file.json && mv temp_file.json "${releases_json}"
 
-	_process_product_version "${LIFERAY_RELEASE_PRODUCT_NAME}" "${_PRODUCT_VERSION}"
+	local latest_product_version="$(_get_latest_product_version "${LIFERAY_RELEASE_PRODUCT_NAME}")"
+
+	_process_product_version "${LIFERAY_RELEASE_PRODUCT_NAME}" "${_PRODUCT_VERSION}" "${latest_product_version}"
 }
 
 function _process_product {
 	local product_name="${1}"
 
-	local release_directory_url="https://releases.liferay.com/${product_name}"
+	local latest_product_version="$(_get_latest_product_version "${product_name}")"
 
 	for product_version in  $(echo -en "$(_generate_product_version_list "${product_name}")" | \
 		grep -E -o "(20[0-9]+\.q[0-9]\.[0-9]+(-lts)?|7\.[0-9]+\.[0-9]+[a-z0-9\.-]+)/" | \
@@ -108,11 +110,12 @@ function _process_product {
 			continue
 		fi
 
-		_process_product_version "${product_name}" "${product_version}"
+		_process_product_version "${product_name}" "${product_version}" "${latest_product_version}"
 	done
 }
 
 function _process_product_version {
+	local latest_product_version=${3}
 	local product_name=${1}
 	local product_version=${2}
 
@@ -143,19 +146,39 @@ function _process_product_version {
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	tee "${release_date}-${product_name}-${product_version}.json" <<- END
-	[
-	    {
-	        "product": "${product_name}",
-	        "productGroupVersion": "$(echo "${product_version}" | sed -r "s@(^[0-9]+\.[0-9a-z]+)\..*@\1@")",
-	        "productVersion": "$(lc_get_property "${release_properties_file}" liferay.product.version)",
-	        "promoted": "false",
-	        "releaseKey": "$(echo "${product_name}-${product_version}" | sed "s/\([0-9]\+\)\.\([0-9]\+\)\.[0-9]\+\(-\|[^0-9]\)/\1.\2\3/g" | sed -e "s/portal-7\.4\.[0-9]*-ga/portal-7.4-ga/")",
-	        "targetPlatformVersion": "$(lc_get_property "${release_properties_file}" target.platform.version)",
-	        "url": "https://releases-cdn.liferay.com/${product_name}/${product_version}"
-	    }
-	]
-	END
+	if [[ ("${product_version}" == *q* || "${product_version}" == 7.4.*-ga*) && "${latest_product_version}" == "${product_version}" ]]
+	then
+		tee "${release_date}-${product_name}-${product_version}.json" <<- END
+		[
+			{
+				"product": "${product_name}",
+				"productGroupVersion": "$(echo "${product_version}" | sed -r "s@(^[0-9]+\.[0-9a-z]+)\..*@\1@")",
+				"productVersion": "$(lc_get_property "${release_properties_file}" liferay.product.version)",
+				"promoted": "false",
+				"releaseKey": "$(echo "${product_name}-${product_version}" | sed "s/\([0-9]\+\)\.\([0-9]\+\)\.[0-9]\+\(-\|[^0-9]\)/\1.\2\3/g" | sed -e "s/portal-7\.4\.[0-9]*-ga/portal-7.4-ga/")",
+				"tags": [
+					"recommended"
+				],
+				"targetPlatformVersion": "$(lc_get_property "${release_properties_file}" target.platform.version)",
+				"url": "https://releases-cdn.liferay.com/${product_name}/${product_version}"
+			}
+		]
+		END
+	else
+		tee "${release_date}-${product_name}-${product_version}.json" <<- END
+		[
+			{
+				"product": "${product_name}",
+				"productGroupVersion": "$(echo "${product_version}" | sed -r "s@(^[0-9]+\.[0-9a-z]+)\..*@\1@")",
+				"productVersion": "$(lc_get_property "${release_properties_file}" liferay.product.version)",
+				"promoted": "false",
+				"releaseKey": "$(echo "${product_name}-${product_version}" | sed "s/\([0-9]\+\)\.\([0-9]\+\)\.[0-9]\+\(-\|[^0-9]\)/\1.\2\3/g" | sed -e "s/portal-7\.4\.[0-9]*-ga/portal-7.4-ga/")",
+				"targetPlatformVersion": "$(lc_get_property "${release_properties_file}" target.platform.version)",
+				"url": "https://releases-cdn.liferay.com/${product_name}/${product_version}"
+			}
+		]
+		END
+	fi
 }
 
 function _promote_product_versions {
