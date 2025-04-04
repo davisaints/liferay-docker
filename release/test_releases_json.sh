@@ -76,6 +76,12 @@ function test_process_new_product_2 {
 
 function test_process_product {
     assert_equals "$(jq '[.[] | select(.targetPlatformVersion == "2025.q1.1")] | length == 1' releases.json)" "true"
+
+	local latest_product_version="$(_get_latest_product_version "${LIFERAY_RELEASE_PRODUCT_NAME}")"
+
+	assert_equals \
+		"$(jq 'map(select(.releaseKey == "'"${LIFERAY_RELEASE_PRODUCT_NAME}-${latest_product_version}"'" and (.tags == ["recommended"]))) | length == 1' releases.json)" \
+		"true"
 }
 
 function test_promote_product_versions {
