@@ -92,6 +92,18 @@ function _process_new_product {
 
 	local latest_product_version="$(_get_latest_product_version "${LIFERAY_RELEASE_PRODUCT_NAME}")"
 
+	if [ "${latest_product_version}" == "${_PRODUCT_VERSION}" ]
+	then
+		jq "map(
+				if .product == \"${LIFERAY_RELEASE_PRODUCT_NAME}\"
+				then 
+					del(.tags)
+				else 
+					.
+				end
+		)" "${releases_json}" > temp_file.json && mv temp_file.json "${releases_json}"
+	fi
+
 	_process_product_version "${LIFERAY_RELEASE_PRODUCT_NAME}" "${_PRODUCT_VERSION}" "${latest_product_version}"
 }
 
