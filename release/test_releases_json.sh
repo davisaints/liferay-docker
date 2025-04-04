@@ -8,6 +8,7 @@ function main {
 	set_up
 
 	test_merge_json_snippets dxp
+	test_tag_recommended_product_versions
 	test_process_new_product_1
 	test_process_new_product_2
 	test_process_product
@@ -27,6 +28,8 @@ function set_up {
 	_process_product dxp &> /dev/null
 
 	_promote_product_versions dxp &> /dev/null
+
+	_tag_recommended_product_versions &> /dev/null
 
 	_merge_json_snippets &> /dev/null
 
@@ -90,6 +93,19 @@ function test_promote_product_versions {
 			assert_equals "$(jq -r '.[] | .promoted' "${last_version}")" "true"
 		fi
 	done < "${_RELEASE_ROOT_DIR}/supported-${product_name}-versions.txt"
+}
+
+function test_tag_recommended_product_versions {
+	for release_type in "dxp" "quartely"
+	do
+		assert_equals \
+		"$(jq "[.[] | select(.productVersion == \"DXP $(_get_latest_product_version "${release_type}" | tr '[:lower:]-' '[:upper:] ')\" and .tags == [\"recommended\"])] | length == 1" releases.json)" \
+		"true"
+	done
+
+	assert_equals \
+		"$(jq '[.[] | select(.tags == ["recommended"])] | length == 2' releases.json)" \
+		"true"
 }
 
 main
