@@ -105,11 +105,23 @@ function _process_new_product {
 	jq "map(
 			if .product == \"${LIFERAY_RELEASE_PRODUCT_NAME}\" and .productGroupVersion == \"${product_group_version}\"
 			then
-				.promoted = \"false\"
+				.promoted = \"false\" | del(.tags)
 			else
 				.
 			end
 		)" "${releases_json}" > temp_file.json && mv temp_file.json "${releases_json}"
+
+	if (! grep "${product_group_version}" "${releases_json}")
+	then
+		jq "map(
+				if .productionVersion | test("q")
+				then
+					del(.tags)
+				else
+					.
+				end
+			)" "${releases_json}" > temp_file.json && mv temp_file.json "${releases_json}"
+	fi
 
 	_process_product_version "${LIFERAY_RELEASE_PRODUCT_NAME}" "${_PRODUCT_VERSION}"
 }
