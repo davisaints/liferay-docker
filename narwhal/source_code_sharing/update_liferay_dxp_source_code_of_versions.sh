@@ -28,7 +28,6 @@ function check_usage {
 	LIFERAY_COMMON_LOG_DIR="${PWD}/logs"
 	RUN_FETCH_REPOSITORY="true"
 	RUN_PUSH_TO_ORIGIN="true"
-	VERSION_INPUT="7.[0-9].[0-9] 7.[0-9].1[0-9]"
 
 	while [ "$#" -gt "0" ]
 	do
@@ -41,13 +40,6 @@ function check_usage {
 
 			--logdir)
 				LIFERAY_COMMON_LOG_DIR="${2}"
-
-				shift 1
-
-				;;
-
-			--version)
-				VERSION_INPUT="${2}"
 
 				shift 1
 
@@ -116,7 +108,7 @@ function get_all_tags {
 
 	lc_cd "${BASE_DIR}/${repository}"
 
-	git tag -l --sort=creatordate --format='%(refname:short)' "${VERSION_LIST[@]}"
+	git tag -l --sort=creatordate --format='%(refname:short)' "20*.q*.[0-9]" "20*.q*.[0-9][0-9]" "7.[0-9].[0-9]-u[0-9]*" "7.[0-9].[0-9][0-9]-u[0-9]*"
 }
 
 function get_new_tags {
@@ -158,18 +150,8 @@ function print_help {
 	exit "${LIFERAY_COMMON_EXIT_CODE_HELP}"
 }
 
-function process_argument_version {
-	local IFS=" "
-
-	read -r -a VERSION_ARRAY <<< "${VERSION_INPUT}"
-
-	VERSION_LIST=("${VERSION_ARRAY[@]/%/-ga[0-9]*}" "${VERSION_ARRAY[@]/%/-u[0-9]*}" "${VERSION_ARRAY[@]/%/.q*}")
-}
-
 function main {
 	check_usage "${@}"
-
-	process_argument_version
 
 	prepare_repositories
 
