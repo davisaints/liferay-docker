@@ -10,7 +10,7 @@ function main {
 	test_releases_json_promote_product_versions
 	test_releases_json_tag_recommended_product_versions
 
-	test_merge_json_snippets
+	test_releases_json_merge_json_snippets
 	test_process_new_product_1
 	test_process_new_product_2
 
@@ -38,15 +38,18 @@ function tear_down {
 }
 
 function test_releases_json_merge_json_snippets {
-	local earliest_url="$(jq -r '.[0].url' < "$(find ./20*dxp*.json | head -n 1)")"
+	local json_files_count=$(
+		ls "${_PROMOTION_DIR}" | \
+		grep \
+			--extended-regexp \
+			"(20.*(dxp|portal).*\.json)" 2> /dev/null | \
+		wc -l)
 
-	local earliest_count="$(grep -c "\"url\": \"${earliest_url}"\" releases.json)"
+	_merge_json_snippets &> /dev/null
 
-	local latest_url="$(jq -r '.[0].url' < "$(find ./20*dxp*.json | tail -n 1)")"
-
-	local latest_count="$(grep -c "\"url\": \"${latest_url}"\" releases.json)"
-
-	assert_equals "${earliest_count}" 1 "${latest_count}" 1
+	assert_equals \
+		"${json_files_count}" \
+		"$(jq length "${_PROMOTION_DIR}/releases.json")"
 }
 
 function test_releases_json_process_new_product_1 {
