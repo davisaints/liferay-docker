@@ -7,12 +7,11 @@ source _releases_json.sh
 function main {
 	set_up
 
-	test_releases_json_merge_json_snippets dxp
-	test_releases_json_process_new_product_1
-	test_releases_json_process_new_product_2
-	test_releases_json_process_product
-	test_releases_json_promote_product_versions dxp
-	test_releases_json_tag_recommended_product_versions
+	test_merge_json_snippets dxp
+	test_process_new_product_1
+	test_process_new_product_2
+	test_promote_product_versions dxp
+	test_tag_recommended_product_versions
 
 	tear_down
 }
@@ -69,7 +68,7 @@ function test_releases_json_process_new_product_2 {
 	_PRODUCT_VERSION="${temp_product_version}"
 }
 
-function test_releases_json_process_product {
+function test_process_product {
     assert_equals "$(jq '[.[] | select(.targetPlatformVersion == "2025.q1.1")] | length == 1' releases.json)" "true"
 }
 
