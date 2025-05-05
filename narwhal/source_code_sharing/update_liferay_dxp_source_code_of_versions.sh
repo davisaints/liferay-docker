@@ -163,20 +163,88 @@ function main {
 
 	for tag_name in $(cat "${TAGS_FILE_NEW}")
 	do
-		local branch_name=$(echo "${tag_name}" | sed -e "s/-.*//" -e 's@\(202[3-4]\.q[1-4]\).*@\1@')
-
 		echo ""
 
 		lc_log DEBUG "Processing: ${tag_name}"
 
-		lc_time_run checkout_branch liferay-dxp "${branch_name}"
+		lc_time_run lc_clone_repository liferay-portal-ee "${REPO_PATH_EE}"
 
-		copy_tag "${tag_name}"
+		lc_time_run prepare_branch_in_portal_ee "${tag_name}"
 
-		lc_time_run push_to_origin "${tag_name}"
+		lc_time_run prepare_branch_in_dxp "${tag_name}"
 
-		lc_time_run push_to_origin "${branch_name}"
+		rm -fr "${REPO_PATH_EE}"
 	done
+}
+
+function prepare_branch_in_dxp {
+	lc_cd "${REPO_PATH_DXP}"
+
+	git checkout master
+
+	git branch -D 7.4.13
+
+	git checkout -b 7.4.13 upstream/7.4.13
+
+	rsync -avz --exclude='.git/' --exclude='.github/' "${REPO_PATH_EE}/" "${REPO_PATH_DXP}"
+
+	git add . --force
+
+	git commit -m "${1}"
+
+	git tag "${1}"
+
+	if [[ "${1}" == 7.4.13-u* ]]
+	then
+		git push -f upstream 7.4.13
+	fi
+
+	git push --verbose upstream "${1}"
+
+	git checkout master
+}
+
+function prepare_branch_in_portal_ee {
+	local tag_name="${1}"
+
+	lc_cd "${REPO_PATH_EE}"
+
+	git fetch upstream "refs/tags/${1}:refs/tags/${1}" --no-tags
+
+	git checkout -b "${1}-branch" "${1}"
+
+	local commit_hash=$(git log -1 --format="%H")
+
+	git filter-branch -f \
+		--index-filter 'git rm -rf --cached --ignore-unmatch \
+		":(glob)**/*.gradle" \
+		":(glob)**/build*.xml" \
+		":(glob)*.properties" \
+		":(glob)gradle/**" \
+		":(glob)modules/**/gradle.properties" \
+		git* \
+		gradle* \
+		modules/*.report.properties \
+		":(glob)portal-web/test/com/**" \
+		":(glob)portal-web/test-ant-templates/**" \
+		modules/dxp/apps/documentum/* \
+		modules/dxp/apps/portal-mobile-device-detection-fiftyonedegrees-enterprise/* \
+		modules/dxp/apps/oauth/* \
+		modules/dxp/apps/osb/* \
+		modules/dxp/apps/portal-search-elasticsearch-cross-cluster-replication/* \
+		modules/dxp/apps/akismet/* \
+		modules/dxp/apps/commerce-salesforce-connector/* \
+		modules/dxp/apps/commerce-demo-pack/* \
+		modules/dxp/apps/commerce-punchout/* \
+		modules/dxp/apps/portal-search-learning-to-rank/* \
+		modules/dxp/apps/portal-search-elasticsearch-monitoring/* \
+		modules/dxp/apps/sync/vldap/* \
+		modules/dxp/apps/sync/sync/*' \
+		--commit-filter 'git_commit_non_empty_tree "$@"' \
+		--msg-filter 'read message; echo "$message ($GIT_COMMIT)"' \
+		"${commit_hash}~1..HEAD" > /dev/null 2>&1
+
+	find . -type f -size +100M -exec rm -f {} \;
 }
 
 main "${@}"
