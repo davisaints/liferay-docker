@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source ../../_liferay_common.sh
+source ../../_release_common.sh
 
 function find_git_dir {
 	lc_cd "${HOME}/dev/projects/liferay-portal-ee"

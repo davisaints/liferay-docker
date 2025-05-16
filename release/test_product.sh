@@ -109,6 +109,8 @@ function test_product_warm_up_tomcat_already_warmed {
 function _test_product_add_ckeditor_license {
 	_PRODUCT_VERSION="${1}"
 
+	set_actual_product_version "${_PRODUCT_VERSION}"
+
 	echo -e "Running _test_product_add_ckeditor_license for ${_PRODUCT_VERSION}.\n"
 
 	add_ckeditor_license &> /dev/null
@@ -122,6 +124,8 @@ function _test_product_add_ckeditor_license {
 
 function _test_product_not_add_ckeditor_license {
 	_PRODUCT_VERSION="${1}"
+
+	set_actual_product_version "${_PRODUCT_VERSION}"
 
 	echo -e "Running _test_product_not_add_ckeditor_license for ${_PRODUCT_VERSION}.\n"
 

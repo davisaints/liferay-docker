@@ -74,6 +74,8 @@ function test_jdk_set_jdk_version_and_parameters {
 
 function _test_jdk_set_jdk_version_and_parameters {
 	_PRODUCT_VERSION="${1}"
+	
+	set_actual_product_version "${_PRODUCT_VERSION}"
 
 	echo -e "Running _test_jdk_set_jdk_version_and_parameters for ${_PRODUCT_VERSION}.\n"
 

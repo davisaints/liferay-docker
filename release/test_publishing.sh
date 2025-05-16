@@ -63,6 +63,8 @@ function test_publishing_update_bundles_yml {
 function _run_update_bundles_yml {
 	_PRODUCT_VERSION="${1}"
 
+	set_actual_product_version "${_PRODUCT_VERSION}"
+
 	echo -e "Running _update_bundles_yml for ${_PRODUCT_VERSION}.\n"
 
 	_update_bundles_yml &> /dev/null

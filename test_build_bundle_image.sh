@@ -61,6 +61,8 @@ function _test_build_bundle_image_set_parent_image {
 
 	echo -e "Running _test_set_parent_image for ${LIFERAY_DOCKER_RELEASE_VERSION}.\n"
 
+	set_actual_product_version "${LIFERAY_DOCKER_RELEASE_VERSION}"
+
 	_set_dockerfile "jdk21" "jdk21" "Dockerfile"
 
 	set_parent_image

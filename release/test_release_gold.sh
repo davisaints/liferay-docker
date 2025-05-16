@@ -185,6 +185,8 @@ function _test_release_gold_not_reference_new_releases {
 function _test_release_gold_reference_new_releases {
 	_PRODUCT_VERSION="${1}"
 
+	set_actual_product_version "${_PRODUCT_VERSION}"
+
 	echo -e "Running _test_release_gold_reference_new_releases for ${_PRODUCT_VERSION}.\n"
 
 	lc_cd "test-dependencies/actual"

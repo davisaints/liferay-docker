@@ -56,6 +56,22 @@ function is_early_product_version_than {
 	echo "false"
 }
 
-function set_actual_product_version {
-	ACTUAL_PRODUCT_VERSION="${1}"
+function is_quarterly_release {
+	if [[ "${ACTUAL_PRODUCT_VERSION}" == *q* ]]
+	then
+		echo "true"
+	else
+		echo "false"
+	fi
 }
+
+function set_actual_product_version {
+	if [ -n "${_PRODUCT_VERSION}" ]
+	then
+		ACTUAL_PRODUCT_VERSION="${_PRODUCT_VERSION}"
+	else
+		ACTUAL_PRODUCT_VERSION="${1}"
+	fi
+}
+
+set_actual_product_version "${@}"

@@ -1,6 +1,7 @@
 #!/bin/bash
 
-source _product.sh
+source ./_product.sh
+source ../_release_common.sh "${_PRODUCT_VERSION}"
 
 function generate_api_jars {
 	mkdir -p "${_BUILD_DIR}/boms"
@@ -196,7 +197,7 @@ function generate_distro_jar {
 	if [[ $(echo "${_PRODUCT_VERSION}" | grep "ga") ]]
 	then
 		osgi_version=$(echo "${osgi_version}" | cut -d '.' -f 1,2,3,5)
-	elif [[ $(echo "${_PRODUCT_VERSION}" | grep "q") ]]
+	elif [ "$(is_quarterly_release)" == "true" ]
 	then
 		if [[ $(echo "${_PRODUCT_VERSION}" | grep "lts") ]]
 		then
