@@ -7,6 +7,8 @@ source _product.sh
 function main {
 	set_up
 
+	test_product_add_ckeditor_license
+	test_product_not_add_ckeditor_license
 	test_product_get_java_specification_version
 	test_product_set_product_version_lts
 	test_product_set_product_version_with_parameters
@@ -18,6 +20,7 @@ function main {
 }
 
 function set_up {
+	export LIFERAY_CKEDITOR_LICENSE_KEY="123456789"
 	export LIFERAY_RELEASE_PRODUCT_NAME="dxp"
 	export _BUILD_DIR="${PWD}"
 	export _BUNDLES_DIR="${PWD}/test-dependencies/liferay-dxp"
@@ -40,11 +43,26 @@ function tear_down {
 	rm -f "${_BUILD_DIR}/warm-up-tomcat"
 	rm -fr "${_BUNDLES_DIR}"
 
+	unset LIFERAY_CKEDITOR_LICENSE_KEY
 	unset LIFERAY_RELEASE_PRODUCT_NAME
 	unset _BUILD_DIR
 	unset _BUNDLES_DIR
 	unset _CURRENT_JAVA_HOME
 	unset _PROJECTS_DIR
+}
+
+function test_product_add_ckeditor_license {
+	_test_product_add_ckeditor_license "2025.q2.0"
+	_test_product_add_ckeditor_license "2025.q4.0"
+	_test_product_add_ckeditor_license "2026.q1.0-lts"
+}
+
+function test_product_not_add_ckeditor_license {
+	_test_product_not_add_ckeditor_license "7.4.3.129-ga129"
+	_test_product_not_add_ckeditor_license "7.4.13-u134"
+	_test_product_not_add_ckeditor_license "2023.q1.0"
+	_test_product_not_add_ckeditor_license "2024.q2.0"
+	_test_product_not_add_ckeditor_license "2025.q1.0-lts"
 }
 
 function test_product_get_java_specification_version {
@@ -86,6 +104,30 @@ function test_product_warm_up_tomcat_already_warmed {
 	assert_equals \
 		"$(warm_up_tomcat 1> /dev/null; echo "${?}")" \
 		"${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
+}
+
+function _test_product_add_ckeditor_license {
+	_PRODUCT_VERSION="${1}"
+
+	echo -e "Running _test_product_add_ckeditor_license for ${_PRODUCT_VERSION}.\n"
+
+	add_ckeditor_license &> /dev/null
+
+	assert_equals \
+		"$(cat ${_BUNDLES_DIR}/osgi/configs/com.liferay.frontend.editor.ckeditor.web.internal.configuration.CKEditor5Configuration.config)" \
+		"licenseKey=\"${LIFERAY_CKEDITOR_LICENSE_KEY}\""
+
+	rm -f "${_BUNDLES_DIR}/osgi/configs/com.liferay.frontend.editor.ckeditor.web.internal.configuration.CKEditor5Configuration.config"
+}
+
+function _test_product_not_add_ckeditor_license {
+	_PRODUCT_VERSION="${1}"
+
+	echo -e "Running _test_product_not_add_ckeditor_license for ${_PRODUCT_VERSION}.\n"
+
+	add_ckeditor_license &> /dev/null
+
+	assert_equals "${?}" "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 }
 
 function _test_product_get_java_specification_version {
