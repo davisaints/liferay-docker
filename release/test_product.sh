@@ -8,8 +8,8 @@ function main {
 	set_up
 
 	test_product_add_ckeditor_license
-	test_product_not_add_ckeditor_license
 	test_product_get_java_specification_version
+	test_product_not_add_ckeditor_license
 	test_product_set_product_version_lts
 	test_product_set_product_version_with_parameters
 	test_product_warm_up_tomcat
@@ -57,19 +57,19 @@ function test_product_add_ckeditor_license {
 	_test_product_add_ckeditor_license "2026.q1.0-lts"
 }
 
+function test_product_get_java_specification_version {
+	_test_product_get_java_specification_version "jdk17" "17"
+	_test_product_get_java_specification_version "jdk8" "1.8"
+	_test_product_get_java_specification_version "openjdk17" "17"
+	_test_product_get_java_specification_version "zulu8" "1.8"
+}
+
 function test_product_not_add_ckeditor_license {
 	_test_product_not_add_ckeditor_license "7.4.3.129-ga129"
 	_test_product_not_add_ckeditor_license "7.4.13-u134"
 	_test_product_not_add_ckeditor_license "2023.q1.0"
 	_test_product_not_add_ckeditor_license "2024.q2.0"
 	_test_product_not_add_ckeditor_license "2025.q1.0-lts"
-}
-
-function test_product_get_java_specification_version {
-	_test_product_get_java_specification_version "jdk17" "17"
-	_test_product_get_java_specification_version "jdk8" "1.8"
-	_test_product_get_java_specification_version "openjdk17" "17"
-	_test_product_get_java_specification_version "zulu8" "1.8"
 }
 
 function test_product_set_product_version_lts {
@@ -120,16 +120,6 @@ function _test_product_add_ckeditor_license {
 	rm -f "${_BUNDLES_DIR}/osgi/configs/com.liferay.frontend.editor.ckeditor.web.internal.configuration.CKEditor5Configuration.config"
 }
 
-function _test_product_not_add_ckeditor_license {
-	_PRODUCT_VERSION="${1}"
-
-	echo -e "Running _test_product_not_add_ckeditor_license for ${_PRODUCT_VERSION}.\n"
-
-	add_ckeditor_license &> /dev/null
-
-	assert_equals "${?}" "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
-}
-
 function _test_product_get_java_specification_version {
 	JAVA_HOME="/opt/java/${1}"
 
@@ -138,6 +128,16 @@ function _test_product_get_java_specification_version {
 	assert_equals "$(get_java_specification_version)" "${2}"
 
 	JAVA_HOME="${_CURRENT_JAVA_HOME}"
+}
+
+function _test_product_not_add_ckeditor_license {
+	_PRODUCT_VERSION="${1}"
+
+	echo -e "Running _test_product_not_add_ckeditor_license for ${_PRODUCT_VERSION}.\n"
+
+	add_ckeditor_license &> /dev/null
+
+	assert_equals "${?}" "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 }
 
 function _test_product_set_product_version_with_parameters {
