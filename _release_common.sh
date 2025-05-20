@@ -10,7 +10,7 @@ function get_product_group_version {
 }
 
 function get_product_version {
-	if [ -n "${_PRODUCT_VERSION}" ] && [ -n "${1}" ]
+	if [ -n "${_PRODUCT_VERSION}" ] && [ -z "${1}" ]
 	then
 		echo "${_PRODUCT_VERSION}"
 	else
