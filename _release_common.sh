@@ -1,5 +1,77 @@
 #!/bin/bash
 
+function get_product_group_version {
+	if [ -n "${_PRODUCT_VERSION}" ]
+	then
+		echo "${_PRODUCT_VERSION}" | cut -d '.' -f 1,2
+	else
+		echo "${1}" | cut -d '.' -f 1,2
+	fi
+}
+
+function get_release_year {
+	if [ -n "${_PRODUCT_VERSION}" ]
+	then
+		echo "${_PRODUCT_VERSION}" | cut -d '.' -f 1
+	else
+		echo "${1}" | cut -d '.' -f 1
+	fi
+}
+
+function is_7_3_ga_release {
+	if [[ "${1}" == 7.3.*-ga* ]]
+	then
+		echo "true"
+	else
+		echo "false"
+	fi
+}
+
+function is_7_3_release {
+	if [[ "${1}" == 7.3* ]]
+	then
+		echo "true"
+	else
+		echo "false"
+	fi
+}
+
+function is_7_3_u_release {
+	if [[ "${1}" == 7.3.*-u* ]]
+	then
+		echo "true"
+	else
+		echo "false"
+	fi
+}
+
+function is_7_4_ga_release {
+	if [[ "${1}" == 7.4.*-ga* ]]
+	then
+		echo "true"
+	else
+		echo "false"
+	fi
+}
+
+function is_7_4_release {
+	if [[ "${1}" == 7.4* ]]
+	then
+		echo "true"
+	else
+		echo "false"
+	fi
+}
+
+function is_7_4_u_release {
+	if [[ "${1}" == 7.4.*-u* ]]
+	then
+		echo "true"
+	else
+		echo "false"
+	fi
+}
+
 function is_early_product_version_than {
 	local product_version_1=$(echo "${ACTUAL_PRODUCT_VERSION}" | sed -e "s/-lts//")
 	local product_version_1_quarter
@@ -56,8 +128,26 @@ function is_early_product_version_than {
 	echo "false"
 }
 
+function is_ga_release {
+	if [[ "${1}" == *-ga* ]]
+	then
+		echo "true"
+	else
+		echo "false"
+	fi
+}
+
 function is_quarterly_release {
 	if [[ "${1}" == *q* ]]
+	then
+		echo "true"
+	else
+		echo "false"
+	fi
+}
+
+function is_u_release {
+	if [[ "${1}" == *-u* ]]
 	then
 		echo "true"
 	else
