@@ -415,7 +415,7 @@ function set_product_version {
 	else
 		_PRODUCT_VERSION="${1}"
 
-		if [[ $(echo "$_PRODUCT_VERSION" | cut -d '.' -f 1) -gt 2024 ]] &&
+		if [[ "$(get_release_year)" -gt 2024 ]] &&
 		   [[ "${_PRODUCT_VERSION}" == *"q1"* ]] &&
 		   [[ "${_PRODUCT_VERSION}" != *"-lts" ]]
 		then

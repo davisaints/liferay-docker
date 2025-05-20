@@ -19,7 +19,7 @@ function add_property {
 }
 
 function check_supported_versions {
-	local supported_version="$(echo "${_PRODUCT_VERSION}" | cut -d '.' -f 1,2)"
+	local supported_version="$(get_product_group_version)"
 
 	if [ -z $(grep "${supported_version}" "${_RELEASE_ROOT_DIR}"/supported-"${LIFERAY_RELEASE_PRODUCT_NAME}"-versions.txt) ]
 	then
@@ -204,7 +204,7 @@ function prepare_next_release_branch {
 		LIFERAY_COMMON_DOWNLOAD_SKIP_CACHE="true" lc_download "https://releases.liferay.com/releases.json" releases.json
 	fi
 
-	local product_group_version="$(echo "${_PRODUCT_VERSION}" | cut -d '.' -f 1,2)"
+	local product_group_version="$(get_product_group_version)"
 
 	local latest_quarterly_product_version="$(\
 		jq -r ".[] | \
@@ -239,7 +239,7 @@ function prepare_next_release_branch {
 
 		if [[ "${_PRODUCT_VERSION}" == *q1* ]]
 		then
-			if [[ "$(echo "${_PRODUCT_VERSION}" | cut -d '.' -f 1)" -ge 2025 ]]
+			if [[ "$(get_release_year)" -ge 2025 ]]
 			then
 				next_project_version_suffix="${next_project_version_suffix} LTS"
 			fi
@@ -339,7 +339,7 @@ function reference_new_releases {
 
 	local latest_quarterly_release="false"
 
-	local product_group_version=$(echo "${_PRODUCT_VERSION}" | cut -d '.' -f 1,2)
+	local product_group_version="$(get_product_group_version)"
 
 	local previous_product_version="$(\
 		grep "portal.latest.bundle.version\[${product_group_version}" \
@@ -412,7 +412,7 @@ function reference_new_releases {
 			cut -d '[' -f 2 | \
 			cut -d ']' -f 1)"
 
-	local quarterly_release_branch="release-$(echo "${_PRODUCT_VERSION}" | cut -d '.' -f 1,2)"
+	local quarterly_release_branch="release-$(get_product_group_version)"
 
 	if [ "${latest_quarterly_release}" == "false" ]
 	then
@@ -547,7 +547,7 @@ function tag_release {
 		fi
 	done
 
-	if [[ "${_PRODUCT_VERSION}" == 7.4.*-u* ]]
+	if [ "$(is_7_4_u_release "${_PRODUCT_VERSION}")" == "true" ]
 	then
 		local temp_branch="release-$(echo "${_PRODUCT_VERSION}" | sed -r "s/-u/\./")"
 
@@ -561,7 +561,7 @@ function tag_release {
 }
 
 function test_boms {
-	if [[ "${_PRODUCT_VERSION}" == 7.4.*-u* ]]
+	if [ "$(is_7_4_u_release "${_PRODUCT_VERSION}")" == "true" ]
 	then
 		lc_log INFO "Skipping test BOMs for ${_PRODUCT_VERSION}."
 
@@ -578,7 +578,7 @@ function test_boms {
 	then
 		blade init -v "${LIFERAY_RELEASE_PRODUCT_NAME}-${_PRODUCT_VERSION}"
 	else
-		local product_group_version=$(echo "${_PRODUCT_VERSION}" | cut -d '.' -f 1,2)
+		local product_group_version="$(get_product_group_version)"
 		local product_version_suffix=$(echo "${_PRODUCT_VERSION}" | cut -d '-' -f 2)
 
 		blade init -v "${LIFERAY_RELEASE_PRODUCT_NAME}-${product_group_version}-${product_version_suffix}"
@@ -620,14 +620,14 @@ function update_release_info_date {
 	if [ ! $(echo "${LIFERAY_RELEASE_PREPARE_NEXT_RELEASE_BRANCH}" | grep -i "true") ] ||
 	   [ "$(is_quarterly_release "${_PRODUCT_VERSION}")" == "false" ] ||
 	   [[ "$(echo "${_PRODUCT_VERSION}" | cut -d '.' -f 3)" -eq 0 ]] ||
-	   [[ "$(echo "${_PRODUCT_VERSION}" | cut -d '.' -f 1)" -lt 2024 ]]
+	   [[ "$(get_release_year)" -lt 2024 ]]
 	then
 		lc_log INFO "Skipping the release info update."
 
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	local product_group_version="$(echo "${_PRODUCT_VERSION}" | cut -d '.' -f 1,2)"
+	local product_group_version="$(get_product_group_version)"
 
 	local quarterly_release_branch="release-${product_group_version}"
 

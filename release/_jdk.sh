@@ -8,13 +8,13 @@ function set_jdk_version_and_parameters {
 
 	if [ "$(is_quarterly_release "${_PRODUCT_VERSION}")" == "true" ]
 	then
-		if [[ "$(echo "${_PRODUCT_VERSION}" | cut -d '.' -f 1)" -ge 2025 ]]
+		if [[ "$(get_release_year)" -ge 2025 ]]
 		then
 			jdk_version="openjdk17"
 		fi
 	fi
 
-	if [[ "$(echo "${_PRODUCT_VERSION}" | grep "ga")" ]] &&
+	if [ "$(is_ga_release "${_PRODUCT_VERSION}")" == "true" ] &&
 	   [[ "$(echo "${_PRODUCT_VERSION}" | cut -d '-' -f 2 | sed "s/ga//g")" -ge 132 ]]
 	then
 		jdk_version="openjdk17"

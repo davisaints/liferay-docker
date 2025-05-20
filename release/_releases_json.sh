@@ -139,7 +139,7 @@ function _process_new_product {
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	local product_group_version="$(echo "${_PRODUCT_VERSION}" | cut -d '.' -f 1,2)"
+	local product_group_version="$(get_product_group_version)"
 
 	jq "map(
 			if .product == \"${LIFERAY_RELEASE_PRODUCT_NAME}\" and .productGroupVersion == \"${product_group_version}\"
@@ -150,7 +150,7 @@ function _process_new_product {
 			end
 		)" "${releases_json}" > temp_file.json && mv temp_file.json "${releases_json}"
 
-	if [ "${product_group_version}" == 7.3 ] || [ "${product_group_version}" == 7.4 ]
+	if [ "$(is_7_3_release "${product_group_version}")" == "true" ] || [ "$(is_7_4_release "${product_group_version}")" == "true" ]
 	then
 		jq "map(
 				if .product == \"${LIFERAY_RELEASE_PRODUCT_NAME}\" and .productGroupVersion == \"${product_group_version}\"
