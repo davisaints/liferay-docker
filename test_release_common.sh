@@ -91,8 +91,8 @@ function test_release_common_is_ga_release {
 
 function test_release_common_is_quarterly_release {
 	_test_release_common_is_quarterly_release "2025.q1.0-lts" "true"
-	_test_release_common_is_quarterly_release "7.4.3.112-ga112" "false"
 	_test_release_common_is_quarterly_release "7.4.13-u134" "false"
+	_test_release_common_is_quarterly_release "7.4.3.112-ga112" "false"
 }
 
 function test_release_common_is_u_release {
