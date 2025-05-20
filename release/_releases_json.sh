@@ -139,10 +139,8 @@ function _process_new_product {
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	local product_group_version="$(get_product_group_version)"
-
 	jq "map(
-			if .product == \"${LIFERAY_RELEASE_PRODUCT_NAME}\" and .productGroupVersion == \"${product_group_version}\"
+			if .product == \"${LIFERAY_RELEASE_PRODUCT_NAME}\" and .productGroupVersion == \"$(get_product_group_version)\"
 			then
 				.promoted = \"false\"
 			else
@@ -150,7 +148,7 @@ function _process_new_product {
 			end
 		)" "${releases_json}" > temp_file.json && mv temp_file.json "${releases_json}"
 
-	if [ "$(is_7_3_release "${product_group_version}")" == "true" ] || [ "$(is_7_4_release "${product_group_version}")" == "true" ]
+	if [ "$(is_7_3_release)" == "true" ] || [ "$(is_7_4_release)" == "true" ]
 	then
 		jq "map(
 				if .product == \"${LIFERAY_RELEASE_PRODUCT_NAME}\" and .productGroupVersion == \"${product_group_version}\"
@@ -160,7 +158,7 @@ function _process_new_product {
 					.
 				end
 			)" "${releases_json}" > temp_file.json && mv temp_file.json "${releases_json}"
-	elif [ "$(is_quarterly_release "${product_group_version}")" == "true" ] && [ "$(_get_latest_product_version "quarterly")" == "${_PRODUCT_VERSION}" ]
+	elif [ "$(is_quarterly_release)" == "true" ] && [ "$(_get_latest_product_version "quarterly")" == "${_PRODUCT_VERSION}" ]
 	then
 		jq "map(
 				if .productGroupVersion | test(\"q\")

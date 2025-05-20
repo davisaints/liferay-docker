@@ -6,7 +6,7 @@ source ../_release_common.sh
 function set_jdk_version_and_parameters {
 	local jdk_version="zulu8"
 
-	if [ "$(is_quarterly_release "${_PRODUCT_VERSION}")" == "true" ]
+	if [ "$(is_quarterly_release)" == "true" ]
 	then
 		if [[ "$(get_release_year)" -ge 2025 ]]
 		then
@@ -14,7 +14,7 @@ function set_jdk_version_and_parameters {
 		fi
 	fi
 
-	if [ "$(is_ga_release "${_PRODUCT_VERSION}")" == "true" ] &&
+	if [ "$(is_ga_release)" == "true" ] &&
 	   [[ "$(echo "${_PRODUCT_VERSION}" | cut -d '-' -f 2 | sed "s/ga//g")" -ge 132 ]]
 	then
 		jdk_version="openjdk17"

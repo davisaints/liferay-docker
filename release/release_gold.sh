@@ -116,8 +116,7 @@ function main {
 
 	promote_boms xanadu
 
-	if [ "$(is_quarterly_release "${_PRODUCT_VERSION}")" == "false" ] &&
-	   [[ ! $(echo "${_PRODUCT_VERSION}" | grep "7.4") ]]
+	if [ "$(is_quarterly_release)" == "false" ] && [ "$(is_7_4_release)" == "false" ]
 	then
 		lc_log INFO "Do not update product_info.json for quarterly and 7.4 releases."
 
@@ -190,7 +189,7 @@ function prepare_branch_to_commit_from_master {
 
 function prepare_next_release_branch {
 	if [ ! $(echo "${LIFERAY_RELEASE_PREPARE_NEXT_RELEASE_BRANCH}" | grep -i "true") ] ||
-	   [ "$(is_quarterly_release "${_PRODUCT_VERSION}")" == "false" ]
+	   [ "$(is_quarterly_release)" == "false" ]
 	then
 		lc_log INFO "Skipping the preparation of the next release branch."
 
@@ -297,7 +296,7 @@ function print_help {
 }
 
 function reference_new_releases {
-	if [ "$(is_quarterly_release "${_PRODUCT_VERSION}")" == "false" ]
+	if [ "$(is_quarterly_release)" == "false" ]
 	then
 		lc_log INFO "Skipping the update to the references in the liferay-jenkins-ee repository."
 
@@ -547,7 +546,7 @@ function tag_release {
 		fi
 	done
 
-	if [ "$(is_7_4_u_release "${_PRODUCT_VERSION}")" == "true" ]
+	if [ "$(is_7_4_u_release)" == "true" ]
 	then
 		local temp_branch="release-$(echo "${_PRODUCT_VERSION}" | sed -r "s/-u/\./")"
 
@@ -561,7 +560,7 @@ function tag_release {
 }
 
 function test_boms {
-	if [ "$(is_7_4_u_release "${_PRODUCT_VERSION}")" == "true" ]
+	if [ "$(is_7_4_u_release)" == "true" ]
 	then
 		lc_log INFO "Skipping test BOMs for ${_PRODUCT_VERSION}."
 
@@ -574,7 +573,7 @@ function test_boms {
 
 	lc_cd "temp_dir_test_boms"
 
-	if [ "$(is_quarterly_release "${_PRODUCT_VERSION}")" == "true" ]
+	if [ "$(is_quarterly_release)" == "true" ]
 	then
 		blade init -v "${LIFERAY_RELEASE_PRODUCT_NAME}-${_PRODUCT_VERSION}"
 	else
@@ -618,7 +617,7 @@ function test_boms {
 
 function update_release_info_date {
 	if [ ! $(echo "${LIFERAY_RELEASE_PREPARE_NEXT_RELEASE_BRANCH}" | grep -i "true") ] ||
-	   [ "$(is_quarterly_release "${_PRODUCT_VERSION}")" == "false" ] ||
+	   [ "$(is_quarterly_release)" == "false" ] ||
 	   [[ "$(echo "${_PRODUCT_VERSION}" | cut -d '.' -f 3)" -eq 0 ]] ||
 	   [[ "$(get_release_year)" -lt 2024 ]]
 	then

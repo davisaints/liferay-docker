@@ -59,7 +59,7 @@ function add_portal_patcher_properties_jar {
 }
 
 function add_portal_patcher_service_properties_jar {
-	if [ "$(is_7_3_release "${_PRODUCT_VERSION}")" == "false" ]
+	if [ "$(is_7_3_release)" == "false" ]
 	then
 		lc_log INFO "Patch level verification is not needed for ${_PRODUCT_VERSION}."
 
@@ -437,7 +437,7 @@ function in_hotfix_scope {
 		return 0
 	fi
 
-	if (echo "${1}" | grep -q "^tomcat/lib/ext") && [ "$(is_7_3_release "${_PRODUCT_VERSION}")" == "true" ]
+	if (echo "${1}" | grep -q "^tomcat/lib/ext") && [ "$(is_7_3_release)" == "true" ]
 	then
 		return 0
 	fi
@@ -566,7 +566,7 @@ function transform_file_name {
 
 	file_name=$(echo "${file_name}" | sed -e s#tomcat/webapps/ROOT#WAR_PATH#)
 
-	if [ "$(is_7_3_release "${_PRODUCT_VERSION}")" == "true" ]
+	if [ "$(is_7_3_release)" == "true" ]
 	then
 		file_name=$(echo "${file_name}" | sed -e s#tomcat/lib/ext#GLOBAL_LIB_PATH#)
 	fi

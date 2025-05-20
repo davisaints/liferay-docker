@@ -9,6 +9,15 @@ function get_product_group_version {
 	fi
 }
 
+function get_product_version {
+	if [ -n "${_PRODUCT_VERSION}" ] && [ -n "${1}" ]
+	then
+		echo "${_PRODUCT_VERSION}"
+	else
+		echo "${1}"
+	fi
+}
+
 function get_release_year {
 	if [ -n "${_PRODUCT_VERSION}" ]
 	then
@@ -19,7 +28,7 @@ function get_release_year {
 }
 
 function is_7_3_ga_release {
-	if [[ "${1}" == 7.3.*-ga* ]]
+	if [[ "$(get_product_version "${1}")" == 7.3.*-ga* ]]
 	then
 		echo "true"
 	else
@@ -28,7 +37,7 @@ function is_7_3_ga_release {
 }
 
 function is_7_3_release {
-	if [[ "${1}" == 7.3* ]]
+	if [[ "$(get_product_version "${1}")" == 7.3* ]]
 	then
 		echo "true"
 	else
@@ -37,7 +46,7 @@ function is_7_3_release {
 }
 
 function is_7_3_u_release {
-	if [[ "${1}" == 7.3.*-u* ]]
+	if [[ "$(get_product_version "${1}")" == 7.3.*-u* ]]
 	then
 		echo "true"
 	else
@@ -46,7 +55,7 @@ function is_7_3_u_release {
 }
 
 function is_7_4_ga_release {
-	if [[ "${1}" == 7.4.*-ga* ]]
+	if [[ "$(get_product_version "${1}")" == 7.4.*-ga* ]]
 	then
 		echo "true"
 	else
@@ -55,7 +64,7 @@ function is_7_4_ga_release {
 }
 
 function is_7_4_release {
-	if [[ "${1}" == 7.4* ]]
+	if [[ "$(get_product_version "${1}")" == 7.4* ]]
 	then
 		echo "true"
 	else
@@ -64,7 +73,7 @@ function is_7_4_release {
 }
 
 function is_7_4_u_release {
-	if [[ "${1}" == 7.4.*-u* ]]
+	if [[ "$(get_product_version "${1}")" == 7.4.*-u* ]]
 	then
 		echo "true"
 	else
@@ -73,7 +82,7 @@ function is_7_4_u_release {
 }
 
 function is_early_product_version_than {
-	local product_version_1=$(echo "${ACTUAL_PRODUCT_VERSION}" | sed -e "s/-lts//")
+	local product_version_1=$(echo "$(get_product_version "${1}")" | sed -e "s/-lts//")
 	local product_version_1_quarter
 	local product_version_1_suffix
 
@@ -129,7 +138,7 @@ function is_early_product_version_than {
 }
 
 function is_ga_release {
-	if [[ "${1}" == *-ga* ]]
+	if [[ "$(get_product_version "${1}")" == *-ga* ]]
 	then
 		echo "true"
 	else
@@ -138,7 +147,7 @@ function is_ga_release {
 }
 
 function is_quarterly_release {
-	if [[ "${1}" == *q* ]]
+	if [[ "$(get_product_version "${1}")" == *q* ]]
 	then
 		echo "true"
 	else
@@ -147,14 +156,10 @@ function is_quarterly_release {
 }
 
 function is_u_release {
-	if [[ "${1}" == *-u* ]]
+	if [[ "$(get_product_version "${1}")" == *-u* ]]
 	then
 		echo "true"
 	else
 		echo "false"
 	fi
-}
-
-function set_actual_product_version {
-	ACTUAL_PRODUCT_VERSION="${1}"
 }

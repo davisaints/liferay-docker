@@ -22,9 +22,9 @@ function generate_checksum_files {
 }
 
 function generate_javadocs {
-	if [ "$(is_7_3_ga_release "${_PRODUCT_VERSION}")" == "false" ] &&
-	   [ "$(is_7_3_u_release "${_PRODUCT_VERSION}")" == "false" ] &&
-	   [ "$(is_7_4_ga_release "${_PRODUCT_VERSION}")" == "false" ]
+	if [ "$(is_7_3_ga_release)" == "false" ] &&
+	   [ "$(is_7_3_u_release)" == "false" ] &&
+	   [ "$(is_7_4_ga_release)" == "false" ]
 	then
 		lc_log INFO "Javadocs should not be generated for ${_PRODUCT_VERSION}."
 
@@ -171,7 +171,7 @@ function package_boms {
 }
 
 function package_portal_dependencies {
-	if [ "$(is_7_3_release "${_PRODUCT_VERSION}")" == "true" ]
+	if [ "$(is_7_3_release)" == "true" ]
 	then
 
 		#
@@ -281,7 +281,7 @@ function package_release {
 
 	lc_cd tomcat/webapps/ROOT
 
-	if [ "$(is_7_3_release "${_PRODUCT_VERSION}")" == "true" ]
+	if [ "$(is_7_3_release)" == "true" ]
 	then
 		cp "${_PROJECTS_DIR}"/liferay-portal-ee/lib/portal/ccpp.jar WEB-INF/lib
 	fi

@@ -72,7 +72,7 @@ function generate_api_jars {
 		rm -f "${name}-${version}.jar"
 	done
 
-	if [ "$(is_7_3_release "${_PRODUCT_VERSION}")" == "true" ]
+	if [ "$(is_7_3_release)" == "true" ]
 	then
 		for portal_jar in portal-kernel support-tomcat
 		do
@@ -194,10 +194,10 @@ function generate_distro_jar {
 
 	local osgi_version=$(echo "${_PRODUCT_VERSION}" | sed 's/-/\./g')
 
-	if [ "$(is_ga_release "${_PRODUCT_VERSION}")" == "true" ]
+	if [ "$(is_ga_release)" == "true" ]
 	then
 		osgi_version=$(echo "${osgi_version}" | cut -d '.' -f 1,2,3,5)
-	elif [ "$(is_quarterly_release "${_PRODUCT_VERSION}")" == "true" ]
+	elif [ "$(is_quarterly_release)" == "true" ]
 	then
 		if [[ $(echo "${_PRODUCT_VERSION}" | grep "lts") ]]
 		then
