@@ -187,8 +187,6 @@ function copy_hotfix_commit {
 
 	lc_time_run checkout_tag liferay-dxp "${tag_name_base}"
 
-	lc_time_run run_git_maintenance
-
 	lc_time_run run_rsync
 
 	lc_time_run commit_and_tag "${tag_name_new}"
@@ -354,6 +352,8 @@ function process_version_list {
 
 		process_zip_list_file "${zip_list_file}" "${release_version}"
 	done
+
+	lc_time_run run_git_maintenance
 }
 
 function process_zip_list_file {
