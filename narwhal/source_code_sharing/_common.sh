@@ -98,6 +98,13 @@ function push_to_origin {
 	lc_cd "${REPO_PATH_DXP}"
 
 	git push -q origin "${1}"
+
+	if [[ "${2}" == 20* ]]
+	then
+		git checkout master
+
+		git branch -D "${2}"
+	fi
 }
 
 function run_rsync {

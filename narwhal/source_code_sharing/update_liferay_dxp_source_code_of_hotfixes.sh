@@ -178,20 +178,44 @@ function checkout_commit {
 	fi
 }
 
+function checkout_hotfix_tag {
+	local base_branch_name="${3}"
+	local repository="${1}"
+	local temporary_branch_name="${2}"
+
+	trap 'return ${LIFERAY_COMMON_EXIT_CODE_BAD}' ERR
+
+	lc_cd "${BASE_DIR}/${repository}"
+
+	git reset --hard -q
+
+	git clean -dfqX
+
+	git checkout -q -b "${temporary_branch_name}" "${base_branch_name}"
+}
+
 function copy_hotfix_commit {
 	local commit_hash="${1}"
 	local tag_name_base="${2}"
 	local tag_name_new="${3}"
 
+	local base_branch_name="${tag_name_new%%-*}"
+	local temporary_branch_name="${tag_name_new}-branch"
+
 	lc_time_run checkout_commit liferay-portal-ee "${commit_hash}"
 
-	lc_time_run checkout_tag liferay-dxp "${tag_name_base}"
+	if [[ "${tag_name_new}" == 20* ]]
+	then
+		lc_time_run checkout_hotfix_tag liferay-dxp "${temporary_branch_name}" "${base_branch_name}"
+	else
+		lc_time_run checkout_tag liferay-dxp "${tag_name_base}"
+	fi
 
 	lc_time_run run_rsync
 
 	lc_time_run commit_and_tag "${tag_name_new}"
 
-	lc_time_run push_to_origin "${tag_name_new}"
+	lc_time_run push_to_origin "${tag_name_new}" "${temporary_branch_name}"
 
 	echo ""
 }
