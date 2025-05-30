@@ -94,6 +94,7 @@ function check_usage {
 	REPO_PATH_DXP="${BASE_DIR}/liferay-dxp"
 	REPO_PATH_EE="${BASE_DIR}/liferay-portal-ee"
 	RUN_FETCH_REPOSITORY="true"
+	RUN_GIT_MAINTENANCE="false"
 	RUN_PUSH_TO_ORIGIN="true"
 	ZIP_LIST_RETENTION_TIME="1 min"
 	VERSION_INPUT="7.3.10 7.4.13 2023.q3"
@@ -216,6 +217,8 @@ function copy_hotfix_commit {
 	lc_time_run commit_and_tag "${tag_name_new}"
 
 	lc_time_run push_to_origin "${tag_name_new}" "${temporary_branch_name}"
+
+	RUN_GIT_MAINTENANCE="true"
 
 	echo ""
 }
@@ -397,7 +400,10 @@ function process_version_list {
 		process_zip_list_file "${zip_list_file}" "${release_version}"
 	done
 
-	lc_time_run run_git_maintenance
+	if [ "${RUN_GIT_MAINTENANCE}" == "true" ]
+	then
+		lc_time_run run_git_maintenance
+	fi
 }
 
 function process_zip_list_file {
