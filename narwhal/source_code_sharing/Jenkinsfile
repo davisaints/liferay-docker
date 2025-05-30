@@ -38,12 +38,6 @@ pipeline {
 			name: 'IGNORE_ZIP_FILES'
 		)
 
-		string(
-			defaultValue: '7.3.10 7.4.13 2023.q3.0 2023.q3.1 2023.q3.2 2023.q3.3 2023.q3.4 2023.q3.6 2023.q3.7 2023.q3.8 2023.q3.9 2023.q4.0 2023.q4.1 2023.q4.2 2023.q4.3 2023.q4.4 2023.q4.5 2023.q4.6 2023.q4.7 2023.q4.8 2023.q4.9 2024.q1.1 2024.q1.2 2024.q1.3 2024.q1.4 2024.q1.5 2024.q1.6 2024.q1.7 2024.q1.8 2024.q1.9 2024.q1.10 2024.q1.11 2024.q1.12 2024.q2.0 2024.q2.1 2024.q2.2 2024.q2.3 2024.q2.4 2024.q2.5 2024.q2.6 2024.q2.7 2024.q2.8 2024.q2.9 2024.q2.10 2024.q2.11 2024.q2.12 2024.q4.0 2024.q4.1 2024.q4.2 2024.q4.7 2025.q1.0 2025.q1.1 2025.q1.2 2025.q1.3',
-			description: '',
-			name: 'HOTFIXES_VERSION'
-		)
-
 		booleanParam(
 			defaultValue: false,
 			description: '',
@@ -191,7 +185,6 @@ pipeline {
 					"${SCRIPT_PATH}/update_liferay_dxp_source_code_of_hotfixes.sh" \
 						--ignore-zip-files "${IGNORE_ZIP_FILES}" \
 						--logdir "${PWD}/logs/${BUILD_NUMBER}" \
-						--version "${HOTFIXES_VERSION}" \
 						--zip-list-retention-time "${ZIP_LIST_RETENTION_TIME}" \
 						${ARGUMENTS}
 				fi
