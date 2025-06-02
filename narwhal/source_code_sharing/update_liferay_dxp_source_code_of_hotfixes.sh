@@ -395,6 +395,15 @@ function process_version_list {
 			fi
 		fi
 
+		curl --head --silent --fail "${zip_directory_url}" > /dev/null
+
+		if [ $? -ne 0 ]
+		then
+			lc_log DEBUG "${zip_directory_url} is not a valid URL."
+
+			continue
+		fi
+
 		lc_time_run get_hotfix_zip_list_file "${release_version}" "${zip_list_file}"
 
 		process_zip_list_file "${zip_list_file}" "${release_version}"
