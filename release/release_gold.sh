@@ -89,12 +89,12 @@ function commit_to_branch_and_send_pull_request {
 }
 
 function get_tag_name {
-	if [ "${LIFERAY_RELEASE_PRODUCT_NAME}" == "dxp" ]
-	then
-		echo "${_ARTIFACT_VERSION}"
-	elif [ "${LIFERAY_RELEASE_PRODUCT_NAME}" == "portal" ]
+	if (is_ga_release || is_u_release)
 	then
 		echo "${_PRODUCT_VERSION}"
+	elif is_quarterly_release
+	then
+		echo "${_ARTIFACT_VERSION}"
 	fi
 }
 
@@ -501,7 +501,7 @@ function tag_release {
 
 	local repository=liferay-portal-ee
 
-	if [ "${LIFERAY_RELEASE_PRODUCT_NAME}" == "portal" ]
+	if is_portal_release
 	then
 		repository=liferay-portal
 	fi

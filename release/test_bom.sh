@@ -18,11 +18,11 @@ function main {
 	test_bom_generate_pom_release_bom_dxp
 	test_bom_generate_pom_release_bom_third_party_dxp
 
-	LIFERAY_RELEASE_PRODUCT_NAME="portal"
-	_BUNDLES_DIR="${_RELEASE_ROOT_DIR}/test-dependencies/liferay-portal"
 	_PRODUCT_VERSION="7.4.3.120-ga120"
 
 	_ARTIFACT_RC_VERSION="$(echo "${_PRODUCT_VERSION}" | cut -d '-' -f 1)-${_BUILD_TIMESTAMP}"
+	_BUNDLES_DIR="${_RELEASE_ROOT_DIR}/test-dependencies/liferay-portal"
+	LIFERAY_RELEASE_PRODUCT_NAME="portal"
 
 	test_bom_generate_pom_release_bom_api_portal
 	test_bom_generate_pom_release_bom_compile_only_portal
@@ -72,7 +72,7 @@ function set_up {
 
 	git fetch --no-tags upstream "${_PRODUCT_VERSION}":"${_PRODUCT_VERSION}" &> /dev/null
 
-	git checkout --quiet "${_PRODUCT_VERSION}"
+	git checkout "${_PRODUCT_VERSION}" &> /dev/null
 
 	lc_cd "${_RELEASE_ROOT_DIR}"
 }

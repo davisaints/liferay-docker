@@ -95,6 +95,15 @@ function is_7_4_u_release {
 	return 1
 }
 
+function is_dxp_release {
+	if [[ "$(_get_product_name "${1}")" == "dxp" ]]
+	then
+		return 0
+	fi
+
+	return 1
+}
+
 function is_early_product_version_than {
 	local product_version_1=""
 
@@ -174,6 +183,15 @@ function is_nightly_release {
 	return 1
 }
 
+function is_portal_release {
+	if [[ "$(_get_product_name "${1}")" == "portal" ]]
+	then
+		return 0
+	fi
+
+	return 1
+}
+
 function is_quarterly_release {
 	if [[ "$(_get_product_version "${1}")" == *q* ]]
 	then
@@ -194,6 +212,15 @@ function is_u_release {
 
 function set_actual_product_version {
 	ACTUAL_PRODUCT_VERSION="${1}"
+}
+
+function _get_product_name {
+	if [ -n "${LIFERAY_RELEASE_PRODUCT_NAME}" ] && [ -z "${1}" ]
+	then
+		echo "${LIFERAY_RELEASE_PRODUCT_NAME}"
+	else
+		echo "${1}"
+	fi
 }
 
 function _get_product_version {
