@@ -366,13 +366,13 @@ function _update_bundles_yml {
 
 		perl -i -0777pe 's/\s+latest: true(?!7.4.13:)//' "${_BASE_DIR}/bundles.yml"
 
-		sed -i "/7.4.13:/i ${product_version_key}:" "${_BASE_DIR}/bundles.yml"
+		sed --in-place "/7.4.13:/i ${product_version_key}:" "${_BASE_DIR}/bundles.yml"
 
 		yq --indent 4 --inplace eval ".\"${product_version_key}\".\"${_PRODUCT_VERSION}\".bundle_url = \"${ga_bundle_url}\"" "${_BASE_DIR}/bundles.yml"
 		yq --indent 4 --inplace eval ".\"${product_version_key}\".\"${_PRODUCT_VERSION}\".latest = true" "${_BASE_DIR}/bundles.yml"
 	fi
 
-	sed -i "s/[[:space:]]{}//g" "${_BASE_DIR}/bundles.yml"
+	sed --in-place "s/[[:space:]]{}//g" "${_BASE_DIR}/bundles.yml"
 
 	truncate -s -1 "${_BASE_DIR}/bundles.yml"
 
