@@ -241,7 +241,7 @@ function upload_hotfix {
 		# shellcheck disable=SC2029
 		#
 
-		if (ssh root@lrdcom-vm-1 ls "/www/releases.liferay.com/dxp/hotfix/${_PRODUCT_VERSION}/" | grep -q "${_HOTFIX_FILE_NAME}")
+		if (ssh root@lrdcom-vm-1 ls "/www/releases.liferay.com/dxp/hotfix/${_PRODUCT_VERSION}/" | grep --quiet "${_HOTFIX_FILE_NAME}")
 		then
 			lc_log INFO "Skipping the upload of ${_HOTFIX_FILE_NAME} because it already exists."
 
@@ -330,8 +330,8 @@ function upload_to_docker_hub {
 function _update_bundles_yml {
 	local product_version_key="$(echo "${_PRODUCT_VERSION}" | cut -d '-' -f 1)"
 
-	if (yq eval ".\"${product_version_key}\" | has(\"${_PRODUCT_VERSION}\")" "${_BASE_DIR}/bundles.yml" | grep -q "true") ||
-	   (yq eval ".quarterly | has(\"${_PRODUCT_VERSION}\")" "${_BASE_DIR}/bundles.yml" | grep -q "true")
+	if (yq eval ".\"${product_version_key}\" | has(\"${_PRODUCT_VERSION}\")" "${_BASE_DIR}/bundles.yml" | grep --quiet "true") ||
+	   (yq eval ".quarterly | has(\"${_PRODUCT_VERSION}\")" "${_BASE_DIR}/bundles.yml" | grep --quiet "true")
 	then
 		lc_log INFO "The ${_PRODUCT_VERSION} product version was already published."
 

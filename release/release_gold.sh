@@ -188,7 +188,7 @@ function prepare_branch_to_commit_from_master {
 }
 
 function prepare_next_release_branch {
-	if [ ! $(echo "${LIFERAY_RELEASE_PREPARE_NEXT_RELEASE_BRANCH}" | grep -i "true") ] ||
+	if [ ! $(echo "${LIFERAY_RELEASE_PREPARE_NEXT_RELEASE_BRANCH}" | grep --ignore-case "true") ] ||
 	   ! is_quarterly_release
 	then
 		lc_log INFO "Skipping the preparation of the next release branch."
@@ -617,7 +617,7 @@ function test_boms {
 
 function update_release_info_date {
 	if ! is_quarterly_release ||
-	   [ ! $(echo "${LIFERAY_RELEASE_PREPARE_NEXT_RELEASE_BRANCH}" | grep -i "true") ] ||
+	   [ ! $(echo "${LIFERAY_RELEASE_PREPARE_NEXT_RELEASE_BRANCH}" | grep --ignore-case "true") ] ||
 	   [[ "$(get_release_patch_version)" -eq 0 ]] ||
 	   [[ "$(get_release_year)" -lt 2024 ]]
 	then
