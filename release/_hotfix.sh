@@ -221,7 +221,7 @@ function compare_jars {
 				fi
 			done <<< "${jar_descriptions}"
 
-			rm -fr "${_BUILD_DIR}/tmp/jar1" "${_BUILD_DIR}/tmp/jar2"
+			rm --force --recursive "${_BUILD_DIR}/tmp/jar1" "${_BUILD_DIR}/tmp/jar2"
 		else
 			new_jar_descriptions="${jar_descriptions}"
 		fi
@@ -369,7 +369,7 @@ function create_documentation {
 }
 
 function create_hotfix {
-	rm -fr "${_BUILD_DIR}"/hotfix
+	rm --force --recursive "${_BUILD_DIR}"/hotfix
 
 	mkdir --parents "${_BUILD_DIR}"/hotfix
 
@@ -484,13 +484,13 @@ function manage_jar {
 function package_hotfix {
 	lc_cd "${_BUILD_DIR}"/hotfix
 
-	rm -f "../${_HOTFIX_FILE_NAME}" checksums removed_files
+	rm --force "../${_HOTFIX_FILE_NAME}" checksums removed_files
 
 	zip -r "../${_HOTFIX_FILE_NAME}" ./*
 
 	lc_cd "${_BUILD_DIR}"
 
-	rm -fr hotfix
+	rm --force --recursive hotfix
 }
 
 function prepare_release_dir {
@@ -517,7 +517,7 @@ function prepare_release_dir {
 		then
 			echo "Removing ${_RELEASE_DIR} because it does not have a Tomcat directory."
 
-			rm -fr "${_RELEASE_DIR}"
+			rm --force --recursive "${_RELEASE_DIR}"
 		else
 			echo "${_RELEASE_DIR} is already available."
 
@@ -525,7 +525,7 @@ function prepare_release_dir {
 		fi
 	fi
 
-	rm -fr "${_RELEASE_DIR}.tmp"
+	rm --force --recursive "${_RELEASE_DIR}.tmp"
 
 	mkdir --parents "${_RELEASE_DIR}.tmp"
 
@@ -539,7 +539,7 @@ function prepare_release_dir {
 
 		7z x ./liferay-dxp.7z
 
-		rm -f ./liferay-dxp.7z
+		rm --force ./liferay-dxp.7z
 	fi
 
 	shopt -s dotglob
@@ -548,7 +548,7 @@ function prepare_release_dir {
 
 	shopt -u dotglob
 
-	rm -fr liferay-dxp
+	rm --force --recursive liferay-dxp
 
 	mv "${_RELEASE_DIR}.tmp" "${_RELEASE_DIR}"
 }

@@ -57,7 +57,7 @@ function check_usage {
 
 	_PROMOTION_DIR="${_RELEASE_ROOT_DIR}/release-data/promotion/files"
 
-	rm -fr "${_PROMOTION_DIR}"
+	rm --force --recursive "${_PROMOTION_DIR}"
 
 	mkdir --parents "${_PROMOTION_DIR}"
 
@@ -198,7 +198,7 @@ function prepare_next_release_branch {
 
 	if [ -z "${LIFERAY_RELEASE_TEST_MODE}" ]
 	then
-		rm -fr releases.json
+		rm --force --recursive releases.json
 
 		LIFERAY_COMMON_DOWNLOAD_SKIP_CACHE="true" lc_download "https://releases.liferay.com/releases.json" releases.json
 	fi
@@ -212,7 +212,7 @@ function prepare_next_release_branch {
 
 	if [ -z "${LIFERAY_RELEASE_TEST_MODE}" ]
 	then
-		rm -fr releases.json
+		rm --force --recursive releases.json
 	fi
 
 	if [ "${_PRODUCT_VERSION}" != "${latest_quarterly_product_version}" ]
@@ -567,7 +567,7 @@ function test_boms {
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	rm -f "${HOME}/.liferay/workspace/releases.json"
+	rm --force "${HOME}/.liferay/workspace/releases.json"
 
 	mkdir --parents "temp_dir_test_boms"
 
@@ -607,7 +607,7 @@ function test_boms {
 
 	pgrep --full --list-name temp_dir_test_boms | awk '{print $1}' | xargs --no-run-if-empty kill -9
 
-	rm -fr "temp_dir_test_boms"
+	rm --force --recursive "temp_dir_test_boms"
 
 	if [[ "${build_result}" != *"BUILD SUCCESSFUL"* ]]
 	then
