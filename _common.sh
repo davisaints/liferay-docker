@@ -327,6 +327,11 @@ function test_docker_image {
 
 function warm_up_tomcat {
 
+	rm -fr "${_BUNDLES_DIR}/data/elasticsearch7"
+	rm -fr "${_BUNDLES_DIR}/osgi/state"
+	rm -fr "${_BUNDLES_DIR}/tomcat/temp"
+	rm -fr "${_BUNDLES_DIR}/tomcat/work"
+
 	#
 	# Warm up Tomcat for older versions to speed up starting Tomcat. Populating
 	# the Hypersonic files can take over 20 seconds.
