@@ -25,7 +25,7 @@ function check_usage {
 
 	lc_cd "${_RELEASE_TOOL_DIR}"
 
-	mkdir -p release-data
+	mkdir --parents release-data
 
 	lc_cd release-data
 
@@ -81,7 +81,7 @@ function main {
 
 	rm -fr "${_BUILD_DIR}/release"
 
-	mkdir -p "${_BUILD_DIR}/release"
+	mkdir --parents "${_BUILD_DIR}/release"
 
 	lc_time_run package_boms
 

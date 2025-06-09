@@ -235,7 +235,7 @@ function upload_hotfix {
 	then
 		lc_log INFO "Connecting to lrdcom-vm-1."
 
-		ssh root@lrdcom-vm-1 mkdir -p "/www/releases.liferay.com/dxp/hotfix/${_PRODUCT_VERSION}/"
+		ssh root@lrdcom-vm-1 mkdir --parents "/www/releases.liferay.com/dxp/hotfix/${_PRODUCT_VERSION}/"
 
 		#
 		# shellcheck disable=SC2029
@@ -296,7 +296,7 @@ function upload_release {
 
 		ssh root@lrdcom-vm-1 rm -r "/www/releases.liferay.com/${LIFERAY_RELEASE_PRODUCT_NAME}/release-candidates/${_PRODUCT_VERSION}-*"
 
-		ssh root@lrdcom-vm-1 mkdir -p "/www/releases.liferay.com/${LIFERAY_RELEASE_PRODUCT_NAME}/release-candidates/${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}"
+		ssh root@lrdcom-vm-1 mkdir --parents "/www/releases.liferay.com/${LIFERAY_RELEASE_PRODUCT_NAME}/release-candidates/${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}"
 	else
 		lc_log INFO "Skipping lrdcom-vm-1."
 	fi
