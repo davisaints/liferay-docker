@@ -298,7 +298,7 @@ function _upload_releases_json {
 
 		scp "${_PROMOTION_DIR}/releases.json" "root@lrdcom-vm-1:/www/releases.liferay.com/releases.json.upload"
 
-		ssh root@lrdcom-vm-1 mv -f "/www/releases.liferay.com/releases.json.upload" "/www/releases.liferay.com/releases.json"
+		ssh root@lrdcom-vm-1 mv --force "/www/releases.liferay.com/releases.json.upload" "/www/releases.liferay.com/releases.json"
 	fi
 
 	lc_log INFO "Backing up to gs://liferay-releases/releases.json.BACKUP."
