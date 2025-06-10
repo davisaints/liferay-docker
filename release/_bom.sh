@@ -426,7 +426,7 @@ function _copy_file {
 
 	lc_log DEBUG "Copying ${1}."
 
-	cp -a "${1}" "${2}/${dir}"
+	cp --archive "${1}" "${2}/${dir}"
 }
 
 function _copy_source_package {
@@ -441,7 +441,7 @@ function _copy_source_package {
 
 	mkdir --parents "${new_dir_name}"
 
-	cp -a "${1}" "${new_dir_name}"
+	cp --archive "${1}" "${new_dir_name}"
 }
 
 function _copy_tld {
@@ -534,7 +534,7 @@ function _manage_bom_jar {
 		rm --force --recursive temp_dir_manage_bom_jar/META-INF/sql
 		rm --force --recursive temp_dir_manage_bom_jar/META-INF/versions
 
-		cp -a temp_dir_manage_bom_jar/* api-jar
+		cp --archive temp_dir_manage_bom_jar/* api-jar
 	fi
 
 	rm --force --recursive temp_dir_manage_bom_jar
