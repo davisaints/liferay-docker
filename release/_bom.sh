@@ -462,7 +462,7 @@ function _copy_tld {
 	for file in $(eval find "${_PROJECTS_DIR}" \
 		"${arguments}" -type f | \
 			awk --field-separator '/' '{print $NF, $0}' | \
-			sort -k 1,1 -u | \
+			sort --key 1,1 --unique | \
 			awk '{print $2}')
 	do
 		cp "${file}" "${1}"
