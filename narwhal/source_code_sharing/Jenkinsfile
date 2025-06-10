@@ -4,9 +4,9 @@ pipeline {
 	}
 
 	environment {
+		GIT_SSH_COMMAND='ssh -i ${SSH_PRIV_KEY} -o UserKnownHostsFile=${WORKSPACE}/.ssh/known_hosts'
 		GITHUB_KNOWN_HOSTS = "|1|9jdFWI7J5bs9QKEWctRqNg2cO2Y=|KjcVFV8qS/3DPnLZOQLweHOx+lA= ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl"
 		SSH_PRIV_KEY = credentials('bf4bf1da-3b6d-4059-ab95-a4b80d255c9b')
-		GIT_SSH_COMMAND='ssh -i ${SSH_PRIV_KEY} -o UserKnownHostsFile=${WORKSPACE}/.ssh/known_hosts'
 	}
 
 	options {
@@ -14,34 +14,22 @@ pipeline {
 	}
 
 	parameters {
-		string(
-			defaultValue: null,
-			description: 'The hotfix will be copied regardless of the .patch.requirements property.',
-			name: 'TAG_FORCE_COPY'
-		)
-
 		booleanParam(
-			defaultValue: true,
-			description: 'Parameter',
-			name: 'RUN_SCRIPT_VERSIONS'
-		)
-
-		booleanParam(
-			defaultValue: true,
+			defaultValue: false,
 			description: '',
-			name: 'RUN_SCRIPT_HOTFIXES'
+			name: 'DEBUG_MODE'
+		)
+
+		string(
+			defaultValue: 'liferay',
+			description: 'The Github project you want to use',
+			name: 'GITHUB_PROJECT'
 		)
 
 		string(
 			defaultValue: 'liferay-hotfix-2115-7413.zip,liferay-hotfix-2116-7413.zip,liferay-hotfix-1629-7413.zip,liferay-hotfix-239-7310.zip,liferay-hotfix-5146-7413.zip,liferay-dxp-2023.q4.2-hotfix-224.zip,liferay-dxp-2024.q1.7-hotfix-46.zip,liferay-dxp-2024.q1.8-hotfix-15.zip,liferay-dxp-2024.q1.7-hotfix-55.zip,liferay-dxp-2024.q2.1-hotfix-6.zip,liferay-hotfix-5998-7413.zip,liferay-dxp-2023.q3.4-hotfix-95.zip,liferay-hotfix-9605-7310.zip,liferay-dxp-2024.q1.2-hotfix-180.zip,liferay-dxp-2024.q2.11-hotfix-2.zip,liferay-dxp-2024.q3.0-hotfix-14.zip,liferay-dxp-2024.q3.0-hotfix-15.zip,liferay-dxp-2024.q3.0-hotfix-17.zip,liferay-hotfix-9891-7310.zip,liferay-dxp-2024.q3.4-hotfix-4.zip,liferay-dxp-2024.q3.4-hotfix-6.zip',
 			description: 'Comma-separated list of zip files that are not processed.',
 			name: 'IGNORE_ZIP_FILES'
-		)
-
-		booleanParam(
-			defaultValue: false,
-			description: '',
-			name: 'DEBUG_MODE'
 		)
 
 		booleanParam(
@@ -68,10 +56,22 @@ pipeline {
 			name: 'REMOVE_LOG_DIR'
 		)
 
+		booleanParam(
+			defaultValue: true,
+			description: '',
+			name: 'RUN_SCRIPT_HOTFIXES'
+		)
+
+		booleanParam(
+			defaultValue: true,
+			description: 'Parameter',
+			name: 'RUN_SCRIPT_VERSIONS'
+		)
+
 		string(
-			defaultValue: 'liferay',
-			description: 'The Github project you want to use',
-			name: 'GITHUB_PROJECT'
+			defaultValue: null,
+			description: 'The hotfix will be copied regardless of the .patch.requirements property.',
+			name: 'TAG_FORCE_COPY'
 		)
 
 		string(
