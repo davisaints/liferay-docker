@@ -380,7 +380,7 @@ function _update_bundles_yml {
 	then
 		git add "${_BASE_DIR}/bundles.yml"
 
-		git commit -m "Add ${_PRODUCT_VERSION} to bundles.yml."
+		git commit --message "Add ${_PRODUCT_VERSION} to bundles.yml."
 
 		git push upstream master
 	fi

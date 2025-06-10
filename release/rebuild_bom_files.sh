@@ -46,7 +46,7 @@ function checkout_product_version {
 
 	git restore .
 
-	git tag -d "${_PRODUCT_VERSION}"
+	git tag --delete "${_PRODUCT_VERSION}"
 
 	git fetch --no-tags upstream "${_PRODUCT_VERSION}":"${_PRODUCT_VERSION}"
 
