@@ -75,12 +75,12 @@ function commit_to_branch_and_send_pull_request {
 
 	git push --force "git@github.com:liferay-release/${repository_name}.git" "${3}"
 
-	gh pr create \
-		--base "${4}" \
-		--body "Created by liferay-docker/release/release_gold.sh." \
-		--head "liferay-release:${3}" \
-		--repo "${5}" \
-		--title "${6}"
+	# gh pr create \
+	# 	--base "${4}" \
+	# 	--body "Created by liferay-docker/release/release_gold.sh." \
+	# 	--head "liferay-release:${3}" \
+	# 	--repo "${5}" \
+	# 	--title "${6}"
 
 	if [ "${?}" -ne 0 ]
 	then
@@ -171,20 +171,22 @@ function prepare_branch_to_commit {
 function prepare_branch_to_commit_from_master {
 	lc_cd "${1}"
 
-	git checkout master
+	# git checkout master
 
-	git fetch git@github.com:liferay/liferay-jenkins-ee.git master
+	# git fetch git@github.com:liferay/liferay-jenkins-ee.git master
 
-	git reset --hard FETCH_HEAD
+	# git reset --hard FETCH_HEAD
 
-	git checkout -b "${2}"
+	# git checkout -b "${2}"
 
-	git push git@github.com:liferay-release/liferay-jenkins-ee.git "${2}" --force
+	# git push git@github.com:liferay-release/liferay-jenkins-ee.git "${2}" --force
 
-	if [ "$(git rev-parse --abbrev-ref HEAD)" != "${2}" ]
-	then
-		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
-	fi
+	git checkout LRCI-5999
+
+	# if [ "$(git rev-parse --abbrev-ref HEAD)" != "${2}" ]
+	# then
+	# 	return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	# fi
 }
 
 function prepare_next_release_branch {
@@ -303,26 +305,26 @@ function reference_new_releases {
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	local issue_key=""
+	local issue_key="LRCI-5999"
 
 	if [ -z "${LIFERAY_RELEASE_TEST_MODE}" ]
 	then
-		issue_key="$(\
-			add_jira_issue \
-				"60a3f462391e56006e6b661b" \
-				"Release Tester" \
-				"Task" \
-				"LRCI" \
-				"Add release references for ${_PRODUCT_VERSION}" \
-				"customfield_10001" \
-				"04c03e90-c5a7-4fda-82f6-65746fe08b83")"
+		# issue_key="$(\
+		# 	add_jira_issue \
+		# 		"60a3f462391e56006e6b661b" \
+		# 		"Release Tester" \
+		# 		"Task" \
+		# 		"LRCI" \
+		# 		"Add release references for ${_PRODUCT_VERSION}" \
+		# 		"customfield_10001" \
+		# 		"04c03e90-c5a7-4fda-82f6-65746fe08b83")"
 
-		if [ "${issue_key}" == "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
-		then
-			lc_log ERROR "Unable to create a Jira issue to add release references for ${_PRODUCT_VERSION}."
+		# if [ "${issue_key}" == "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
+		# then
+		# 	lc_log ERROR "Unable to create a Jira issue to add release references for ${_PRODUCT_VERSION}."
 
-			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
-		fi
+		# 	return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+		# fi
 
 		prepare_branch_to_commit_from_master "${_PROJECTS_DIR}/liferay-jenkins-ee/commands" "${issue_key}"
 	fi
@@ -438,30 +440,36 @@ function reference_new_releases {
 
 	if [ -z "${LIFERAY_RELEASE_TEST_MODE}" ]
 	then
-		commit_to_branch_and_send_pull_request \
-			"${_PROJECTS_DIR}/liferay-jenkins-ee/commands/build.properties" \
-			"${issue_key} Add release references for ${_PRODUCT_VERSION}" \
-			"${issue_key}" \
-			"master" \
-			"pyoo47/liferay-jenkins-ee" \
-			"${issue_key} Add release references for ${_PRODUCT_VERSION}."
+		# commit_to_branch_and_send_pull_request \
+		# 	"${_PROJECTS_DIR}/liferay-jenkins-ee/commands/build.properties" \
+		# 	"${issue_key} Add release references for ${_PRODUCT_VERSION}" \
+		# 	"${issue_key}" \
+		# 	"master" \
+		# 	"pyoo47/liferay-jenkins-ee" \
+		# 	"${issue_key} Add release references for ${_PRODUCT_VERSION}."
+
+		git add "${_PROJECTS_DIR}/liferay-jenkins-ee/commands/build.properties"
+
+		git commit --message "${issue_key} Add release references for ${_PRODUCT_VERSION}"
+
+		git push --force "git@github.com:liferay-release/liferay-jenkins-ee.git" "${issue_key}"
 
 		if [ "${?}" -ne 0 ]
 		then
-			lc_log ERROR "Unable to send pull request with references to the next release."
+			lc_log ERROR "Unable to push references."
 
 			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 		else
-			lc_log INFO "Pull request with references to the next release was sent successfully."
+			lc_log INFO "References pushed successfully to the next release."
 		fi
 
-		local pull_request_url="$(\
-			gh pr view liferay-release:${issue_key} \
-				--jq ".url" \
-				--json "url" \
-				--repo "pyoo47/liferay-jenkins-ee")"
+		# local pull_request_url="$(\
+		# 	gh pr view liferay-release:${issue_key} \
+		# 		--jq ".url" \
+		# 		--json "url" \
+		# 		--repo "pyoo47/liferay-jenkins-ee")"
 
-		add_jira_issue_comment "Related pull request: ${pull_request_url}" "${issue_key}"
+		# add_jira_issue_comment "Related pull request: ${pull_request_url}" "${issue_key}"
 	fi
 }
 
