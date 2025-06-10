@@ -248,7 +248,7 @@ function generate_pom_release_bom {
 	echo "" >> "${pom_file_name}"
 
 	find "${_PROJECTS_DIR}/liferay-portal-ee/modules/.releng" -name '*.properties' -print0 | \
-		xargs -0 awk -F= '/^artifact.url=/  { print $2 }' \
+		xargs -0 awk --field-separator '=' '/^artifact.url=/  { print $2 }' \
 		> /tmp/artifact_urls.txt
 
 	for artifact_file in $(
@@ -461,7 +461,7 @@ function _copy_tld {
 
 	for file in $(eval find "${_PROJECTS_DIR}" \
 		"${arguments}" -type f | \
-			awk -F "/" '{print $NF, $0}' | \
+			awk --field-separator '/' '{print $NF, $0}' | \
 			sort -k 1,1 -u | \
 			awk '{print $2}')
 	do
