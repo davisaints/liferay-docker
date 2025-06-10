@@ -32,15 +32,15 @@ function set_up {
 
 	unzip -q liferay-dxp-tomcat-2024.q2.6-1721635298.zip
 
-	mkdir -p "${_RELEASE_ROOT_DIR}/release-data/build/boms"
+	mkdir --parents "${_RELEASE_ROOT_DIR}/release-data/build/boms"
 }
 
 function tear_down {
 	pgrep --full --list-name "${_BUNDLES_DIR}" | awk '{print $1}' | xargs --no-run-if-empty kill -9
 
-	rm -fr "${_BUNDLES_DIR}"
-	rm -fr "${_RELEASE_ROOT_DIR}/release-data/build/boms"
-	rm -f "${_RELEASE_ROOT_DIR}/test-dependencies/liferay-dxp-tomcat-2024.q2.6-1721635298.zip"
+	rm --force --recursive "${_BUNDLES_DIR}"
+	rm --force --recursive "${_RELEASE_ROOT_DIR}/release-data/build/boms"
+	rm --force "${_RELEASE_ROOT_DIR}/test-dependencies/liferay-dxp-tomcat-2024.q2.6-1721635298.zip"
 
 	unset LIFERAY_RELEASE_PRODUCT_NAME
 	unset LIFERAY_RELEASE_VERSION

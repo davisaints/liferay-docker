@@ -44,7 +44,7 @@ function set_up {
 
 	git checkout master &> /dev/null
 
-	mkdir -p "${_PROJECTS_DIR}/liferay-portal-ee/release"
+	mkdir --parents "${_PROJECTS_DIR}/liferay-portal-ee/release"
 }
 
 function tear_down {
@@ -53,7 +53,7 @@ function tear_down {
 	unset _PRODUCT_VERSION
 	unset _RELEASE_ROOT_DIR
 
-	rm -fr "${_PROJECTS_DIR}/liferay-portal-ee/release"
+	rm --force --recursive "${_PROJECTS_DIR}/liferay-portal-ee/release"
 
 	unset _PROJECTS_DIR
 }
@@ -62,9 +62,9 @@ function test_git_generate_release_notes {
 	generate_release_notes
 
 	assert_equals \
-		$(grep -q "\-," "${_PROJECTS_DIR}/liferay-portal-ee/release/release-notes.txt"; echo "${?}") \
+		$(grep --quiet "\-," "${_PROJECTS_DIR}/liferay-portal-ee/release/release-notes.txt"; echo "${?}") \
 		"${LIFERAY_COMMON_EXIT_CODE_BAD}" \
-		$(grep -q "LPD-27038" "${_PROJECTS_DIR}/liferay-portal-ee/release/release-notes.txt"; echo "${?}") \
+		$(grep --quiet "LPD-27038" "${_PROJECTS_DIR}/liferay-portal-ee/release/release-notes.txt"; echo "${?}") \
 		"${LIFERAY_COMMON_EXIT_CODE_OK}"
 }
 

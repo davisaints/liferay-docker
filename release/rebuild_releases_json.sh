@@ -7,9 +7,9 @@ _RELEASE_ROOT_DIR=$(pwd)
 
 _PROMOTION_DIR="${_RELEASE_ROOT_DIR}/release-data/promotion/files"
 
-rm -fr "${_PROMOTION_DIR}"
+rm --force --recursive "${_PROMOTION_DIR}"
 
-mkdir -p "${_PROMOTION_DIR}"
+mkdir --parents "${_PROMOTION_DIR}"
 
 lc_cd "${_PROMOTION_DIR}"
 
