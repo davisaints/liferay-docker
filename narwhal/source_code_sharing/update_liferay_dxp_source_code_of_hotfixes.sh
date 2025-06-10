@@ -185,7 +185,7 @@ function checkout_hotfix_tag {
 
 	git clean -dfqX
 
-	git checkout -q -b "${temporary_branch_name}" "${base_branch_name}"
+	git checkout -b "${temporary_branch_name}" -q "${base_branch_name}"
 }
 
 function copy_hotfix_commit {
