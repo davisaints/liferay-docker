@@ -170,8 +170,15 @@ function package_boms {
 
 	touch .touch
 
-	jar cvfm "${_BUILD_DIR}/release/release.${LIFERAY_RELEASE_PRODUCT_NAME}.api-${_ARTIFACT_RC_VERSION}.jar" .touch -C api-jar .
-	jar cvfm "${_BUILD_DIR}/release/release.${LIFERAY_RELEASE_PRODUCT_NAME}.api-${_ARTIFACT_RC_VERSION}-sources.jar" .touch -C api-sources-jar .
+	jar --create --verbose \
+		--file "${_BUILD_DIR}/release/release.${LIFERAY_RELEASE_PRODUCT_NAME}.api-${_ARTIFACT_RC_VERSION}.jar" \
+		--manifest .touch \
+		-C api-jar .
+
+	jar --create --verbose \
+		--file "${_BUILD_DIR}/release/release.${LIFERAY_RELEASE_PRODUCT_NAME}.api-${_ARTIFACT_RC_VERSION}-sources.jar" \
+		--manifest .touch \
+		-C api-sources-jar .
 
 	rm --force .touch
 }
