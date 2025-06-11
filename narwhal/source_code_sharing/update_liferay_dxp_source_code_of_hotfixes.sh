@@ -302,7 +302,9 @@ function get_hotfix_zip_list_file {
 
 		if [[ "${release_version}" == 20* ]]
 		then
-			if [[ "${release_version}" == *q1* && "${release_version}" != 2023* && "${release_version}" != 2024* ]]
+			if [[ "${release_version}" == *q1* ]] &&
+			   [[ "${release_version}" != 2023* ]] &&
+			   [[ "${release_version}" != 2024* ]]
 			then
 				lc_curl "${zip_directory_url}/" - | grep -E -o "liferay-dxp-20[a-z0-9\.]+-lts-hotfix-[0-9]{0,9}.zip" | uniq - "${zip_list_file}"
 			else
@@ -423,7 +425,9 @@ function process_version_list {
 		then
 			local zip_directory_url="https://files.liferay.com/private/ee/fix-packs/${release_version}/hotfix"
 		else
-			if [[ "${release_version}" == *q1* && "${release_version}" != 2023* && "${release_version}" != 2024* ]]
+			if [[ "${release_version}" == *q1* ]] &&
+			   [[ "${release_version}" != 2023* ]] &&
+			   [[ "${release_version}" != 2024* ]]
 			then
 				local zip_directory_url="https://releases.liferay.com/dxp/hotfix/${release_version}-lts"
 			else
