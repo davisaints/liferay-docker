@@ -372,6 +372,42 @@ function process_argument_version {
 	do
 		VERSION_LIST+=("${tag}")
 	done < <(git tag -l --format='%(refname:short)' "20*.q*.[0-9]" "20*.q*.[0-9][0-9]")
+
+	for release_version in "${VERSION_LIST[@]}"
+	do
+		if [[ ${release_version} == 7* ]]
+		then
+			local zip_directory_url="https://files.liferay.com/private/ee/fix-packs/${release_version}/hotfix"
+		else
+			if [[ "${release_version}" == *q1* ]] &&
+			   [[ "${release_version}" != 2023* ]] &&
+			   [[ "${release_version}" != 2024* ]]
+			then
+				local zip_directory_url="https://releases.liferay.com/dxp/hotfix/${release_version}-lts"
+			else
+				local zip_directory_url="https://releases.liferay.com/dxp/hotfix/${release_version}"
+			fi
+		fi
+
+		curl --head --silent --fail "${zip_directory_url}" > /dev/null
+
+		if [ $? -ne 0 ]
+		then
+			VERSION_LIST=( "${VERSION_LIST[@]/$release_version}" )
+		fi
+	done
+
+	temporary_version_list=()
+
+	for version in "${VERSION_LIST[@]}"
+	do
+		if [ -n "${version}" ]
+		then
+			temporary_version_list+=("${version}")
+		fi
+	done
+
+	VERSION_LIST=("${temporary_version_list[@]}")
 }
 
 function process_version_list {
@@ -393,15 +429,6 @@ function process_version_list {
 			else
 				local zip_directory_url="https://releases.liferay.com/dxp/hotfix/${release_version}"
 			fi
-		fi
-
-		curl --head --silent --fail "${zip_directory_url}" > /dev/null
-
-		if [ $? -ne 0 ]
-		then
-			lc_log DEBUG "${zip_directory_url} is not a valid URL."
-
-			continue
 		fi
 
 		lc_time_run get_hotfix_zip_list_file "${release_version}" "${zip_list_file}"
