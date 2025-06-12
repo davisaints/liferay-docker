@@ -6,7 +6,7 @@ function configure_jdk {
 }
 
 function customize_aliases {
-	alias la="ls -la --group-directories-first"
+	alias la="ls -l --all --group-directories-first"
 }
 
 function customize_prompt {
