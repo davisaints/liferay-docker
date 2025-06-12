@@ -216,31 +216,31 @@ function prepare_branch_in_portal_ee {
 	local commit_hash=$(git log -1 --format="%H")
 
 	git filter-branch -f \
+		--commit-filter 'git_commit_non_empty_tree "$@"' \
 		--index-filter 'git rm -rf --cached --ignore-unmatch \
 		":(glob)**/*.gradle" \
 		":(glob)**/build*.xml" \
 		":(glob)*.properties" \
 		":(glob)gradle/**" \
 		":(glob)modules/**/gradle.properties" \
+		":(glob)portal-web/test-ant-templates/**" \
+		":(glob)portal-web/test/com/**" \
 		git* \
 		gradle* \
 		modules/*.report.properties \
-		":(glob)portal-web/test/com/**" \
-		":(glob)portal-web/test-ant-templates/**" \
-		modules/dxp/apps/documentum/* \
-		modules/dxp/apps/portal-mobile-device-detection-fiftyonedegrees-enterprise/* \
-		modules/dxp/apps/oauth/* \
-		modules/dxp/apps/osb/* \
-		modules/dxp/apps/portal-search-elasticsearch-cross-cluster-replication/* \
 		modules/dxp/apps/akismet/* \
-		modules/dxp/apps/commerce-salesforce-connector/* \
 		modules/dxp/apps/commerce-demo-pack/* \
 		modules/dxp/apps/commerce-punchout/* \
-		modules/dxp/apps/portal-search-learning-to-rank/* \
+		modules/dxp/apps/commerce-salesforce-connector/* \
+		modules/dxp/apps/documentum/* \
+		modules/dxp/apps/oauth/* \
+		modules/dxp/apps/osb/* \
+		modules/dxp/apps/portal-mobile-device-detection-fiftyonedegrees-enterprise/* \
+		modules/dxp/apps/portal-search-elasticsearch-cross-cluster-replication/* \
 		modules/dxp/apps/portal-search-elasticsearch-monitoring/* \
-		modules/dxp/apps/sync/vldap/* \
-		modules/dxp/apps/sync/sync/*' \
-		--commit-filter 'git_commit_non_empty_tree "$@"' \
+		modules/dxp/apps/portal-search-learning-to-rank/* \
+		modules/dxp/apps/sync/sync/* \
+		modules/dxp/apps/sync/vldap/*' \
 		--msg-filter 'read message; echo "$message ($GIT_COMMIT)"' \
 		"${commit_hash}~1..HEAD" > /dev/null 2>&1
 
