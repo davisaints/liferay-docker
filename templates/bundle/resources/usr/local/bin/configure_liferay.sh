@@ -6,8 +6,8 @@ source /usr/local/bin/_liferay_common.sh
 function main {
 	if [ "${LIFERAY_DISABLE_TRIAL_LICENSE}" == "true" ]
 	then
-		rm -f /opt/liferay/data/license/trial-commerce-enterprise-license-*.li
-		rm -f /opt/liferay/deploy/trial-dxp-license-*.xml
+		rm --force /opt/liferay/data/license/trial-commerce-enterprise-license-*.li
+		rm --force /opt/liferay/deploy/trial-dxp-license-*.xml
 	fi
 
 	if [ -n "${LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_PASSWORD_FILE}" ]
@@ -36,7 +36,7 @@ function main {
 
 	if [ -d "${LIFERAY_MOUNT_DIR}"/files ]
 	then
-		if [[ $(ls -A "${LIFERAY_MOUNT_DIR}"/files) ]]
+		if [[ $(ls --almost-all "${LIFERAY_MOUNT_DIR}"/files) ]]
 		then
 			echo "[LIFERAY] Copying files from ${LIFERAY_MOUNT_DIR}/files:"
 			echo ""
@@ -46,7 +46,7 @@ function main {
 			echo ""
 			echo "[LIFERAY] ... into ${LIFERAY_HOME}."
 
-			cp -r "${LIFERAY_MOUNT_DIR}"/files/* "${LIFERAY_HOME}"
+			cp --recursive "${LIFERAY_MOUNT_DIR}"/files/* "${LIFERAY_HOME}"
 
 			echo ""
 		fi
@@ -65,12 +65,12 @@ function main {
 
 	if [ -d "${LIFERAY_MOUNT_DIR}"/deploy ]
 	then
-		if [[ $(ls -A /opt/liferay/deploy) ]]
+		if [[ $(ls --almost-all /opt/liferay/deploy) ]]
 		then
 			cp /opt/liferay/deploy/* "${LIFERAY_MOUNT_DIR}"/deploy
 		fi
 
-		rm -fr /opt/liferay/deploy
+		rm --force --recursive /opt/liferay/deploy
 
 		ln -s "${LIFERAY_MOUNT_DIR}"/deploy /opt/liferay/deploy
 
@@ -103,12 +103,12 @@ function main {
 
 	if [ -n "${LIFERAY_TOMCAT_AJP_PORT}" ]
 	then
-		sed -i s/'<!-- Define an AJP 1.3 Connector on port 8009 -->'/"<Connector address=\"0.0.0.0\" port=\"${LIFERAY_TOMCAT_AJP_PORT}\" protocol=\"AJP\/1.3\" redirectPort=\"8443\" secretRequired=\"false\" URIEncoding=\"UTF-8\" \/>"/ /opt/liferay/tomcat/conf/server.xml
+		sed --in-place s/'<!-- Define an AJP 1.3 Connector on port 8009 -->'/"<Connector address=\"0.0.0.0\" port=\"${LIFERAY_TOMCAT_AJP_PORT}\" protocol=\"AJP\/1.3\" redirectPort=\"8443\" secretRequired=\"false\" URIEncoding=\"UTF-8\" \/>"/ /opt/liferay/tomcat/conf/server.xml
 	fi
 
 	if [ -n "${LIFERAY_TOMCAT_JVM_ROUTE}" ]
 	then
-		sed -i s/"<Engine name=\"Catalina\" defaultHost=\"localhost\">"/"<Engine defaultHost=\"localhost\" jvmRoute=\"${LIFERAY_TOMCAT_JVM_ROUTE}\" name=\"Catalina\">"/ /opt/liferay/tomcat/conf/server.xml
+		sed --in-place s/"<Engine name=\"Catalina\" defaultHost=\"localhost\">"/"<Engine defaultHost=\"localhost\" jvmRoute=\"${LIFERAY_TOMCAT_JVM_ROUTE}\" name=\"Catalina\">"/ /opt/liferay/tomcat/conf/server.xml
 	fi
 }
 
@@ -182,8 +182,8 @@ function slim {
 			) > "/opt/liferay/osgi/configs/com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration.config"
 		fi
 
-		rm -f "/opt/liferay/deploy/com.liferay.portal.search.opensearch2.api.jar"
-		rm -f "/opt/liferay/deploy/com.liferay.portal.search.opensearch2.impl.jar"
+		rm --force "/opt/liferay/deploy/com.liferay.portal.search.opensearch2.api.jar"
+		rm --force "/opt/liferay/deploy/com.liferay.portal.search.opensearch2.impl.jar"
 	fi
 }
 

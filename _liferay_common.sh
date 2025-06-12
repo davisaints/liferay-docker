@@ -64,12 +64,12 @@ function lc_clone_repository {
 	then
 		lc_log DEBUG "Copying Git repository from /home/me/dev/projects/${repository_name}."
 
-		cp -a "/home/me/dev/projects/${repository_name}" "${repository_path}"
+		cp --archive "/home/me/dev/projects/${repository_name}" "${repository_path}"
 	elif [ -e "/opt/dev/projects/github/${repository_name}" ]
 	then
 		lc_log DEBUG "Copying Git repository from /opt/dev/projects/github/${repository_path}."
 
-		cp -a "/opt/dev/projects/github/${repository_name}" "${repository_path}"
+		cp --archive "/opt/dev/projects/github/${repository_name}" "${repository_path}"
 	else
 		git clone "git@github.com:liferay/${repository_name}.git" "${repository_path}"
 	fi
@@ -196,7 +196,7 @@ function lc_download {
 		then
 			lc_log DEBUG "Deleting file from cache: ${cache_file}."
 
-			rm -f "${cache_file}"
+			rm --force "${cache_file}"
 		else
 			lc_log DEBUG "Skipping the download of ${file_url} because it already exists."
 
@@ -219,7 +219,7 @@ function lc_download {
 
 	local cache_file_dir="$(dirname "${cache_file}")"
 
-	mkdir -p "${cache_file_dir}"
+	mkdir --parents "${cache_file_dir}"
 
 	lc_log DEBUG "Downloading ${file_url}."
 
@@ -295,11 +295,11 @@ function lc_get_property {
 
 	if [ "${file##*.}" == "bnd" ]
 	then
-		local property_value=$(grep -F "${property_key}: " "${file}")
+		local property_value=$(grep --fixed-strings "${property_key}: " "${file}")
 
 		echo "${property_value##*: }"
 	else
-		local property_value=$(sed -r "s/\\\r?\n[ \t]*//g" -z < "${file}" | grep -F "${property_key}=")
+		local property_value=$(sed --regexp-extended "s/\\\r?\n[ \t]*//g" -z < "${file}" | grep --fixed-strings "${property_key}=")
 
 		echo "${property_value##*=}"
 	fi
@@ -331,7 +331,7 @@ function lc_time_run {
 
 	if [ -n "${LIFERAY_COMMON_LOG_DIR}" ]
 	then
-		mkdir -p "${LIFERAY_COMMON_LOG_DIR}"
+		mkdir --parents "${LIFERAY_COMMON_LOG_DIR}"
 
 		local log_file="${LIFERAY_COMMON_LOG_DIR}/log_${LIFERAY_COMMON_START_TIME}_step_$(lc_next_step)_${run_id}.txt"
 	fi
@@ -365,7 +365,7 @@ function lc_time_run {
 			then
 				echo "Full log file is at ${log_file}. Printing the last 100 lines:"
 
-				tail -n 100 "${log_file}"
+				tail --lines 100 "${log_file}"
 			fi
 
 			if (declare -F lc_time_run_error &>/dev/null)
@@ -406,7 +406,7 @@ function _lc_init {
 	LIFERAY_COMMON_START_TIME=$(date +%s)
 	LIFERAY_COMMON_STEP_FILE=$(mktemp)
 
-	trap 'rm -f "${LIFERAY_COMMON_STEP_FILE}"' EXIT ERR SIGINT SIGTERM
+	trap 'rm --force "${LIFERAY_COMMON_STEP_FILE}"' EXIT ERR SIGINT SIGTERM
 
 	declare -A LIFERAY_COMMON_BACKGROUND_PIDS
 
@@ -423,7 +423,7 @@ function _lc_init {
 	LIFERAY_COMMON_EXIT_CODE_OK=0
 	LIFERAY_COMMON_EXIT_CODE_SKIPPED=4
 
-	if (locale -a | grep -q en_US.utf8)
+	if (locale -a | grep --quiet en_US.utf8)
 	then
 		export LC_ALL=en_US.utf8
 	else

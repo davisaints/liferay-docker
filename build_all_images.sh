@@ -124,7 +124,7 @@ function build_bundle_images {
 	# LIFERAY_DOCKER_IMAGE_FILTER=7.2.10 ./build_all_images.sh
 	#
 
-	local main_keys=$(yq '' < bundles.yml | grep -v '  .*' | sed 's/://')
+	local main_keys=$(yq '' < bundles.yml | grep --invert-match '  .*' | sed 's/://')
 
 	local specified_version=${LIFERAY_DOCKER_IMAGE_FILTER}
 
@@ -137,7 +137,14 @@ function build_bundle_images {
 
 	if [[ "${search_output}" != "null" ]]
 	then
-		local latest_7413_version=$(yq '."7.4.13"' bundles.yml | grep '^.*:$' | sed 's/://' | sed 's/.*-u//' | sed 's/7.4.13.nightly//' | sort -nr | head -n1)
+		local latest_7413_version=$( \
+			yq '."7.4.13"' bundles.yml | \
+			grep '^.*:$' | \
+			sed 's/://' | \
+			sed 's/.*-u//' | \
+			sed 's/7.4.13.nightly//' | \
+			sort --numeric-sort --reverse | \
+			head --lines 1)
 
 		local versions=$(echo "${search_output}" | grep '^.*:$' | sed 's/://')
 
@@ -282,7 +289,7 @@ function build_jdk_image {
 	echo "Building Docker image ${jdk_friendly_name}."
 	echo ""
 
-	LIFERAY_DOCKER_IMAGE_PLATFORMS="${LIFERAY_DOCKER_IMAGE_PLATFORMS}" LIFERAY_DOCKER_REPOSITORY="${LIFERAY_DOCKER_REPOSITORY}" LIFERAY_DOCKER_ZULU_AMD64_VERSION=${latest_available_zulu_amd64_version} LIFERAY_DOCKER_ZULU_ARM64_VERSION=${latest_available_zulu_arm64_version} time ./build_"$(echo "${jdk_image_name}" | sed -r "s/-/_/g")"_image.sh "${BUILD_ALL_IMAGES_PUSH}" | tee -a "${LIFERAY_DOCKER_LOGS_DIR}"/"${jdk_image_name}".log
+	LIFERAY_DOCKER_IMAGE_PLATFORMS="${LIFERAY_DOCKER_IMAGE_PLATFORMS}" LIFERAY_DOCKER_REPOSITORY="${LIFERAY_DOCKER_REPOSITORY}" LIFERAY_DOCKER_ZULU_AMD64_VERSION=${latest_available_zulu_amd64_version} LIFERAY_DOCKER_ZULU_ARM64_VERSION=${latest_available_zulu_arm64_version} time ./build_"$(echo "${jdk_image_name}" | sed --regexp-extended "s/-/_/g")"_image.sh "${BUILD_ALL_IMAGES_PUSH}" | tee -a "${LIFERAY_DOCKER_LOGS_DIR}"/"${jdk_image_name}".log
 
 	if [ "${PIPESTATUS[0]}" -gt 0 ]
 	then
@@ -457,16 +464,16 @@ function get_latest_available_zulu_version {
 			--location \
 			--silent \
 			"https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?arch=${1}&bundle_type=jdk&ext=deb&hw_bitness=64&javafx=false&java_version=${2}&os=linux" | \
-			jq -r '.zulu_version | join(".")' | \
-			cut -d '.' -f 1,2,3)
+			jq --raw-output '.zulu_version | join(".")' | \
+			cut --delimiter '.' --fields 1,2,3)
 
 	echo "${version}"
 }
 
 function get_latest_docker_hub_version {
-	local token=$(curl -s "https://auth.docker.io/token?scope=repository:liferay/${1}:pull&service=registry.docker.io" | jq -r '.token')
+	local token=$(curl -s "https://auth.docker.io/token?scope=repository:liferay/${1}:pull&service=registry.docker.io" | jq --raw-output '.token')
 
-	local version=$(curl -s -H "Authorization: Bearer $token" "https://registry-1.docker.io/v2/liferay/${1}/manifests/latest" | grep -o '\\"org.label-schema.version\\":\\"[0-9]\.[0-9]\.[0-9]*\\"' | head -1 | sed 's/\\"//g' | sed 's:.*\:::')
+	local version=$(curl -s -H "Authorization: Bearer $token" "https://registry-1.docker.io/v2/liferay/${1}/manifests/latest" | grep --only-matching '\\"org.label-schema.version\\":\\"[0-9]\.[0-9]\.[0-9]*\\"' | head -1 | sed 's/\\"//g' | sed 's:.*\:::')
 
 	version=$(get_tag_from_image "${version}" "liferay/${1}" "org.label-schema.version:[0-9]*.[0-9]*.[0-9]*")
 
@@ -476,7 +483,7 @@ function get_latest_docker_hub_version {
 function get_latest_docker_hub_zabbix_server_version {
 	local image_tag="${1}"
 
-	local token=$(curl -s "https://auth.docker.io/token?scope=repository:${image_tag}:pull&service=registry.docker.io" | jq -r '.token')
+	local token=$(curl -s "https://auth.docker.io/token?scope=repository:${image_tag}:pull&service=registry.docker.io" | jq --raw-output '.token')
 
 	local label_name="org.opencontainers.image.version"
 	local tag="ubuntu-latest"
@@ -487,7 +494,7 @@ function get_latest_docker_hub_zabbix_server_version {
 		tag="latest"
 	fi
 
-	local version=$(curl -s -H "Authorization: Bearer $token" "https://registry-1.docker.io/v2/${image_tag}/manifests/${tag}" | grep -o "\\\\\"${label_name}\\\\\":\\\\\"[0-9]*\.[0-9]*\.[0-9]*\\\\\"" | head -1 | sed 's/\\"//g' | sed 's:.*\:::')
+	local version=$(curl -s -H "Authorization: Bearer $token" "https://registry-1.docker.io/v2/${image_tag}/manifests/${tag}" | grep --only-matching "\\\\\"${label_name}\\\\\":\\\\\"[0-9]*\.[0-9]*\.[0-9]*\\\\\"" | head -1 | sed 's/\\"//g' | sed 's:.*\:::')
 
 	version=$(get_tag_from_image "${version}" "${image_tag}" "${label_name}:[0-9]*.[0-9]*.[0-9]*")
 
@@ -495,9 +502,9 @@ function get_latest_docker_hub_zabbix_server_version {
 }
 
 function get_latest_docker_hub_zulu_version {
-	local token=$(curl -s "https://auth.docker.io/token?scope=repository:liferay/${1}:pull&service=registry.docker.io" | jq -r '.token')
+	local token=$(curl -s "https://auth.docker.io/token?scope=repository:liferay/${1}:pull&service=registry.docker.io" | jq --raw-output '.token')
 
-	local version=$(curl -s -H "Authorization: Bearer $token" "https://registry-1.docker.io/v2/liferay/${1}/manifests/latest" | grep -o "\\\\\"org.label-schema.zulu${2}_${3}_version\\\\\":\\\\\"[0-9]*\.[0-9]*\.[0-9]*\\\\\"" | head -1 | sed 's/\\"//g' | sed 's:.*\:::')
+	local version=$(curl -s -H "Authorization: Bearer $token" "https://registry-1.docker.io/v2/liferay/${1}/manifests/latest" | grep --only-matching "\\\\\"org.label-schema.zulu${2}_${3}_version\\\\\":\\\\\"[0-9]*\.[0-9]*\.[0-9]*\\\\\"" | head -1 | sed 's/\\"//g' | sed 's:.*\:::')
 
 	version=$(get_tag_from_image "${version}" "liferay/${1}" "org.label-schema.zulu${2}_${3}_version:[0-9]*.[0-9]*.[0-9]*")
 
@@ -517,7 +524,7 @@ function get_main_key {
 
 	for main_key in ${main_keys}
 	do
-		local count=$(echo "${version}" | grep -c -E "${main_key}-|${main_key}\.")
+		local count=$(echo "${version}" | grep --count --extended-regexp "${main_key}-|${main_key}\.")
 
 		if [ "${count}" -gt 0 ]
 		then
@@ -550,7 +557,7 @@ function get_tag_from_image {
 		then
 			version="0"
 		else
-			version=$(docker image inspect --format '{{index .Config.Labels }}' "${image_name}:latest" | grep -o "${filter}" | sed s/.*://g)
+			version=$(docker image inspect --format '{{index .Config.Labels }}' "${image_name}:latest" | grep --only-matching "${filter}" | sed s/.*://g)
 		fi
 
 		echo "${version}"
@@ -614,7 +621,7 @@ function main {
 
 	export LIFERAY_DOCKER_LOGS_DIR="${LIFERAY_DOCKER_LOGS_DIR}"
 
-	mkdir -p "${LIFERAY_DOCKER_LOGS_DIR}"
+	mkdir --parents "${LIFERAY_DOCKER_LOGS_DIR}"
 
 	build_base_image
 
@@ -641,7 +648,7 @@ function main {
 
 	cat "${LIFERAY_DOCKER_LOGS_DIR}/results"
 
-	if [ $(grep -c "FAILED" "${LIFERAY_DOCKER_LOGS_DIR}/results") != 0 ]
+	if [ $(grep --count "FAILED" "${LIFERAY_DOCKER_LOGS_DIR}/results") != 0 ]
 	then
 		exit 1
 	fi
@@ -656,14 +663,14 @@ function validate_bundles_yml {
 	fi
 
 	local dxp_latest_key_counter=0
-	local main_keys=$(yq '' < bundles.yml | grep -v '  .*' | sed 's/://')
+	local main_keys=$(yq '' < bundles.yml | grep --invert-match '  .*' | sed 's/://')
 	local portal_latest_key_counter=0
 
 	for main_key in ${main_keys}
 	do
 		if [ $(yq .\""${main_key}"\".*.latest < bundles.yml | grep "true\|false" -c) -gt 0 ]
 		then
-			local minor_keys=$(yq .\""${main_key}"\" < bundles.yml | grep -v '  .*' | sed 's/://')
+			local minor_keys=$(yq .\""${main_key}"\" < bundles.yml | grep --invert-match '  .*' | sed 's/://')
 
 			for minor_key in ${minor_keys}
 			do

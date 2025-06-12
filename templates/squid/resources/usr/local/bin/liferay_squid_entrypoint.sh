@@ -1,11 +1,11 @@
 #!/bin/bash
 
 function main {
-	rm -f /run/squid.pid
+	rm --force /run/squid.pid
 
 	if [ ! -e /etc/squid/seeder.crt ]
 	then
-		mkdir -p /var/lib/squid
+		mkdir --parents /var/lib/squid
 
 		/usr/lib/squid/security_file_certgen \
 			-c \
@@ -25,7 +25,7 @@ function main {
 			-x509
 	fi
 
-	squid -z && rm -f /run/squid.pid
+	squid -z && rm --force /run/squid.pid
 
 	squid -CNYd 1
 
