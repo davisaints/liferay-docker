@@ -131,7 +131,7 @@ function lc_download {
 		fi
 	fi
 
-	mkdir -p $(dirname "${cache_file}")
+	mkdir --parents $(dirname "${cache_file}")
 
 	lc_log DEBUG "Downloading ${file_url}."
 
@@ -157,11 +157,11 @@ function lc_get_property {
 
 	if [ "${file##*.}" == "bnd" ]
 	then
-		local property_value=$(grep -F "${property_key}: " "${file}")
+		local property_value=$(grep --fixed-strings "${property_key}: " "${file}")
 
 		echo "${property_value##*: }"
 	else
-		local property_value=$(sed -r "s/\\\r?\n[ \t]*//g" -z < "${file}" | grep -F "${property_key}=")
+		local property_value=$(sed -r "s/\\\r?\n[ \t]*//g" -z < "${file}" | grep --fixed-strings "${property_key}=")
 
 		echo "${property_value##*=}"
 	fi
@@ -199,7 +199,7 @@ function lc_time_run {
 
 	if [ -n "${LIFERAY_COMMON_LOG_DIR}" ]
 	then
-		mkdir -p "${LIFERAY_COMMON_LOG_DIR}"
+		mkdir --parents "${LIFERAY_COMMON_LOG_DIR}"
 
 		local log_file="${LIFERAY_COMMON_LOG_DIR}/log_${LIFERAY_COMMON_START_TIME}_step_$(lc_next_step)_${run_id}.txt"
 	fi
