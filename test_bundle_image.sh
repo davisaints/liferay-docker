@@ -188,10 +188,10 @@ function test_docker_image_files {
 function test_docker_image_fix_pack_installed {
 	if [ -n "${LIFERAY_DOCKER_TEST_INSTALLED_PATCHES}" ]
 	then
-		local correct_fix_pack=$(echo "${LIFERAY_DOCKER_TEST_INSTALLED_PATCHES}" | tr -d '[:space:]')
+		local correct_fix_pack=$(echo "${LIFERAY_DOCKER_TEST_INSTALLED_PATCHES}" | tr --delete '[:space:]')
 		local output=$(docker exec -it "${CONTAINER_ID}" /opt/liferay/patching-tool/patching-tool.sh info | grep "Currently installed patches:")
 
-		local installed_fix_pack=$(echo "${output##*: }" | tr -d '[:space:]')
+		local installed_fix_pack=$(echo "${output##*: }" | tr --delete '[:space:]')
 
 		if [ "${correct_fix_pack}" == "${installed_fix_pack}" ]
 		then
