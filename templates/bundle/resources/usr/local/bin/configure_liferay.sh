@@ -6,8 +6,8 @@ source /usr/local/bin/_liferay_common.sh
 function main {
 	if [ "${LIFERAY_DISABLE_TRIAL_LICENSE}" == "true" ]
 	then
-		rm -f /opt/liferay/data/license/trial-commerce-enterprise-license-*.li
-		rm -f /opt/liferay/deploy/trial-dxp-license-*.xml
+		rm --force /opt/liferay/data/license/trial-commerce-enterprise-license-*.li
+		rm --force /opt/liferay/deploy/trial-dxp-license-*.xml
 	fi
 
 	if [ -n "${LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_PASSWORD_FILE}" ]
@@ -70,7 +70,7 @@ function main {
 			cp /opt/liferay/deploy/* "${LIFERAY_MOUNT_DIR}"/deploy
 		fi
 
-		rm -fr /opt/liferay/deploy
+		rm --force --recursive /opt/liferay/deploy
 
 		ln -s "${LIFERAY_MOUNT_DIR}"/deploy /opt/liferay/deploy
 
@@ -182,8 +182,8 @@ function slim {
 			) > "/opt/liferay/osgi/configs/com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration.config"
 		fi
 
-		rm -f "/opt/liferay/deploy/com.liferay.portal.search.opensearch2.api.jar"
-		rm -f "/opt/liferay/deploy/com.liferay.portal.search.opensearch2.impl.jar"
+		rm --force "/opt/liferay/deploy/com.liferay.portal.search.opensearch2.api.jar"
+		rm --force "/opt/liferay/deploy/com.liferay.portal.search.opensearch2.impl.jar"
 	fi
 }
 
