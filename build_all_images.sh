@@ -137,7 +137,7 @@ function build_bundle_images {
 
 	if [[ "${search_output}" != "null" ]]
 	then
-		local latest_7413_version=$(yq '."7.4.13"' bundles.yml | grep '^.*:$' | sed 's/://' | sed 's/.*-u//' | sed 's/7.4.13.nightly//' | sort -nr | head -n1)
+		local latest_7413_version=$(yq '."7.4.13"' bundles.yml | grep '^.*:$' | sed 's/://' | sed 's/.*-u//' | sed 's/7.4.13.nightly//' | sort -nr | head --lines 1)
 
 		local versions=$(echo "${search_output}" | grep '^.*:$' | sed 's/://')
 
@@ -458,7 +458,7 @@ function get_latest_available_zulu_version {
 			--silent \
 			"https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?arch=${1}&bundle_type=jdk&ext=deb&hw_bitness=64&javafx=false&java_version=${2}&os=linux" | \
 			jq -r '.zulu_version | join(".")' | \
-			cut -d '.' -f 1,2,3)
+			cut --delimiter '.' --fields 1,2,3)
 
 	echo "${version}"
 }
@@ -656,14 +656,14 @@ function validate_bundles_yml {
 	fi
 
 	local dxp_latest_key_counter=0
-	local main_keys=$(yq '' < bundles.yml | grep -v '  .*' | sed 's/://')
+	local main_keys=$(yq '' < bundles.yml | grep --invert-match '  .*' | sed 's/://')
 	local portal_latest_key_counter=0
 
 	for main_key in ${main_keys}
 	do
 		if [ $(yq .\""${main_key}"\".*.latest < bundles.yml | grep "true\|false" -c) -gt 0 ]
 		then
-			local minor_keys=$(yq .\""${main_key}"\" < bundles.yml | grep -v '  .*' | sed 's/://')
+			local minor_keys=$(yq .\""${main_key}"\" < bundles.yml | grep --invert-match '  .*' | sed 's/://')
 
 			for minor_key in ${minor_keys}
 			do
