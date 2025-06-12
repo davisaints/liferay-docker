@@ -193,7 +193,7 @@ function copy_hotfix_commit {
 	local tag_name_base="${2}"
 	local tag_name_new="${3}"
 
-	local base_branch_name=$(echo "${tag_name_new}" | cut -d'-' -f1)
+	local base_branch_name=$(echo "${tag_name_new}" | cut -d '-' -f 1)
 	local temporary_branch_name="${tag_name_new}-branch"
 
 	lc_time_run checkout_commit liferay-portal-ee "${commit_hash}"
