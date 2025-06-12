@@ -66,7 +66,7 @@ function get_change_log {
 }
 
 function get_latest_version {
-	local git_line=$(grep 'docker.image.git.id' .releng/docker-image.changelog | tail -n1)
+	local git_line=$(grep 'docker.image.git.id' .releng/docker-image.changelog | tail --lines 1)
 
 	RELEASE_NOTES_LATEST_SHA=${git_line#*=}
 
