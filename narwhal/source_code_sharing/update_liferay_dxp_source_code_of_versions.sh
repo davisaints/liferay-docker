@@ -217,7 +217,7 @@ function prepare_branch_in_portal_ee {
 
 	git filter-branch -f \
 		--commit-filter 'git_commit_non_empty_tree "$@"' \
-		--index-filter 'git rm -rf --cached --ignore-unmatch \
+		--index-filter 'git rm -fr --cached --ignore-unmatch \
 		":(glob)**/*.gradle" \
 		":(glob)**/build*.xml" \
 		":(glob)*.properties" \
