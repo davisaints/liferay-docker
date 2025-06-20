@@ -33,12 +33,12 @@ function assert_equals {
 
 				while IFS= read -r line
 				do
-					echo "Actual: $(echo "${line}" | cut -d '|' -f 1 | xargs)" >> "${assertion_error_file}"
-					echo -e "Expected: $(echo "${line}" | cut -d '|' -f 2 | xargs)\n" >> "${assertion_error_file}"
+					echo "Actual: $(echo "${line}" | cut --delimiter '|' --fields 1 | xargs)" >> "${assertion_error_file}"
+					echo -e "Expected: $(echo "${line}" | cut --delimiter '|' --fields 2 | xargs)\n" >> "${assertion_error_file}"
 				done < "${temp_assertion_error_file}"
 			fi
 
-			rm -f "${temp_assertion_error_file}"
+			rm --force "${temp_assertion_error_file}"
 		else
 			if [ "${arguments[${index}]}" != "${arguments[${index} + 1]}" ]
 			then
@@ -63,7 +63,7 @@ function assert_equals {
 
 		cat "${assertion_error_file}"
 
-		rm -f "${assertion_error_file}"
+		rm --force "${assertion_error_file}"
 
 		_TEST_RESULT="true"
 	fi
@@ -82,10 +82,10 @@ function main {
 
 	if [ -n "${BASH_SOURCE[3]}" ]
 	then
-		echo -e "\n##### Running tests from $(echo ${BASH_SOURCE[3]} | sed -r 's/\.\///g') #####\n"
+		echo -e "\n##### Running tests from $(echo ${BASH_SOURCE[3]} | sed --regexp-extended 's/\.\///g') #####\n"
 	elif [ -n "${BASH_SOURCE[2]}" ]
 	then
-		echo -e "\n##### Running tests from $(echo ${BASH_SOURCE[2]} | sed -r 's/\.\///g') #####\n"
+		echo -e "\n##### Running tests from $(echo ${BASH_SOURCE[2]} | sed --regexp-extended 's/\.\///g') #####\n"
 	fi
 }
 

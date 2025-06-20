@@ -46,14 +46,14 @@ function generate_release_notes {
 
 		git add .releng/docker-image.changelog
 
-		git commit -m "${RELEASE_NOTES_NEW_VERSION} change log"
+		git commit --message "${RELEASE_NOTES_NEW_VERSION} change log"
 	fi
 }
 
 function get_change_log {
 	RELEASE_NOTES_CURRENT_SHA=$(git log -1 --pretty=%H)
 
-	RELEASE_NOTES_CHANGE_LOG=$(git log --grep "^DOCKER-" --grep "^LCD-" --grep "^LPD-" --pretty=%s "${RELEASE_NOTES_LATEST_SHA}..${RELEASE_NOTES_CURRENT_SHA}" | sed -e "s/\ .*/ /" | uniq | tr -d "\n" | tr -d "\r" | sed -e "s/ $//")
+	RELEASE_NOTES_CHANGE_LOG=$(git log --grep "^DOCKER-" --grep "^LCD-" --grep "^LPD-" --pretty=%s "${RELEASE_NOTES_LATEST_SHA}..${RELEASE_NOTES_CURRENT_SHA}" | sed --expression "s/\ .*/ /" | uniq | tr --delete "\n" | tr --delete "\r" | sed --expression "s/ $//")
 
 	if [ "${1}" == "fail-on-change" ] && [ -n "${RELEASE_NOTES_CHANGE_LOG}" ]
 	then
@@ -66,7 +66,7 @@ function get_change_log {
 }
 
 function get_latest_version {
-	local git_line=$(grep 'docker.image.git.id' .releng/docker-image.changelog | tail -n1)
+	local git_line=$(grep 'docker.image.git.id' .releng/docker-image.changelog | tail --lines 1)
 
 	RELEASE_NOTES_LATEST_SHA=${git_line#*=}
 

@@ -15,7 +15,7 @@ function main {
 
 		exit 1
 	else
-		mkdir -p "${license_dir}/deploy"
+		mkdir --parents "${license_dir}/deploy"
 
 		local license_file_name="trial-dxp-license-${license_start_date}.xml"
 
@@ -28,14 +28,14 @@ function main {
 		sed 's/\\"/\"/g' |
 		sed 's/\\\//\//g' > "${license_dir}/deploy/${license_file_name}"
 
-		rm -f "${license_dir}/deploy/${license_file_name}.json"
+		rm --force "${license_dir}/deploy/${license_file_name}.json"
 
 		if [ ! -e "${license_dir}/deploy/${license_file_name}" ]
 		then
 			echo "Trial DXP license does not exist at ${license_dir}/deploy/${license_file_name}."
 
 			exit 1
-		elif ! grep -q "docker@liferay.com" "${license_dir}/deploy/${license_file_name}"
+		elif ! grep --quiet "docker@liferay.com" "${license_dir}/deploy/${license_file_name}"
 		then
 			echo "Invalid trial DXP license exists at ${license_dir}/deploy/${license_file_name}."
 
