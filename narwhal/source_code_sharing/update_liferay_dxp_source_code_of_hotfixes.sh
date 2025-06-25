@@ -395,7 +395,7 @@ function process_argument_version {
 
 		if [ $? -ne 0 ]
 		then
-			VERSION_LIST=( "${VERSION_LIST[@]/$release_version}" )
+			VERSION_LIST=("${VERSION_LIST[@]/$release_version}")
 		fi
 	done
 
