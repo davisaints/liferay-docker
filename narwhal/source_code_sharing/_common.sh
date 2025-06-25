@@ -48,7 +48,7 @@ function fetch_repository {
 
 	lc_cd "${BASE_DIR}/${1}"
 
-	git fetch --all --force --tags
+	git fetch upstream --tags
 
 	git config --add checkout.defaultRemote origin
 }
