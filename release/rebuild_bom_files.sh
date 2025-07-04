@@ -46,15 +46,17 @@ function checkout_product_version {
 
 	git restore .
 
-	git tag -d "${_PRODUCT_VERSION}"
+	local product_version_tag=$(echo "${_PRODUCT_VERSION}" | sed -e 's/-lts//g')
 
-	git fetch --no-tags upstream "${_PRODUCT_VERSION}":"${_PRODUCT_VERSION}"
+	git tag -d "${product_version_tag}"
 
-	git checkout "${_PRODUCT_VERSION}"
+	git fetch --no-tags upstream "${product_version_tag}":"${product_version_tag}"
+
+	git checkout "${product_version_tag}"
 
 	if [ "${?}" -ne 0 ]
 	then
-		lc_log ERROR "Unable to checkout to ${_PRODUCT_VERSION}."
+		lc_log ERROR "Unable to checkout to ${product_version_tag}."
 
 		exit "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi

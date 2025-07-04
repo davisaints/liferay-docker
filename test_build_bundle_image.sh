@@ -15,19 +15,26 @@ function main {
 function set_up {
 	common_set_up
 
+	export LATEST_TOMCAT_VERSION_TEST=$(curl \
+		"https://downloads.apache.org/tomcat/tomcat-9/" \
+		--silent \
+		| grep --only-matching --perl-regexp "9\.\d+\.\d+" \
+		| sort --version-sort \
+		| tail --lines=1)
 	export TEMP_DIR="${PWD}"
 }
 
 function tear_down {
 	common_tear_down
 
+	unset LATEST_TOMCAT_VERSION_TEST
 	unset TEMP_DIR
 }
 
 function test_build_bundle_image_get_latest_tomcat_version {
-	_test_build_bundle_image_get_latest_tomcat_version "9.0.83" "" "9.0.104"
-	_test_build_bundle_image_get_latest_tomcat_version "9.0.104" "" "9.0.104"
-	_test_build_bundle_image_get_latest_tomcat_version "9.0.105" "10.1.40" "10.1.40"
+	_test_build_bundle_image_get_latest_tomcat_version "9.0.83" "" "${LATEST_TOMCAT_VERSION_TEST}"
+	_test_build_bundle_image_get_latest_tomcat_version "9.0.104" "" "${LATEST_TOMCAT_VERSION_TEST}"
+	_test_build_bundle_image_get_latest_tomcat_version "9.0.105" "${LATEST_TOMCAT_VERSION_TEST}" "${LATEST_TOMCAT_VERSION_TEST}"
 }
 
 function test_build_bundle_image_set_parent_image {

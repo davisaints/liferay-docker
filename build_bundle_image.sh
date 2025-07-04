@@ -186,7 +186,17 @@ function download_trial_dxp_license {
 }
 
 function get_latest_tomcat_version {
-	local latest_tomcat_version="9.0.104"
+	local latest_tomcat_version=$(curl \
+		"https://downloads.apache.org/tomcat/tomcat-9/" \
+		--silent \
+		| grep --only-matching --perl-regexp "9\.\d+\.\d+" \
+		| sort --version-sort \
+		| tail --lines=1)
+
+	if [ -z "${latest_tomcat_version}" ]
+	then
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
 
 	latest_tomcat_version=$(\
 		echo -e "${latest_tomcat_version}\n${1}" | \
@@ -247,6 +257,11 @@ function main {
 	set_parent_image
 
 	prepare_temp_directory "${@}"
+
+	if [ "${?}" -ne 0 ]
+	then
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
 
 	check_release "${@}"
 
@@ -329,6 +344,15 @@ function prepare_temp_directory {
 	local tomcat_version=$(get_tomcat_version "${TEMP_DIR}/liferay")
 
 	local latest_tomcat_version=$(get_latest_tomcat_version "${tomcat_version}")
+
+	if [ -z "${latest_tomcat_version}" ]
+	then
+		lc_log ERROR "Unable to retrieve the latest Tomcat version."
+
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	else
+		lc_log INFO "Latest Tomcat version set to ${latest_tomcat_version}."
+	fi
 
 	if [ "${tomcat_version}" != "${latest_tomcat_version}" ]
 	then
