@@ -27,14 +27,14 @@ function check_usage {
 function clean_up_test_directory {
 	if [ "${TEST_RESULT}" -eq 0 ]
 	then
-		rm -fr "${TEST_DIR}"
+		rm --force --recursive "${TEST_DIR}"
 	fi
 }
 
 function generate_thread_dump {
 	if [ "${TEST_RESULT}" -gt 0 ]
 	then
-		docker exec -it "${CONTAINER_ID}" /usr/local/bin/generate_thread_dump.sh
+		docker exec --interactive --tty "${CONTAINER_ID}" /usr/local/bin/generate_thread_dump.sh
 
 		docker cp "${CONTAINER_ID}":/opt/liferay/data/sre/thread_dumps "${PWD}/${LIFERAY_DOCKER_LOGS_DIR}"
 	fi
@@ -88,11 +88,11 @@ function main {
 function prepare_mount {
 	TEST_DIR=temp-test-$(date "$(date)" "+%Y%m%d%H%M")
 
-	mkdir -p "${TEST_DIR}"
+	mkdir --parents "${TEST_DIR}"
 
-	cp -r templates/test/resources/* "${TEST_DIR}"
+	cp --recursive templates/test/resources/* "${TEST_DIR}"
 
-	mkdir -p "${TEST_DIR}/mnt/liferay/patching"
+	mkdir --parents "${TEST_DIR}/mnt/liferay/patching"
 
 	if [ -n "${LIFERAY_DOCKER_TEST_PATCHING_TOOL_URL}" ]
 	then
@@ -188,10 +188,10 @@ function test_docker_image_files {
 function test_docker_image_fix_pack_installed {
 	if [ -n "${LIFERAY_DOCKER_TEST_INSTALLED_PATCHES}" ]
 	then
-		local correct_fix_pack=$(echo "${LIFERAY_DOCKER_TEST_INSTALLED_PATCHES}" | tr -d '[:space:]')
-		local output=$(docker exec -it "${CONTAINER_ID}" /opt/liferay/patching-tool/patching-tool.sh info | grep "Currently installed patches:")
+		local correct_fix_pack=$(echo "${LIFERAY_DOCKER_TEST_INSTALLED_PATCHES}" | tr --delete '[:space:]')
+		local output=$(docker exec --interactive --tty "${CONTAINER_ID}" /opt/liferay/patching-tool/patching-tool.sh info | grep "Currently installed patches:")
 
-		local installed_fix_pack=$(echo "${output##*: }" | tr -d '[:space:]')
+		local installed_fix_pack=$(echo "${output##*: }" | tr --delete '[:space:]')
 
 		if [ "${correct_fix_pack}" == "${installed_fix_pack}" ]
 		then
@@ -245,8 +245,8 @@ function test_health_status {
 		echo -en "."
 
 		local health_status=$(docker inspect --format="{{json .State.Health.Status}}" "${CONTAINER_ID}")
-		local ignore_license=$(docker logs ${CONTAINER_ID} 2> /dev/null | grep -c "Starting Liferay Portal")
-		local license_status=$(docker logs ${CONTAINER_ID} 2> /dev/null | grep -c "License registered for DXP Development")
+		local ignore_license=$(docker logs ${CONTAINER_ID} 2> /dev/null | grep --count "Starting Liferay Portal")
+		local license_status=$(docker logs ${CONTAINER_ID} 2> /dev/null | grep --count "License registered for DXP Development")
 
 		if [ "${health_status}" == "\"healthy\"" ] && ([ ${ignore_license} -gt 0 ] || [ ${license_status} -gt 0 ])
 		then

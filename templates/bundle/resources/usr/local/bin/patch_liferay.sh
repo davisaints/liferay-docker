@@ -2,7 +2,7 @@
 
 function apply_patch {
 	local patch_file_name=${1}
-	local patch_version=$(echo "${patch_file_name}" | awk -F"-" '{ print $NF }' | awk -F"." '{ print $1 }')
+	local patch_version=$(echo "${patch_file_name}" | awk --field-separator "-" '{ print $NF }' | awk --field-separator "." '{ print $1 }')
 
 	if [ -e "/opt/liferay/patching-tool/patch-applied" ]
 	then
@@ -36,14 +36,14 @@ function install_patch_step_1 {
 }
 
 function install_patch_step_2 {
-	rm -fr /opt/liferay/osgi/state/*
+	rm --force --recursive /opt/liferay/osgi/state/*
 
 	echo ""
 	echo "[LIFERAY] Patch applied successfully."
 }
 
 function main {
-	if [[ $(ls -A "${LIFERAY_PATCHING_DIR}"/patching-tool-*.zip 2>/dev/null) ]]
+	if [[ $(ls --almost-all "${LIFERAY_PATCHING_DIR}"/patching-tool-*.zip 2>/dev/null) ]]
 	then
 		echo ""
 		echo "[LIFERAY] Updating Patching Tool."
@@ -51,11 +51,11 @@ function main {
 		mv /opt/liferay/patching-tool/default.properties /opt/liferay/patching-tool-default.properties
 		mv /opt/liferay/patching-tool/patches /opt/liferay/patching-tool-upgrade-patches
 
-		rm -fr /opt/liferay/patching-tool
+		rm --force --recursive /opt/liferay/patching-tool
 
 		unzip -d /opt/liferay -q "${LIFERAY_PATCHING_DIR}"/patching-tool-*
 
-		rm -fr /opt/liferay/patching-tool/patches
+		rm --force --recursive /opt/liferay/patching-tool/patches
 
 		mv /opt/liferay/patching-tool-default.properties /opt/liferay/patching-tool/default.properties
 		mv /opt/liferay/patching-tool-upgrade-patches /opt/liferay/patching-tool/patches
@@ -66,7 +66,7 @@ function main {
 
 	if [ -n "${LIFERAY_DOCKER_HOTFIX}" ]
 	then
-		if (! /opt/liferay/patching-tool/patching-tool.sh version | grep -q "Patching-tool version: 4.")
+		if (! /opt/liferay/patching-tool/patching-tool.sh version | grep --quiet "Patching-tool version: 4.")
 		then
 			echo "[LIFERAY] The environment variable \"LIFERAY_DOCKER_HOTFIX\" requires Patching Tool 4 and above."
 		else
@@ -80,7 +80,7 @@ function main {
 
 			apply_patch "${patch_file_name}"
 		else
-			local patch_file_name=$(basename $(find "${LIFERAY_PATCHING_DIR}" -maxdepth 1 -name "liferay-*.zip" -type f 2>/dev/null | sort | tail -n 1))
+			local patch_file_name=$(basename $(find "${LIFERAY_PATCHING_DIR}" -maxdepth 1 -name "liferay-*.zip" -type f 2>/dev/null | sort | tail --lines 1))
 
 			echo ""
 			echo "[LIFERAY] There were multiple hotfixes in the patching folder. As only one can be installed, applying the latest one: ${patch_file_name}."

@@ -176,7 +176,7 @@ function download_file_from_github {
 function download_trial_dxp_license {
 	if [[ ${DOCKER_IMAGE_NAME} == "dxp" ]]
 	then
-		rm -fr "${TEMP_DIR}/liferay/data/license"
+		rm --force --recursive "${TEMP_DIR}/liferay/data/license"
 
 		if (! ./download_trial_dxp_license.sh "${TEMP_DIR}/liferay" $(date "${CURRENT_DATE}" "+%s000"))
 		then
@@ -205,7 +205,7 @@ function get_latest_tomcat_version {
 	then
 		local master_tomcat_version=$(lc_get_property "app.server.properties" "app.server.tomcat.version")
 
-		rm -f "app.server.properties"
+		rm --force "app.server.properties"
 
 		latest_tomcat_version=$(\
 			echo -e "${latest_tomcat_version}\n${master_tomcat_version}" | \
@@ -229,8 +229,8 @@ function install_fix_pack {
 
 		"${TEMP_DIR}/liferay/patching-tool/patching-tool.sh" install
 
-		rm -fr "${TEMP_DIR}/liferay/data/hypersonic/"*
-		rm -fr "${TEMP_DIR}/liferay/osgi/state/"*
+		rm --force --recursive "${TEMP_DIR}/liferay/data/hypersonic/"*
+		rm --force --recursive "${TEMP_DIR}/liferay/osgi/state/"*
 	fi
 }
 
@@ -280,10 +280,10 @@ function main {
 }
 
 function prepare_slim_image {
-	rm -fr "${TEMP_DIR}/liferay/elasticsearch-sidecar"
+	rm --force --recursive "${TEMP_DIR}/liferay/elasticsearch-sidecar"
 
-	local product_name=$(echo "${LIFERAY_DOCKER_RELEASE_FILE_URL}" | cut -d '/' -f 2)
-	local product_version=$(echo "${LIFERAY_DOCKER_RELEASE_FILE_URL}" | cut -d '/' -f 3)
+	local product_name=$(echo "${LIFERAY_DOCKER_RELEASE_FILE_URL}" | cut --delimiter '/' --fields 2)
+	local product_version=$(echo "${LIFERAY_DOCKER_RELEASE_FILE_URL}" | cut --delimiter '/' --fields 3)
 
 	LIFERAY_COMMON_DOWNLOAD_SKIP_CACHE="true" lc_download "https://releases-gcp.liferay.com/opensearch2/${product_name}/${product_version}/com.liferay.portal.search.opensearch2.api.jar" "${TEMP_DIR}/liferay/deploy/com.liferay.portal.search.opensearch2.api.jar"
 
@@ -345,7 +345,7 @@ function prepare_temp_directory {
 
 		local latest_tomcat_download_dir="downloads/tomcat/apache-tomcat-${latest_tomcat_version}"
 
-		local latest_tomcat_major_version=$(echo "${latest_tomcat_version}" | cut -d '.' -f 1)
+		local latest_tomcat_major_version=$(echo "${latest_tomcat_version}" | cut --delimiter '.' --fields 1)
 
 		local latest_tomcat_url="https://dlcdn.apache.org/tomcat/tomcat-${latest_tomcat_major_version}/v${latest_tomcat_version}/bin/apache-tomcat-${latest_tomcat_version}.zip"
 
@@ -359,23 +359,23 @@ function prepare_temp_directory {
 		rm -fr "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/temp/safeToDelete.tmp"
 		rm -fr "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/webapps"
 
-		cp -r "${TEMP_DIR}/liferay/tomcat-temp/LICENSE" "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/LICENSE"
-		cp -r "${TEMP_DIR}/liferay/tomcat-temp/NOTICE" "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/NOTICE"
-		cp -r "${TEMP_DIR}/liferay/tomcat-temp/RELEASE-NOTES" "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/RELEASE-NOTES"
-		cp -r "${TEMP_DIR}/liferay/tomcat-temp/bin/catalina-tasks.xml" "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/bin/catalina-tasks.xml"
-		cp -r "${TEMP_DIR}/liferay/tomcat-temp/bin/setenv.bat" "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/bin/setenv.bat"
-		cp -r "${TEMP_DIR}/liferay/tomcat-temp/bin/setenv.sh" "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/bin/setenv.sh"
-		cp -r "${TEMP_DIR}/liferay/tomcat-temp/conf" "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/"
+		cp --recursive "${TEMP_DIR}/liferay/tomcat-temp/LICENSE" "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/LICENSE"
+		cp --recursive "${TEMP_DIR}/liferay/tomcat-temp/NOTICE" "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/NOTICE"
+		cp --recursive "${TEMP_DIR}/liferay/tomcat-temp/RELEASE-NOTES" "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/RELEASE-NOTES"
+		cp --recursive "${TEMP_DIR}/liferay/tomcat-temp/bin/catalina-tasks.xml" "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/bin/catalina-tasks.xml"
+		cp --recursive "${TEMP_DIR}/liferay/tomcat-temp/bin/setenv.bat" "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/bin/setenv.bat"
+		cp --recursive "${TEMP_DIR}/liferay/tomcat-temp/bin/setenv.sh" "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/bin/setenv.sh"
+		cp --recursive "${TEMP_DIR}/liferay/tomcat-temp/conf" "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/"
 
 		if is_7_3_release
 		then
-			cp -r "${TEMP_DIR}/liferay/tomcat-temp/lib/ext" "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/lib/ext"
+			cp --recursive "${TEMP_DIR}/liferay/tomcat-temp/lib/ext" "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/lib/ext"
 		fi
 
-		cp -r "${TEMP_DIR}/liferay/tomcat-temp/webapps" "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/"
-		cp -r "${TEMP_DIR}/liferay/tomcat-temp/work/Catalina" "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/work/Catalina"
+		cp --recursive "${TEMP_DIR}/liferay/tomcat-temp/webapps" "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/"
+		cp --recursive "${TEMP_DIR}/liferay/tomcat-temp/work/Catalina" "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/work/Catalina"
 
-		rm -fr "${TEMP_DIR}/liferay/tomcat-temp"
+		rm --force --recursive "${TEMP_DIR}/liferay/tomcat-temp"
 
 		chmod +x "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/bin/"*
 	fi
@@ -409,7 +409,7 @@ function push_docker_image {
 	then
 		check_docker_buildx
 
-		sed -i '1s/FROM /FROM --platform=${TARGETPLATFORM} /g' "${TEMP_DIR}"/Dockerfile
+		sed --in-place '1s/FROM /FROM --platform=${TARGETPLATFORM} /g' "${TEMP_DIR}"/Dockerfile
 
 		docker buildx build \
 			--build-arg LABEL_BUILD_DATE=$(date "${CURRENT_DATE}" "+%Y-%m-%dT%H:%M:%SZ") \
@@ -446,8 +446,8 @@ function set_parent_image {
 			return
 		fi
 
-		sed -i 's/liferay\/jdk21:latest AS liferay-jdk21/liferay\/jdk11:latest AS liferay-jdk11/g' "${TEMP_DIR}"/Dockerfile
-		sed -i 's/FROM liferay-jdk21/FROM liferay-jdk11/g' "${TEMP_DIR}"/Dockerfile
+		sed --in-place 's/liferay\/jdk21:latest AS liferay-jdk21/liferay\/jdk11:latest AS liferay-jdk11/g' "${TEMP_DIR}"/Dockerfile
+		sed --in-place 's/FROM liferay-jdk21/FROM liferay-jdk11/g' "${TEMP_DIR}"/Dockerfile
 	elif [ "$(get_product_group_version "${LIFERAY_DOCKER_RELEASE_VERSION}")" == "7.4" ]
 	then
 		if is_nightly_release "${LIFERAY_DOCKER_RELEASE_VERSION}"
@@ -467,19 +467,19 @@ function set_parent_image {
 			return
 		fi
 
-		sed -i 's/liferay\/jdk21:latest AS liferay-jdk21/liferay\/jdk11:latest AS liferay-jdk11/g' "${TEMP_DIR}"/Dockerfile
-		sed -i 's/FROM liferay-jdk21/FROM liferay-jdk11/g' "${TEMP_DIR}"/Dockerfile
-	elif [[ "$(get_product_group_version "${LIFERAY_DOCKER_RELEASE_VERSION}" | tr -d .)" -le 73 ]]
+		sed --in-place 's/liferay\/jdk21:latest AS liferay-jdk21/liferay\/jdk11:latest AS liferay-jdk11/g' "${TEMP_DIR}"/Dockerfile
+		sed --in-place 's/FROM liferay-jdk21/FROM liferay-jdk11/g' "${TEMP_DIR}"/Dockerfile
+	elif [[ "$(get_product_group_version "${LIFERAY_DOCKER_RELEASE_VERSION}" | tr --delete .)" -le 73 ]]
 	then
-		sed -i 's/liferay\/jdk21:latest AS liferay-jdk21/liferay\/jdk11-jdk8:latest AS liferay-jdk11-jdk8/g' "${TEMP_DIR}"/Dockerfile
-		sed -i 's/FROM liferay-jdk21/FROM liferay-jdk11-jdk8/g' "${TEMP_DIR}"/Dockerfile
+		sed --in-place 's/liferay\/jdk21:latest AS liferay-jdk21/liferay\/jdk11-jdk8:latest AS liferay-jdk11-jdk8/g' "${TEMP_DIR}"/Dockerfile
+		sed --in-place 's/FROM liferay-jdk21/FROM liferay-jdk11-jdk8/g' "${TEMP_DIR}"/Dockerfile
 	fi
 }
 
 function update_patching_tool {
 	if [ -e "${TEMP_DIR}/liferay/tomcat" ]
 	then
-		sed -i "s@tomcat-[0-9]*.[0-9]*.[0-9]*/@tomcat/@g" "${TEMP_DIR}/liferay/patching-tool/default.properties"
+		sed --in-place "s@tomcat-[0-9]*.[0-9]*.[0-9]*/@tomcat/@g" "${TEMP_DIR}/liferay/patching-tool/default.properties"
 	fi
 
 	if [ -e "${TEMP_DIR}/liferay/patching-tool" ]
@@ -495,7 +495,7 @@ function update_patching_tool {
 
 		patching_tool_minor_version=${patching_tool_minor_version%.*}
 
-		if (! echo ${patching_tool_minor_version} | grep -e '[0-9]*[.][0-9]*' >/dev/null)
+		if (! echo ${patching_tool_minor_version} | grep --regexp '[0-9]*[.][0-9]*' >/dev/null)
 		then
 			echo "Patching Tool update is skipped as it's not a 1.0+ version or the bundle did not include a properly configured Patching Tool."
 
@@ -504,7 +504,7 @@ function update_patching_tool {
 
 		mv "${TEMP_DIR}/liferay/patching-tool/patches" "${TEMP_DIR}/liferay/patching-tool-upgrade-patches"
 
-		rm -fr "${TEMP_DIR}/liferay/patching-tool"
+		rm --force --recursive "${TEMP_DIR}/liferay/patching-tool"
 
 		local latest_patching_tool_version
 
@@ -534,7 +534,7 @@ function update_patching_tool {
 
 		"${TEMP_DIR}/liferay/patching-tool/patching-tool.sh" auto-discovery
 
-		rm -fr "${TEMP_DIR}/liferay/patching-tool/patches"
+		rm --force --recursive "${TEMP_DIR}/liferay/patching-tool/patches"
 
 		mv "${TEMP_DIR}/liferay/patching-tool-upgrade-patches" "${TEMP_DIR}/liferay/patching-tool/patches"
 

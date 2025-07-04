@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function get_product_group_version {
-	echo "$(_get_product_version "${1}")" | cut -d '.' -f 1,2
+	echo "$(_get_product_version "${1}")" | cut --delimiter '.' --fields 1,2
 }
 
 function get_release_patch_version {
@@ -9,14 +9,14 @@ function get_release_patch_version {
 
 	if is_lts_release "${product_version}"
 	then
-		echo "${product_version}" | cut -d '.' -f 3 | sed -e "s/-lts//"
+		echo "${product_version}" | cut --delimiter '.' --fields 3 | sed --expression "s/-lts//"
 	else
-		echo "${product_version}" | cut -d '.' -f 3
+		echo "${product_version}" | cut --delimiter '.' --fields 3
 	fi
 }
 
 function get_release_quarter {
-	echo "$(_get_product_version "${1}")" | cut -d '.' -f 2 | tr -d 'q'
+	echo "$(_get_product_version "${1}")" | cut --delimiter '.' --fields 2 | tr --delete 'q'
 }
 
 function get_release_version {
@@ -26,13 +26,13 @@ function get_release_version {
 	then
 		if is_7_3_ga_release "${product_version}"
 		then
-			echo "${product_version}" | cut -d '.' -f 1,2,3 | cut -d '-' -f 1
+			echo "${product_version}" | cut --delimiter '.' --fields 1,2,3 | cut --delimiter '-' --fields 1
 		else
-			echo "${product_version}" | cut -d '.' -f 1,2,3
+			echo "${product_version}" | cut --delimiter '.' --fields 1,2,3
 		fi
 	elif is_u_release "${product_version}"
 	then
-		echo "${product_version}" | cut -d '-' -f 1
+		echo "${product_version}" | cut --delimiter '-' --fields 1
 	fi
 }
 
@@ -41,15 +41,15 @@ function get_release_version_trivial {
 
 	if is_ga_release "${product_version}"
 	then
-		echo "${product_version}" | cut -d '-' -f 2 | sed 's/ga//'
+		echo "${product_version}" | cut --delimiter '-' --fields 2 | sed 's/ga//'
 	elif is_u_release "${product_version}"
 	then
-		echo "${product_version}" | cut -d '-' -f 2 | tr -d u
+		echo "${product_version}" | cut --delimiter '-' --fields 2 | tr --delete u
 	fi
 }
 
 function get_release_year {
-	echo "$(_get_product_version "${1}")" | cut -d '.' -f 1
+	echo "$(_get_product_version "${1}")" | cut --delimiter '.' --fields 1
 }
 
 function has_ssh_connection {
@@ -131,9 +131,9 @@ function is_early_product_version_than {
 
 	if [ -n "${ACTUAL_PRODUCT_VERSION}" ]
 	then
-		product_version_1=$(echo "${ACTUAL_PRODUCT_VERSION}" | sed -e "s/-lts//")
+		product_version_1=$(echo "${ACTUAL_PRODUCT_VERSION}" | sed --expression "s/-lts//")
 	else
-		product_version_1=$(_get_product_version | sed -e "s/-lts//")
+		product_version_1=$(_get_product_version | sed --expression "s/-lts//")
 	fi
 
 	local product_version_1_quarter
@@ -141,15 +141,15 @@ function is_early_product_version_than {
 
 	IFS='.' read -r product_version_1_year product_version_1_quarter product_version_1_suffix <<< "${product_version_1}"
 
-	product_version_1_quarter=$(echo "${product_version_1_quarter}" | sed -e "s/q//")
+	product_version_1_quarter=$(echo "${product_version_1_quarter}" | sed --expression "s/q//")
 
-	local product_version_2=$(echo "${1}" | sed -e "s/-lts//")
+	local product_version_2=$(echo "${1}" | sed --expression "s/-lts//")
 	local product_version_2_quarter
 	local product_version_2_suffix
 
 	IFS='.' read -r product_version_2_year product_version_2_quarter product_version_2_suffix <<< "${product_version_2}"
 
-	product_version_2_quarter=$(echo "${product_version_2_quarter}" | sed -e "s/q//")
+	product_version_2_quarter=$(echo "${product_version_2_quarter}" | sed --expression "s/q//")
 
 	if [ "${product_version_1_year}" -lt "${product_version_2_year}" ]
 	then
