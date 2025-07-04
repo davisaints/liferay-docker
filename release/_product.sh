@@ -76,7 +76,7 @@ function build_product {
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	rm -fr "${_BUNDLES_DIR}"
+	rm --force --recursive "${_BUNDLES_DIR}"
 
 	lc_cd "${_PROJECTS_DIR}"/liferay-portal-ee
 
@@ -99,20 +99,20 @@ function build_product {
 		mv tomcat-* tomcat
 	fi
 
-	rm -f apache-tomcat*
+	rm --force apache-tomcat*
 
 	if ls deploy/*.war 1> /dev/null 2>&1
 	then
 		mv deploy/*.war osgi/war
 	fi
 
-	rm -fr osgi/test
+	rm --force --recursive osgi/test
 
 	#
 	# TODO Remove in 2025
 	#
 
-	rm -f tomcat/webapps/ROOT/WEB-INF/shielded-container-lib/mysql.jar
+	rm --force tomcat/webapps/ROOT/WEB-INF/shielded-container-lib/mysql.jar
 
 	echo "${LIFERAY_RELEASE_GIT_REF}${LIFERAY_RELEASE_HOTFIX_TEST_SHA}" > "${_BUILD_DIR}"/built.sha
 }
@@ -141,15 +141,15 @@ function clean_up_ignored_dxp_modules {
 	lc_cd "${_PROJECTS_DIR}"/liferay-portal-ee/modules
 
 	(
-		git grep "Liferay-Releng-Bundle: false" | sed -e s/app.bnd:.*//
-		git ls-files "*/.lfrbuild-releng-ignore" | sed -e s#/.lfrbuild-releng-ignore##
+		git grep "Liferay-Releng-Bundle: false" | sed --expression s/app.bnd:.*//
+		git ls-files "*/.lfrbuild-releng-ignore" | sed --expression s#/.lfrbuild-releng-ignore##
 	) | while IFS= read -r ignored_dir
 	do
 		local dxp_dir=""
 
-		if (echo "${ignored_dir}" | grep -Eq "^apps/")
+		if (echo "${ignored_dir}" | grep --extended-regexp --quiet "^apps/")
 		then
-			dxp_dir=$(echo "${ignored_dir}" | sed -e "s#apps/#dxp/apps/#")
+			dxp_dir=$(echo "${ignored_dir}" | sed --expression "s#apps/#dxp/apps/#")
 
 			lc_log INFO "Exclude ${dxp_dir} if it exists."
 
@@ -169,10 +169,10 @@ function clean_up_ignored_dxp_modules {
 
 			if [ -e "${_BUNDLES_DIR}/osgi/modules/${ignored_file}.jar" ]
 			then
-				rm -f "${_BUNDLES_DIR}/osgi/modules/${ignored_file}.jar"
+				rm --force "${_BUNDLES_DIR}/osgi/modules/${ignored_file}.jar"
 			elif [ -e "${_BUNDLES_DIR}/osgi/portal/${ignored_file}.jar" ]
 			then
-				rm -f "${_BUNDLES_DIR}/osgi/portal/${ignored_file}.jar"
+				rm --force "${_BUNDLES_DIR}/osgi/portal/${ignored_file}.jar"
 			else
 				lc_log INFO "Unable to delete ${ignored_file}.jar."
 			fi
@@ -190,18 +190,18 @@ function clean_up_ignored_dxp_plugins {
 
 	lc_cd "${_BUNDLES_DIR}/osgi/war"
 
-	rm -fv documentum-hook-*.war
-	rm -fv fjord-theme.war
-	rm -fv minium-theme.war
-	rm -fv opensocial-portlet-*.war
-	rm -fv porygon-theme.war
-	rm -fv powwow-portlet-*.war
-	rm -fv saml-hook-*.war
-	rm -fv sharepoint-hook-*.war
-	rm -fv social-bookmarks-hook-*.war
-	rm -fv speedwell-theme.war
-	rm -fv tasks-portlet-*.war
-	rm -fv westeros-bank-theme.war
+	rm --force --verbose documentum-hook-*.war
+	rm --force --verbose fjord-theme.war
+	rm --force --verbose minium-theme.war
+	rm --force --verbose opensocial-portlet-*.war
+	rm --force --verbose porygon-theme.war
+	rm --force --verbose powwow-portlet-*.war
+	rm --force --verbose saml-hook-*.war
+	rm --force --verbose sharepoint-hook-*.war
+	rm --force --verbose social-bookmarks-hook-*.war
+	rm --force --verbose speedwell-theme.war
+	rm --force --verbose tasks-portlet-*.war
+	rm --force --verbose westeros-bank-theme.war
 }
 
 function compile_product {
@@ -249,7 +249,7 @@ function decrement_module_versions {
 
 	find . -name bnd.bnd -type f -print0 | while IFS= read -r -d '' bnd_bnd_file
 	do
-		if (echo "${bnd_bnd_file}" | grep -q archetype-resources) || (echo "${bnd_bnd_file}" | grep -q modules/third-party)
+		if (echo "${bnd_bnd_file}" | grep --quiet archetype-resources) || (echo "${bnd_bnd_file}" | grep --quiet modules/third-party)
 		then
 			continue
 		fi
@@ -274,7 +274,7 @@ function decrement_module_versions {
 
 		micro_version=$((micro_version - 1))
 
-		sed -i -e "s/Bundle-Version: ${bundle_version}/Bundle-Version: ${major_minor_version}.${micro_version}/" "${bnd_bnd_file}"
+		sed --in-place --expression "s/Bundle-Version: ${bundle_version}/Bundle-Version: ${major_minor_version}.${micro_version}/" "${bnd_bnd_file}"
 	done
 }
 
@@ -290,7 +290,7 @@ function deploy_elasticsearch_sidecar {
 	then
 		lc_cd "${_PROJECTS_DIR}"/liferay-portal-ee/modules/apps/portal-search-elasticsearch7/portal-search-elasticsearch7-impl
 
-		if ("${_PROJECTS_DIR}"/liferay-portal-ee/gradlew tasks | grep -q deploySidecar)
+		if ("${_PROJECTS_DIR}"/liferay-portal-ee/gradlew tasks | grep --quiet deploySidecar)
 		then
 			"${_PROJECTS_DIR}"/liferay-portal-ee/gradlew deploySidecar
 		else
@@ -324,12 +324,12 @@ function deploy_opensearch {
 }
 
 function get_java_specification_version {
-	if (echo "${JAVA_HOME}" | grep -E "jdk8|zulu8" &> /dev/null)
+	if (echo "${JAVA_HOME}" | grep --extended-regexp "jdk8|zulu8" &> /dev/null)
 	then
 		echo "1.8"
 	fi
 
-	if (echo "${JAVA_HOME}" | grep -E "jdk17|openjdk17" &> /dev/null)
+	if (echo "${JAVA_HOME}" | grep --extended-regexp "jdk17|openjdk17" &> /dev/null)
 	then
 		echo "17"
 	fi
@@ -402,7 +402,7 @@ function set_product_version {
 
 		local version_display_name=$(lc_get_property release.properties "release.info.version.display.name[${branch}-private]")
 
-		if (echo "${version_display_name}" | grep -iq "q")
+		if (echo "${version_display_name}" | grep --ignore-case --quiet "q")
 		then
 			_PRODUCT_VERSION=$(echo "${version_display_name,,}" | sed 's/ lts/-lts/g')
 		else
@@ -454,9 +454,9 @@ function set_up_profile {
 function start_tomcat {
 	export LIFERAY_JVM_OPTS="-Xmx3G"
 
-	rm -fr "${_BUNDLES_DIR}/osgi/state"
-	rm -fr "${_BUNDLES_DIR}/tomcat/temp"
-	rm -fr "${_BUNDLES_DIR}/tomcat/work"
+	rm --force --recursive "${_BUNDLES_DIR}/osgi/state"
+	rm --force --recursive "${_BUNDLES_DIR}/tomcat/temp"
+	rm --force --recursive "${_BUNDLES_DIR}/tomcat/work"
 
 	lc_cd "${_BUNDLES_DIR}/tomcat/bin"
 
@@ -485,7 +485,7 @@ function start_tomcat {
 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
 
-	if (echo "${_PRODUCT_VERSION}" | grep -Eq "^7.[0123]")
+	if (echo "${_PRODUCT_VERSION}" | grep --extended-regexp --quiet "^7.[0123]")
 	then
 		lc_log INFO "Sleep for 20 seconds before shutting down."
 
@@ -505,7 +505,7 @@ function stop_tomcat {
 
 	local tomcat_dir_regex=$(\
 		echo "${_BUNDLES_DIR}/tomcat" | \
-		sed -e "s/${slash_regex}/${backslash_and_slash_regex}/g")
+		sed --expression "s/${slash_regex}/${backslash_and_slash_regex}/g")
 
 	for count in {0..30}
 	do
@@ -528,14 +528,14 @@ function stop_tomcat {
 
 	cat ../logs/catalina.out
 
-	rm -fr ../logs/*
-	rm -fr ../../logs/*
+	rm --force --recursive ../logs/*
+	rm --force --recursive ../../logs/*
 }
 
 function update_release_info_date {
 	lc_cd "${_PROJECTS_DIR}/liferay-portal-ee"
 
-	sed -i -e "s/release.info.date=.*/release.info.date=$(date +"%B %d, %Y")/" release.properties
+	sed --in-place --expression "s/release.info.date=.*/release.info.date=$(date +"%B %d, %Y")/" release.properties
 }
 
 function warm_up_tomcat {

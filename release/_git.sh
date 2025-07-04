@@ -22,7 +22,7 @@ function clone_repository {
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	mkdir -p "${_PROJECTS_DIR}"
+	mkdir --parents "${_PROJECTS_DIR}"
 
 	lc_cd "${_PROJECTS_DIR}"
 
@@ -30,12 +30,12 @@ function clone_repository {
 	then
 		echo "Copying Git repository from /home/me/dev/projects/${1}."
 
-		cp -a "/home/me/dev/projects/${1}" "${_PROJECTS_DIR}"
+		cp --archive "/home/me/dev/projects/${1}" "${_PROJECTS_DIR}"
 	elif [ -e "/opt/dev/projects/github/${1}" ]
 	then
 		echo "Copying Git repository from /opt/dev/projects/github/${1}."
 
-		cp -a "/opt/dev/projects/github/${1}" "${_PROJECTS_DIR}"
+		cp --archive "/opt/dev/projects/github/${1}" "${_PROJECTS_DIR}"
 	else
 		git clone git@github.com:liferay/"${1}".git
 	fi
@@ -62,7 +62,7 @@ function commit_to_branch_and_send_pull_request {
 
 	git commit --message "${2}"
 
-	local repository_name=$(echo "${4}" | cut -d '/' -f 2)
+	local repository_name=$(echo "${4}" | cut --delimiter '/' --fields 2)
 
 	git push --force "git@github.com:liferay-release/${repository_name}.git" "${_TEMP_BRANCH}"
 
@@ -97,16 +97,16 @@ function generate_release_notes {
 	lc_cd "${_PROJECTS_DIR}"/liferay-portal-ee
 
 	git log "tags/${ga_version}..HEAD" --pretty="%s %H" | \
-		sed -e "/c394bcbc1c36af47e66678c470d623568d3f1e88/c\LPD-27038/" | \
-		sed -e "/8a80898965553c441eef73d6d6839d0b5712ca43/c\LPD-27038/" | \
-		grep -E "^[A-Z][A-Z0-9]*-[0-9]+" | \
-		sed -e "s/^\([A-Z][A-Z0-9]*-[0-9]*\).*/\\1/" | \
+		sed --expression "/c394bcbc1c36af47e66678c470d623568d3f1e88/c\LPD-27038/" | \
+		sed --expression "/8a80898965553c441eef73d6d6839d0b5712ca43/c\LPD-27038/" | \
+		grep --extended-regexp "^[A-Z][A-Z0-9]*-[0-9]+" | \
+		sed --expression "s/^\([A-Z][A-Z0-9]*-[0-9]*\).*/\\1/" | \
 		sort | \
 		uniq | \
-		grep -v LRCI | \
-		grep -v LRQA | \
-		grep -v POSHI | \
-		grep -v RELEASE | \
+		grep --invert-match LRCI | \
+		grep --invert-match LRQA | \
+		grep --invert-match POSHI | \
+		grep --invert-match RELEASE | \
 		paste -sd, > "${_BUILD_DIR}/release/release-notes.txt"
 }
 
@@ -160,16 +160,16 @@ function update_portal_repository {
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	if (echo "${LIFERAY_RELEASE_GIT_REF}" | grep -q -E "^[[:alnum:]\.-]+/[0-9a-z]{40}$")
+	if (echo "${LIFERAY_RELEASE_GIT_REF}" | grep --quiet --extended-regexp "^[[:alnum:]\.-]+/[0-9a-z]{40}$")
 	then
 		checkout_ref="${LIFERAY_RELEASE_GIT_REF#*/}"
 
 		LIFERAY_RELEASE_GIT_REF="${LIFERAY_RELEASE_GIT_REF%/*}"
-	elif (echo "${LIFERAY_RELEASE_GIT_REF}" | grep -qE "^[0-9a-f]{40}$")
+	elif (echo "${LIFERAY_RELEASE_GIT_REF}" | grep --quiet --extended-regexp "^[0-9a-f]{40}$")
 	then
 		lc_log INFO "Looking for a tag that matches Git SHA ${LIFERAY_RELEASE_GIT_REF}."
 
-		LIFERAY_RELEASE_GIT_REF=$(git ls-remote upstream | grep "${LIFERAY_RELEASE_GIT_REF}" | grep refs/tags/fix-pack-fix- | head -n 1 | sed -e "s#.*/##")
+		LIFERAY_RELEASE_GIT_REF=$(git ls-remote upstream | grep "${LIFERAY_RELEASE_GIT_REF}" | grep refs/tags/fix-pack-fix- | head --lines 1 | sed --expression "s#.*/##")
 
 		if [ -n "${LIFERAY_RELEASE_GIT_REF}" ]
 		then

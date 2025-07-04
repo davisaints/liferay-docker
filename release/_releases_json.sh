@@ -36,7 +36,7 @@ function _add_major_versions {
 			return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 		fi
 
-		local product_major_version=$(jq -r ".[].productVersion" "${quarterly_release_json_file}" | sed "s/\.[0-9]\+//");
+		local product_major_version=$(jq --raw-output ".[].productVersion" "${quarterly_release_json_file}" | sed "s/\.[0-9]\+//");
 
 		jq "map(
 				. + {productMajorVersion: \"${product_major_version}\"}
@@ -95,11 +95,11 @@ function _get_latest_product_version {
 			--only-matching \
 			--perl-regexp \
 			"${product_version_regex}" | \
-		tail -n 1
+		tail --lines 1
 }
 
 function _merge_json_snippets {
-	if (! jq -s add $(ls ./*.json | sort -r) > releases.json)
+	if (! jq --slurp add $(ls ./*.json | sort --reverse) > releases.json)
 	then
 		lc_log ERROR "Detected invalid JSON."
 
@@ -185,10 +185,10 @@ function _process_products {
 				--extended-regexp \
 				--only-matching \
 				"(20[0-9]+\.q[0-9]\.[0-9]+(-lts)?|7\.[0-9]+\.[0-9]+[a-z0-9\.-]+)/" | \
-			tr -d "/" | \
+			tr --delete "/" | \
 			uniq)
 		do
-			if [[ $(echo "${product_version}" | grep "7.4") ]] && [[ $(echo "${product_version}" | cut -d 'u' -f 2) -gt 112 ]]
+			if [[ $(echo "${product_version}" | grep "7.4") ]] && [[ $(echo "${product_version}" | cut --delimiter 'u' --fields 2) -gt 112 ]]
 			then
 				continue
 			fi
@@ -233,10 +233,10 @@ function _process_product_version {
 	[
 	    {
 	        "product": "${product_name}",
-	        "productGroupVersion": "$(echo "${product_version}" | sed -r "s@(^[0-9]+\.[0-9a-z]+)\..*@\1@")",
+	        "productGroupVersion": "$(echo "${product_version}" | sed --regexp-extended "s@(^[0-9]+\.[0-9a-z]+)\..*@\1@")",
 	        "productVersion": "$(lc_get_property "${release_properties_file}" liferay.product.version)",
 	        "promoted": "false",
-	        "releaseKey": "$(echo "${product_name}-${product_version}" | sed "s/\([0-9]\+\)\.\([0-9]\+\)\.[0-9]\+\(-\|[^0-9]\)/\1.\2\3/g" | sed -e "s/portal-7\.4\.[0-9]*-ga/portal-7.4-ga/")",
+	        "releaseKey": "$(echo "${product_name}-${product_version}" | sed "s/\([0-9]\+\)\.\([0-9]\+\)\.[0-9]\+\(-\|[^0-9]\)/\1.\2\3/g" | sed --expression "s/portal-7\.4\.[0-9]*-ga/portal-7.4-ga/")",
 	        "targetPlatformVersion": "$(lc_get_property "${release_properties_file}" target.platform.version)",
 	        "url": "https://releases-cdn.liferay.com/${product_name}/${product_version}"
 	    }
@@ -250,13 +250,13 @@ function _promote_product_versions {
 		while read -r group_version || [ -n "${group_version}" ]
 		do
 			# shellcheck disable=SC2010
-			last_version=$(ls "${_PROMOTION_DIR}" | grep "${product_name}-${group_version}" | tail -n 1 2>/dev/null)
+			last_version=$(ls "${_PROMOTION_DIR}" | grep "${product_name}-${group_version}" | tail --lines 1 2>/dev/null)
 
 			if [ -n "${last_version}" ]
 			then
 				lc_log INFO "Promoting ${last_version}."
 
-				sed -i 's/"promoted": "false"/"promoted": "true"/' "${last_version}"
+				sed --in-place 's/"promoted": "false"/"promoted": "true"/' "${last_version}"
 			else
 				lc_log INFO "No product version found to promote for ${product_name}-${group_version}."
 			fi
@@ -296,13 +296,13 @@ function _upload_releases_json {
 	then
 		lc_log INFO "Backing up to /www/releases.liferay.com/releases.json.BACKUP."
 
-		ssh root@lrdcom-vm-1 cp -f "/www/releases.liferay.com/releases.json" "/www/releases.liferay.com/releases.json.BACKUP"
+		ssh root@lrdcom-vm-1 cp --force "/www/releases.liferay.com/releases.json" "/www/releases.liferay.com/releases.json.BACKUP"
 
 		lc_log INFO "Uploading ${_PROMOTION_DIR}/releases.json to /www/releases.liferay.com/releases.json."
 
 		scp "${_PROMOTION_DIR}/releases.json" "root@lrdcom-vm-1:/www/releases.liferay.com/releases.json.upload"
 
-		ssh root@lrdcom-vm-1 mv -f "/www/releases.liferay.com/releases.json.upload" "/www/releases.liferay.com/releases.json"
+		ssh root@lrdcom-vm-1 mv --force "/www/releases.liferay.com/releases.json.upload" "/www/releases.liferay.com/releases.json"
 	fi
 
 	lc_log INFO "Backing up to gs://liferay-releases/releases.json.BACKUP."

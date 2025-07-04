@@ -43,7 +43,7 @@ function check_usage {
 
 	lc_cd "${_RELEASE_TOOL_DIR}"
 
-	mkdir -p release-data
+	mkdir --parents release-data
 
 	lc_cd release-data
 
@@ -236,11 +236,11 @@ function print_variables {
 	echo "To reproduce this build locally, execute the following command in liferay-docker/release:"
 
 	local environment=$(set | \
-		grep -e "^LIFERAY_RELEASE" | \
-		grep -v "LIFERAY_RELEASE_GCS_TOKEN" | \
-		grep -v "LIFERAY_RELEASE_HOTFIX_SIGNATURE" | \
-		grep -v "LIFERAY_RELEASE_PATCHER_REQUEST_KEY" | \
-		grep -v "LIFERAY_RELEASE_UPLOAD" | \
+		grep --regexp "^LIFERAY_RELEASE" | \
+		grep --invert-match "LIFERAY_RELEASE_GCS_TOKEN" | \
+		grep --invert-match "LIFERAY_RELEASE_HOTFIX_SIGNATURE" | \
+		grep --invert-match "LIFERAY_RELEASE_PATCHER_REQUEST_KEY" | \
+		grep --invert-match "LIFERAY_RELEASE_UPLOAD" | \
 		tr "\n" " ")
 
 	echo "${environment}./build_release.sh"

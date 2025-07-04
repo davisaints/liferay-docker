@@ -37,7 +37,7 @@ function add_fixed_issues_to_patcher_project_version {
 			--retry 3 \
 			--user "${LIFERAY_RELEASE_PATCHER_PORTAL_EMAIL_ADDRESS}:${LIFERAY_RELEASE_PATCHER_PORTAL_PASSWORD}")
 
-		if [ $(echo "${update_fixed_issues_response}" | jq -r '.status') -eq 200 ]
+		if [ $(echo "${update_fixed_issues_response}" | jq --raw-output '.status') -eq 200 ]
 		then
 			lc_log INFO "Adding fixed issues to Liferay Patcher project version ${2}."
 		else
@@ -45,7 +45,7 @@ function add_fixed_issues_to_patcher_project_version {
 
 			lc_log ERROR "${update_fixed_issues_response}"
 
-			rm -f release-notes.txt
+			rm --force release-notes.txt
 
 			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 		fi
@@ -53,7 +53,7 @@ function add_fixed_issues_to_patcher_project_version {
 
 	lc_log INFO "Added fixed issues to Liferay Patcher project ${2}."
 
-	rm -f release-notes.txt
+	rm --force release-notes.txt
 }
 
 function add_patcher_project_version {
@@ -74,11 +74,11 @@ function add_patcher_project_version {
 			--retry 3 \
 			--user "${LIFERAY_RELEASE_PATCHER_PORTAL_EMAIL_ADDRESS}:${LIFERAY_RELEASE_PATCHER_PORTAL_PASSWORD}")
 
-	if [ $(echo "${add_by_name_response}" | jq -r '.status') -eq 200 ]
+	if [ $(echo "${add_by_name_response}" | jq --raw-output '.status') -eq 200 ]
 	then
 		lc_log INFO "Added Liferay Patcher project version ${patcher_project_version}."
 
-		add_fixed_issues_to_patcher_project_version $(echo "${add_by_name_response}" | jq -r '.data.patcherProjectVersionId') "${patcher_project_version}"
+		add_fixed_issues_to_patcher_project_version $(echo "${add_by_name_response}" | jq --raw-output '.data.patcherProjectVersionId') "${patcher_project_version}"
 	else
 		lc_log ERROR "Unable to add Liferay Patcher project ${patcher_project_version}:"
 
@@ -127,7 +127,7 @@ function get_patcher_product_version_label {
 function get_patcher_project_version {
 	if is_7_3_release
 	then
-		echo "fix-pack-dxp-$(echo "${_PRODUCT_VERSION}" | cut -d 'u' -f 2)-7310"
+		echo "fix-pack-dxp-$(echo "${_PRODUCT_VERSION}" | cut --delimiter 'u' --fields 2)-7310"
 	elif is_quarterly_release
 	then
 		echo "${_ARTIFACT_VERSION}"
@@ -225,13 +225,13 @@ function upload_hotfix {
 	then
 		lc_log INFO "Connecting to lrdcom-vm-1."
 
-		ssh root@lrdcom-vm-1 mkdir -p "/www/releases.liferay.com/dxp/hotfix/${_PRODUCT_VERSION}/"
+		ssh root@lrdcom-vm-1 mkdir --parents "/www/releases.liferay.com/dxp/hotfix/${_PRODUCT_VERSION}/"
 
 		#
 		# shellcheck disable=SC2029
 		#
 
-		if (ssh root@lrdcom-vm-1 ls "/www/releases.liferay.com/dxp/hotfix/${_PRODUCT_VERSION}/" | grep -q "${_HOTFIX_FILE_NAME}")
+		if (ssh root@lrdcom-vm-1 ls "/www/releases.liferay.com/dxp/hotfix/${_PRODUCT_VERSION}/" | grep --quiet "${_HOTFIX_FILE_NAME}")
 		then
 			lc_log INFO "Skipping the upload of ${_HOTFIX_FILE_NAME} to lrdcom-vm-1 because it already exists."
 
@@ -299,7 +299,7 @@ function upload_release {
 
 		ssh root@lrdcom-vm-1 rm -r "/www/releases.liferay.com/${LIFERAY_RELEASE_PRODUCT_NAME}/release-candidates/${_PRODUCT_VERSION}-*"
 
-		ssh root@lrdcom-vm-1 mkdir -p "/www/releases.liferay.com/${LIFERAY_RELEASE_PRODUCT_NAME}/release-candidates/${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}"
+		ssh root@lrdcom-vm-1 mkdir --parents "/www/releases.liferay.com/${LIFERAY_RELEASE_PRODUCT_NAME}/release-candidates/${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}"
 	else
 		lc_log INFO "Skipping lrdcom-vm-1."
 	fi
@@ -349,10 +349,10 @@ function upload_to_docker_hub {
 }
 
 function _update_bundles_yml {
-	local product_version_key="$(echo "${_PRODUCT_VERSION}" | cut -d '-' -f 1)"
+	local product_version_key="$(echo "${_PRODUCT_VERSION}" | cut --delimiter '-' --fields 1)"
 
-	if (yq eval ".\"${product_version_key}\" | has(\"${_PRODUCT_VERSION}\")" "${_PROJECTS_DIR}/liferay-docker/bundles.yml" | grep -q "true") ||
-	   (yq eval ".quarterly | has(\"${_PRODUCT_VERSION}\")" "${_PROJECTS_DIR}/liferay-docker/bundles.yml" | grep -q "true")
+	if (yq eval ".\"${product_version_key}\" | has(\"${_PRODUCT_VERSION}\")" "${_PROJECTS_DIR}/liferay-docker/bundles.yml" | grep --quiet "true") ||
+	   (yq eval ".quarterly | has(\"${_PRODUCT_VERSION}\")" "${_PROJECTS_DIR}/liferay-docker/bundles.yml" | grep --quiet "true")
 	then
 		lc_log INFO "The ${_PRODUCT_VERSION} product version was already published."
 
@@ -387,16 +387,16 @@ function _update_bundles_yml {
 
 		perl -i -0777pe 's/\s+latest: true(?!7.4.13:)//' "${_PROJECTS_DIR}/liferay-docker/bundles.yml"
 
-		sed -i "/7.4.13:/i ${product_version_key}:" "${_PROJECTS_DIR}/liferay-docker/bundles.yml"
+		sed --in-place "/7.4.13:/i ${product_version_key}:" "${_PROJECTS_DIR}/liferay-docker/bundles.yml"
 
 		yq --indent 4 --inplace eval ".\"${product_version_key}\".\"${_PRODUCT_VERSION}\".bundle_url = \"${ga_bundle_url}\"" "${_PROJECTS_DIR}/liferay-docker/bundles.yml"
 		yq --indent 4 --inplace eval ".\"${product_version_key}\".\"${_PRODUCT_VERSION}\".latest = true" "${_PROJECTS_DIR}/liferay-docker/bundles.yml"
 	fi
 
-	sed -i "/^$/d" "${_PROJECTS_DIR}/liferay-docker/bundles.yml"
-	sed -i "s/[[:space:]]{}//g" "${_PROJECTS_DIR}/liferay-docker/bundles.yml"
+	sed --in-place "/^$/d" "${_PROJECTS_DIR}/liferay-docker/bundles.yml"
+	sed --in-place "s/[[:space:]]{}//g" "${_PROJECTS_DIR}/liferay-docker/bundles.yml"
 
-	truncate -s -1 "${_PROJECTS_DIR}/liferay-docker/bundles.yml"
+	truncate --size -1 "${_PROJECTS_DIR}/liferay-docker/bundles.yml"
 
 	if [ -z "${LIFERAY_RELEASE_TEST_MODE}" ]
 	then

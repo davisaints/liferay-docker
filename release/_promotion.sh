@@ -21,7 +21,7 @@ function prepare_jars_for_promotion {
 
 		if [ -n "${nexus_repository_name}" ]
 		then
-			_download_bom_file "${nexus_repository_url}/${nexus_repository_name}/content/com/liferay/portal/$(echo ${jar_rc_name} | cut -d '-' -f 1)/${_ARTIFACT_RC_VERSION}/${jar_rc_name}" "${_PROMOTION_DIR}/${jar_release_name}"
+			_download_bom_file "${nexus_repository_url}/${nexus_repository_name}/content/com/liferay/portal/$(echo ${jar_rc_name} | cut --delimiter '-' --fields 1)/${_ARTIFACT_RC_VERSION}/${jar_rc_name}" "${_PROMOTION_DIR}/${jar_release_name}"
 		else
 			mv "${_PROMOTION_DIR}/${jar_rc_name}" "${_PROMOTION_DIR}/${jar_release_name}"
 			mv "${_PROMOTION_DIR}/${jar_rc_name}.MD5" "${_PROMOTION_DIR}/${jar_release_name}.MD5"
@@ -60,7 +60,7 @@ function prepare_poms_for_promotion {
 		fi
 	done
 
-	sed -i "s#<version>${_ARTIFACT_RC_VERSION}</version>#<version>${_ARTIFACT_VERSION}</version>#" ./*.pom
+	sed --in-place "s#<version>${_ARTIFACT_RC_VERSION}</version>#<version>${_ARTIFACT_VERSION}</version>#" ./*.pom
 }
 
 function promote_boms {
@@ -75,14 +75,14 @@ function promote_packages {
 
 	if [ "${?}" -eq 0 ]
 	then
-		if (ssh root@lrdcom-vm-1 ls -d "/www/releases.liferay.com/${LIFERAY_RELEASE_PRODUCT_NAME}/${_PRODUCT_VERSION}" | grep -q "${_PRODUCT_VERSION}" &>/dev/null)
+		if (ssh root@lrdcom-vm-1 ls --directory "/www/releases.liferay.com/${LIFERAY_RELEASE_PRODUCT_NAME}/${_PRODUCT_VERSION}" | grep --quiet "${_PRODUCT_VERSION}" &>/dev/null)
 		then
 			lc_log INFO "Release was already published."
 
 			return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 		fi
 
-		ssh root@lrdcom-vm-1 cp -a "/www/releases.liferay.com/${LIFERAY_RELEASE_PRODUCT_NAME}/release-candidates/${_PRODUCT_VERSION}-${LIFERAY_RELEASE_RC_BUILD_TIMESTAMP}" "/www/releases.liferay.com/${LIFERAY_RELEASE_PRODUCT_NAME}/${_PRODUCT_VERSION}"
+		ssh root@lrdcom-vm-1 cp --archive "/www/releases.liferay.com/${LIFERAY_RELEASE_PRODUCT_NAME}/release-candidates/${_PRODUCT_VERSION}-${LIFERAY_RELEASE_RC_BUILD_TIMESTAMP}" "/www/releases.liferay.com/${LIFERAY_RELEASE_PRODUCT_NAME}/${_PRODUCT_VERSION}"
 	fi
 
 	if (gsutil ls "gs://liferay-releases/${LIFERAY_RELEASE_PRODUCT_NAME}" | grep "${_PRODUCT_VERSION}")
@@ -134,7 +134,7 @@ function _verify_checksum {
 	file="${1}"
 
 	(
-		sed -z "s/\n$//" "${file}.sha512"
+		sed --null-data "s/\n$//" "${file}.sha512"
 
 		echo "  ${file}"
 	) | sha512sum -c - --status

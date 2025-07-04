@@ -4,13 +4,13 @@ source ../_release_common.sh
 source ./_product.sh
 
 function generate_api_jars {
-	mkdir -p "${_BUILD_DIR}/boms"
+	mkdir --parents "${_BUILD_DIR}/boms"
 
 	lc_cd "${_BUILD_DIR}/boms"
 
-	mkdir -p api-jar api-sources-jar
+	mkdir --parents api-jar api-sources-jar
 
-	local enforce_version_artifacts=$(lc_get_property "${_PROJECTS_DIR}/liferay-portal-ee/source-formatter.properties" source.check.GradleDependencyArtifactsCheck.enforceVersionArtifacts | sed -e "s/,/\\n/g")
+	local enforce_version_artifacts=$(lc_get_property "${_PROJECTS_DIR}/liferay-portal-ee/source-formatter.properties" source.check.GradleDependencyArtifactsCheck.enforceVersionArtifacts | sed --expression "s/,/\\n/g")
 
 	#
 	# TODO Remove if block when 2023.q3 support is dropped
@@ -18,7 +18,7 @@ function generate_api_jars {
 
 	if [ -z "${enforce_version_artifacts}" ]
 	then
-		local enforce_version_artifacts=$(lc_get_property "${_PROJECTS_DIR}/liferay-portal-ee/modules/source-formatter.properties" source.check.GradleDependencyArtifactsCheck.enforceVersionArtifacts | sed -e "s/,/\\n/g")
+		local enforce_version_artifacts=$(lc_get_property "${_PROJECTS_DIR}/liferay-portal-ee/modules/source-formatter.properties" source.check.GradleDependencyArtifactsCheck.enforceVersionArtifacts | sed --expression "s/,/\\n/g")
 	fi
 
 	if [ -z "${enforce_version_artifacts}" ]
@@ -30,29 +30,29 @@ function generate_api_jars {
 
 	for artifact in ${enforce_version_artifacts}
 	do
-		if (! echo "${artifact}" | grep -q "com.fasterxml") &&
-			(! echo "${artifact}" | grep -q "com.liferay.alloy-taglibs:alloy-taglib:") &&
-			(! echo "${artifact}" | grep -q "com.liferay.portletmvc4spring:com.liferay.portletmvc4spring.test:") &&
-			(! echo "${artifact}" | grep -q "com.liferay:biz.aQute.bnd.annotation:") &&
-			(! echo "${artifact}" | grep -q "io.swagger") &&
-			(! echo "${artifact}" | grep -q "javax") &&
-			(! echo "${artifact}" | grep -q "org.jsoup") &&
-			(! echo "${artifact}" | grep -q "org.osgi")
+		if (! echo "${artifact}" | grep --quiet "com.fasterxml") &&
+			(! echo "${artifact}" | grep --quiet "com.liferay.alloy-taglibs:alloy-taglib:") &&
+			(! echo "${artifact}" | grep --quiet "com.liferay.portletmvc4spring:com.liferay.portletmvc4spring.test:") &&
+			(! echo "${artifact}" | grep --quiet "com.liferay:biz.aQute.bnd.annotation:") &&
+			(! echo "${artifact}" | grep --quiet "io.swagger") &&
+			(! echo "${artifact}" | grep --quiet "javax") &&
+			(! echo "${artifact}" | grep --quiet "org.jsoup") &&
+			(! echo "${artifact}" | grep --quiet "org.osgi")
 		then
 			continue
 		fi
 
-		local group_path=$(echo "${artifact%%:*}" | sed -e "s#[.]#/#g")
+		local group_path=$(echo "${artifact%%:*}" | sed --expression "s#[.]#/#g")
 
 		if [ "${group_path}" == "com/fasterxml/jackson-dataformat" ]
 		then
 			group_path="com/fasterxml/jackson/dataformat"
 		fi
 
-		local name=$(echo "${artifact}" | sed -e "s/.*:\(.*\):.*/\\1/")
+		local name=$(echo "${artifact}" | sed --expression "s/.*:\(.*\):.*/\\1/")
 		local version=${artifact##*:}
 
-		if (! echo "${artifact}" | grep -q "com.liferay.alloy-taglibs:alloy-taglib:")
+		if (! echo "${artifact}" | grep --quiet "com.liferay.alloy-taglibs:alloy-taglib:")
 		then
 			lc_log INFO "Downloading and unzipping https://repository-cdn.liferay.com/nexus/content/groups/public/${group_path}/${name}/${version}/${name}-${version}-sources.jar."
 
@@ -60,7 +60,7 @@ function generate_api_jars {
 
 			unzip -d api-sources-jar -o -q "${name}-${version}-sources.jar"
 
-			rm -f "${name}-${version}-sources.jar"
+			rm --force "${name}-${version}-sources.jar"
 		fi
 
 		lc_log INFO "Downloading and unzipping https://repository-cdn.liferay.com/nexus/content/groups/public/${group_path}/${name}/${version}/${name}-${version}.jar."
@@ -69,7 +69,7 @@ function generate_api_jars {
 
 		_manage_bom_jar "${name}-${version}.jar"
 
-		rm -f "${name}-${version}.jar"
+		rm --force "${name}-${version}.jar"
 	done
 
 	if is_7_3_release
@@ -123,7 +123,7 @@ function generate_api_jars {
 
 	_copy_tld "api-jar/META-INF" "liferay-*.tld" "ratings.tld"
 
-	mkdir -p api-jar/META-INF/resources
+	mkdir --parents api-jar/META-INF/resources
 
 	_copy_tld "api-jar/META-INF/resources" "liferay-application-list.tld" "liferay-data-engine.tld" "liferay-ddm.tld" "liferay-export-import-changeset.tld" "liferay-form.tld" "liferay-staging.tld" "liferay-template.tld"  "react.tld" "soy.tld"
 
@@ -139,8 +139,8 @@ function generate_api_source_jar {
 
 	find . -name taglib -type d -print0 | while IFS= read -r -d '' taglib_dir
 	do
-		if (! echo "${taglib_dir}" | grep -q "/com/liferay/") ||
-		   (echo "${taglib_dir}" | grep -q "/classes/")
+		if (! echo "${taglib_dir}" | grep --quiet "/com/liferay/") ||
+		   (echo "${taglib_dir}" | grep --quiet "/classes/")
 		then
 			continue
 		fi
@@ -152,13 +152,13 @@ function generate_api_source_jar {
 
 	find . -name packageinfo -type f -print0 | while IFS= read -r -d '' packageinfo_file
 	do
-		if (echo "${packageinfo_file}" | grep -q "/classes/") ||
-		   (echo "${packageinfo_file}" | grep -q "/portal-kernel/")
+		if (echo "${packageinfo_file}" | grep --quiet "/classes/") ||
+		   (echo "${packageinfo_file}" | grep --quiet "/portal-kernel/")
 		then
 			continue
 		fi
 
-		packageinfo_file=$(echo "${packageinfo_file}" | sed -e "s#/resources/#/java/#")
+		packageinfo_file=$(echo "${packageinfo_file}" | sed --expression "s#/resources/#/java/#")
 
 		local package_dir=$(dirname "${packageinfo_file}")
 
@@ -196,7 +196,7 @@ function generate_distro_jar {
 
 	if is_ga_release
 	then
-		osgi_version=$(echo "${osgi_version}" | cut -d '.' -f 1,2,3,5)
+		osgi_version=$(echo "${osgi_version}" | cut --delimiter '.' --fields 1,2,3,5)
 	elif is_quarterly_release
 	then
 		if is_lts_release
@@ -209,8 +209,8 @@ function generate_distro_jar {
 
 	java -jar biz.aQute.bnd-6.4.0.jar remote distro -o "release.${LIFERAY_RELEASE_PRODUCT_NAME}.distro-${_ARTIFACT_RC_VERSION}.jar" "release.${LIFERAY_RELEASE_PRODUCT_NAME}.distro" "${osgi_version}"
 
-	rm -f biz.aQute.bnd-6.4.0.jar
-	rm -f "${_BUNDLES_DIR}/osgi/modules/biz.aQute.remote.agent-6.4.0.jar"
+	rm --force biz.aQute.bnd-6.4.0.jar
+	rm --force "${_BUNDLES_DIR}/osgi/modules/biz.aQute.remote.agent-6.4.0.jar"
 
 	stop_tomcat
 
@@ -226,9 +226,9 @@ function generate_pom_release_api {
 	lc_log DEBUG "Generating ${pom_file_name}."
 
 	sed \
-		-e "s/__ARTIFACT_ID__/release.${LIFERAY_RELEASE_PRODUCT_NAME}.api/" \
-		-e "s/__ARTIFACT_RC_VERSION__/${_ARTIFACT_RC_VERSION}/" \
-		-e "w ${pom_file_name}" \
+		--expression "s/__ARTIFACT_ID__/release.${LIFERAY_RELEASE_PRODUCT_NAME}.api/" \
+		--expression "s/__ARTIFACT_RC_VERSION__/${_ARTIFACT_RC_VERSION}/" \
+		--expression "w ${pom_file_name}" \
 		"${_RELEASE_TOOL_DIR}/templates/release.api.pom.tpl" > /dev/null
 }
 
@@ -238,35 +238,35 @@ function generate_pom_release_bom {
 	lc_log DEBUG "Generating ${pom_file_name}."
 
 	sed \
-		-e "s/__ARTIFACT_ID__/release.${LIFERAY_RELEASE_PRODUCT_NAME}.bom/" \
-		-e "s/__ARTIFACT_RC_VERSION__/${_ARTIFACT_RC_VERSION}/" \
-		-e "s/__GITHUB_REPOSITORY__/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}/" \
-		-e "s/__PRODUCT_VERSION__/${_PRODUCT_VERSION}/" \
-		-e "w ${pom_file_name}" \
+		--expression "s/__ARTIFACT_ID__/release.${LIFERAY_RELEASE_PRODUCT_NAME}.bom/" \
+		--expression "s/__ARTIFACT_RC_VERSION__/${_ARTIFACT_RC_VERSION}/" \
+		--expression "s/__GITHUB_REPOSITORY__/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}/" \
+		--expression "s/__PRODUCT_VERSION__/${_PRODUCT_VERSION}/" \
+		--expression "w ${pom_file_name}" \
 		"${_RELEASE_TOOL_DIR}/templates/release.bom.pom.tpl" > /dev/null
 
 	echo "" >> "${pom_file_name}"
 
 	find "${_PROJECTS_DIR}/liferay-portal-ee/modules/.releng" -name '*.properties' -print0 | \
-		xargs -0 awk -F= '/^artifact.url=/  { print $2 }' \
+		xargs -0 awk --field-separator '=' '/^artifact.url=/  { print $2 }' \
 		> /tmp/artifact_urls.txt
 
 	for artifact_file in $(
 		find "${_BUNDLES_DIR}/osgi" "${_BUNDLES_DIR}/tomcat/lib/ext" "${_BUNDLES_DIR}/tomcat/webapps/ROOT/WEB-INF" -name '*.jar' | \
 			sed \
-				-e 's/\.jar$//' \
-				-e "s@.*/@@" \
-				-e "s@-@.@g" | \
-			grep -v -E "(\.demo|\.sample\.|\.templates\.)" | \
+				--expression 's/\.jar$//' \
+				--expression "s@.*/@@" \
+				--expression "s@-@.@g" | \
+			grep --invert-match --extended-regexp "(\.demo|\.sample\.|\.templates\.)" | \
 			sort
 	)
 	do
-		grep -E "/(com\.liferay\.|)${artifact_file}/" /tmp/artifact_urls.txt | sort | while IFS= read -r artifact_url
+		grep --extended-regexp "/(com\.liferay\.|)${artifact_file}/" /tmp/artifact_urls.txt | sort | while IFS= read -r artifact_url
 		do
 			local file_name="${artifact_url##*/}"
 
-			local artifact_id=$(echo "${file_name}" | cut -d '-' -f 1)
-			local version=$(echo "${file_name}" | sed -e "s@\.\(jar\|war\)\$@@" -e "s@.*${artifact_file}-@@")
+			local artifact_id=$(echo "${file_name}" | cut --delimiter '-' --fields 1)
+			local version=$(echo "${file_name}" | sed --expression "s@\.\(jar\|war\)\$@@" -e "s@.*${artifact_file}-@@")
 
 			if [[ "${artifact_url}" == */com/liferay/portal/* ]]
 			then
@@ -278,7 +278,7 @@ function generate_pom_release_bom {
 				group_id="com.liferay"
 			fi
 
-			if (grep -q "(\t)*<groupId>${group_id}</groupId>\n(\t)*<artifactId>${artifact_id}</artifactId>\n\(\t)*<version>${version}</version>" "${pom_file_name}")
+			if (grep --quiet "(\t)*<groupId>${group_id}</groupId>\n(\t)*<artifactId>${artifact_id}</artifactId>\n\(\t)*<version>${version}</version>" "${pom_file_name}")
 			then
 				continue
 			fi
@@ -306,17 +306,17 @@ function generate_pom_release_bom_compile_only {
 	lc_log DEBUG "Generating ${pom_file_name}."
 
 	sed \
-		-e "s/__ARTIFACT_ID__/release.${LIFERAY_RELEASE_PRODUCT_NAME}.bom.compile.only/" \
-		-e "s/__ARTIFACT_RC_VERSION__/${_ARTIFACT_RC_VERSION}/" \
-		-e "s/__GITHUB_REPOSITORY__/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}/" \
-		-e "s/__PRODUCT_VERSION__/${_PRODUCT_VERSION}/" \
-		-e "s/__RELEASE_API_DEPENDENCY__/release.${LIFERAY_RELEASE_PRODUCT_NAME}.api/" \
-		-e "w ${pom_file_name}" \
+		--expression "s/__ARTIFACT_ID__/release.${LIFERAY_RELEASE_PRODUCT_NAME}.bom.compile.only/" \
+		--expression "s/__ARTIFACT_RC_VERSION__/${_ARTIFACT_RC_VERSION}/" \
+		--expression "s/__GITHUB_REPOSITORY__/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}/" \
+		--expression "s/__PRODUCT_VERSION__/${_PRODUCT_VERSION}/" \
+		--expression "s/__RELEASE_API_DEPENDENCY__/release.${LIFERAY_RELEASE_PRODUCT_NAME}.api/" \
+		--expression "w ${pom_file_name}" \
 		"${_RELEASE_TOOL_DIR}/templates/release.bom.compile.only.pom.tpl" > /dev/null
 
 	echo  "" >> "${pom_file_name}"
 
-	cut -d= -f2 "${_PROJECTS_DIR}/liferay-portal-ee/modules/releng-pom-compile-only-dependencies.properties" | \
+	cut --delimiter '=' --fields 2 "${_PROJECTS_DIR}/liferay-portal-ee/modules/releng-pom-compile-only-dependencies.properties" | \
 		while IFS=: read -r group_id artifact_id version
 		do
 			echo -e "\t\t\t<dependency>"
@@ -339,11 +339,11 @@ function generate_pom_release_bom_third_party {
 	lc_log DEBUG "Generating ${pom_file_name}."
 
 	sed \
-		-e "s/__ARTIFACT_ID__/release.${LIFERAY_RELEASE_PRODUCT_NAME}.bom.third.party/" \
-		-e "s/__ARTIFACT_RC_VERSION__/${_ARTIFACT_RC_VERSION}/" \
-		-e "s/__GITHUB_REPOSITORY__/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}/" \
-		-e "s/__PRODUCT_VERSION__/${_PRODUCT_VERSION}/" \
-		-e "w ${pom_file_name}" \
+		--expression "s/__ARTIFACT_ID__/release.${LIFERAY_RELEASE_PRODUCT_NAME}.bom.third.party/" \
+		--expression "s/__ARTIFACT_RC_VERSION__/${_ARTIFACT_RC_VERSION}/" \
+		--expression "s/__GITHUB_REPOSITORY__/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}/" \
+		--expression "s/__PRODUCT_VERSION__/${_PRODUCT_VERSION}/" \
+		--expression "w ${pom_file_name}" \
 		"${_RELEASE_TOOL_DIR}/templates/release.bom.third.party.pom.tpl" > /dev/null
 
 	echo "" >> "${pom_file_name}"
@@ -363,7 +363,7 @@ function generate_pom_release_bom_third_party {
 
 	for dependency_property in "${dependencies_properties[@]}"
 	do
-		IFS=':' read -ra dependency_property_parts <<< "$(echo "${dependency_property}" | cut -d = -f 2)"
+		IFS=':' read -ra dependency_property_parts <<< "$(echo "${dependency_property}" | cut --delimiter '=' --fields 2)"
 
 		if [[ ${included_dependencies[@]} =~ "${dependency_property_parts[0]}${dependency_property_parts[1]}${dependency_property_parts[2]}" ]]
 		then
@@ -372,7 +372,7 @@ function generate_pom_release_bom_third_party {
 
 		included_dependencies+=("${dependency_property_parts[0]}${dependency_property_parts[1]}${dependency_property_parts[2]}")
 
-		if (grep -q "<artifactId>${dependency_property_parts[1]}</artifactId>" "${pom_compile_only_file_name}" && grep -q "<groupId>${dependency_property_parts[0]}</groupId>" "${pom_compile_only_file_name}")
+		if (grep --quiet "<artifactId>${dependency_property_parts[1]}</artifactId>" "${pom_compile_only_file_name}" && grep --quiet "<groupId>${dependency_property_parts[0]}</groupId>" "${pom_compile_only_file_name}")
 		then
 			continue
 		fi
@@ -399,18 +399,18 @@ function generate_pom_release_distro {
 	lc_log DEBUG "Generating ${pom_file_name}."
 
 	sed \
-		-e "s/__ARTIFACT_ID__/release.${LIFERAY_RELEASE_PRODUCT_NAME}.distro/" \
-		-e "s/__ARTIFACT_RC_VERSION__/${_ARTIFACT_RC_VERSION}/" \
-		-e "w ${pom_file_name}" \
+		--expression "s/__ARTIFACT_ID__/release.${LIFERAY_RELEASE_PRODUCT_NAME}.distro/" \
+		--expression "s/__ARTIFACT_RC_VERSION__/${_ARTIFACT_RC_VERSION}/" \
+		--expression "w ${pom_file_name}" \
 		"${_RELEASE_TOOL_DIR}/templates/release.distro.pom.tpl" > /dev/null
 }
 
 function generate_poms {
-	mkdir -p "${_BUILD_DIR}/boms"
+	mkdir --parents "${_BUILD_DIR}/boms"
 
 	lc_cd "${_BUILD_DIR}/boms"
 
-	rm -f ./*.pom
+	rm --force ./*.pom
 
 	lc_time_run generate_pom_release_api
 	lc_time_run generate_pom_release_bom
@@ -420,13 +420,13 @@ function generate_poms {
 }
 
 function _copy_file {
-	local dir=$(dirname "${1}" | sed -e "s#[./]*[^/]*/##")
+	local dir=$(dirname "${1}" | sed --expression "s#[./]*[^/]*/##")
 
-	mkdir -p "${2}/${dir}"
+	mkdir --parents "${2}/${dir}"
 
 	lc_log DEBUG "Copying ${1}."
 
-	cp -a "${1}" "${2}/${dir}"
+	cp --archive "${1}" "${2}/${dir}"
 }
 
 function _copy_source_package {
@@ -435,13 +435,13 @@ function _copy_source_package {
 	# TODO Exclude what is not packaged
 	#
 
-	local new_dir_name=$(echo "${1}" | sed -e "s#.*/com/liferay/#com/liferay/#")
+	local new_dir_name=$(echo "${1}" | sed --expression "s#.*/com/liferay/#com/liferay/#")
 
 	new_dir_name="${_BUILD_DIR}"/boms/api-sources-jar/$(dirname "${new_dir_name}")
 
-	mkdir -p "${new_dir_name}"
+	mkdir --parents "${new_dir_name}"
 
-	cp -a "${1}" "${new_dir_name}"
+	cp --archive "${1}" "${new_dir_name}"
 }
 
 function _copy_tld {
@@ -461,8 +461,8 @@ function _copy_tld {
 
 	for file in $(eval find "${_PROJECTS_DIR}" \
 		"${arguments}" -type f | \
-			awk -F "/" '{print $NF, $0}' | \
-			sort -k 1,1 -u | \
+			awk --field-separator '/' '{print $NF, $0}' | \
+			sort --key 1,1 --unique | \
 			awk '{print $2}')
 	do
 		cp "${file}" "${1}"
@@ -472,13 +472,13 @@ function _copy_tld {
 function _manage_bom_jar {
 	lc_log DEBUG "Processing ${1} for api jar."
 
-	mkdir -p temp_dir_manage_bom_jar
+	mkdir --parents temp_dir_manage_bom_jar
 
 	unzip -d temp_dir_manage_bom_jar -o -q "${1}"
 
-	#rm -f "${name}-${version}.jar"
+	#rm --force "${name}-${version}.jar"
 
-	if (basename "${1}" | grep -Eq "^com.liferay.")
+	if (basename "${1}" | grep --extended-regexp --quiet "^com.liferay.")
 	then
 		local current_file
 
@@ -486,21 +486,21 @@ function _manage_bom_jar {
 		do
 			lc_log DEBUG "Removing ${current_file}."
 
-			rm -f "${current_file}"
+			rm --force "${current_file}"
 		done
 
 		find temp_dir_manage_bom_jar -name "java-docs-*.xml" -type f -print0 | while IFS= read -r -d '' current_file
 		do
 			lc_log DEBUG "Removing ${current_file}."
 
-			rm -f "${current_file}"
+			rm --force "${current_file}"
 		done
 
 		find temp_dir_manage_bom_jar -name "node-modules" -type d -print0 | while IFS= read -r -d '' current_file
 		do
 			lc_log DEBUG "Removing ${current_file}."
 
-			rm -f "${current_file}"
+			rm --force "${current_file}"
 		done
 
 		find temp_dir_manage_bom_jar -maxdepth 1 -type f -print0 | while IFS= read -r -d '' current_file
@@ -529,13 +529,13 @@ function _manage_bom_jar {
 			_copy_file "$(dirname "${current_file}")" api-jar
 		done
 	else
-		rm -fr temp_dir_manage_bom_jar/META-INF/custom-sql
-		rm -fr temp_dir_manage_bom_jar/META-INF/images
-		rm -fr temp_dir_manage_bom_jar/META-INF/sql
-		rm -fr temp_dir_manage_bom_jar/META-INF/versions
+		rm --force --recursive temp_dir_manage_bom_jar/META-INF/custom-sql
+		rm --force --recursive temp_dir_manage_bom_jar/META-INF/images
+		rm --force --recursive temp_dir_manage_bom_jar/META-INF/sql
+		rm --force --recursive temp_dir_manage_bom_jar/META-INF/versions
 
-		cp -a temp_dir_manage_bom_jar/* api-jar
+		cp --archive temp_dir_manage_bom_jar/* api-jar
 	fi
 
-	rm -fr temp_dir_manage_bom_jar
+	rm --force --recursive temp_dir_manage_bom_jar
 }

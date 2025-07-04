@@ -14,9 +14,9 @@ function generate_checksum_files {
 			# TODO Remove *.MD5 in favor of *.sha512.
 			#
 
-			md5sum "${file}" | sed -e "s/ .*//" > "${file}.MD5"
+			md5sum "${file}" | sed --expression "s/ .*//" > "${file}.MD5"
 
-			sha512sum "${file}" | sed -e "s/ .*//" > "${file}.sha512"
+			sha512sum "${file}" | sed --expression "s/ .*//" > "${file}.sha512"
 		fi
 	done
 }
@@ -76,7 +76,7 @@ function generate_javadocs {
 }
 
 function generate_release_properties_file {
-	local tomcat_version=$(grep -Eo "Apache Tomcat Version [0-9]+\.[0-9]+\.[0-9]+" "${_BUNDLES_DIR}/tomcat/RELEASE-NOTES")
+	local tomcat_version=$(grep --extended-regexp --only-matching "Apache Tomcat Version [0-9]+\.[0-9]+\.[0-9]+" "${_BUNDLES_DIR}/tomcat/RELEASE-NOTES")
 
 	tomcat_version="${tomcat_version/Apache Tomcat Version /}"
 
@@ -95,17 +95,17 @@ function generate_release_properties_file {
 	if is_dxp_release
 	then
 		product_version="DXP ${product_version}"
-		target_platform_version=$(echo "${target_platform_version}" | sed -r 's/-u/.u/')
+		target_platform_version=$(echo "${target_platform_version}" | sed --regexp-extended 's/-u/.u/')
 
 		if is_lts_release
 		then
-			target_platform_version=$(echo "${target_platform_version}" | sed -r 's/-lts//g')
+			target_platform_version=$(echo "${target_platform_version}" | sed --regexp-extended 's/-lts//g')
 		fi
 
 	elif is_portal_release
 	then
 		product_version="Portal ${product_version}"
-		target_platform_version=$(echo "${_PRODUCT_VERSION}" | cut -d '-' -f 1)
+		target_platform_version=$(echo "${_PRODUCT_VERSION}" | cut --delimiter '-' --fields 1)
 	fi
 
 	product_version="${product_version/-/ }"
@@ -152,19 +152,19 @@ function install_patching_tool {
 
 	unzip -q patching-tool-"${latest_version}".zip
 
-	rm -f patching-tool-"${latest_version}".zip
+	rm --force patching-tool-"${latest_version}".zip
 
 	lc_cd patching-tool
 
 	./patching-tool.sh auto-discovery
 
-	rm -f logs/*
+	rm --force logs/*
 }
 
 function package_boms {
 	lc_cd "${_BUILD_DIR}/boms"
 
-	cp -a ./*.pom "${_BUILD_DIR}/release"
+	cp --archive ./*.pom "${_BUILD_DIR}/release"
 
 	cp "release.${LIFERAY_RELEASE_PRODUCT_NAME}.distro-${_ARTIFACT_RC_VERSION}.jar" "${_BUILD_DIR}/release"
 
@@ -173,7 +173,7 @@ function package_boms {
 	jar cvfm "${_BUILD_DIR}/release/release.${LIFERAY_RELEASE_PRODUCT_NAME}.api-${_ARTIFACT_RC_VERSION}.jar" .touch -C api-jar .
 	jar cvfm "${_BUILD_DIR}/release/release.${LIFERAY_RELEASE_PRODUCT_NAME}.api-${_ARTIFACT_RC_VERSION}-sources.jar" .touch -C api-sources-jar .
 
-	rm -f .touch
+	rm --force .touch
 }
 
 function package_portal_dependencies {
@@ -184,9 +184,9 @@ function package_portal_dependencies {
 		# Client
 		#
 
-		rm -fr "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-client-${_PRODUCT_VERSION}"
+		rm --force --recursive "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-client-${_PRODUCT_VERSION}"
 
-		mkdir -p "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-client-${_PRODUCT_VERSION}"
+		mkdir --parents "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-client-${_PRODUCT_VERSION}"
 
 		for jar in \
 			activation.jar \
@@ -212,15 +212,15 @@ function package_portal_dependencies {
 
 		zip -qr "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-client-${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}.zip" "liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-client-${_PRODUCT_VERSION}"
 
-		rm -fr "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-client-${_PRODUCT_VERSION}"
+		rm --force --recursive "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-client-${_PRODUCT_VERSION}"
 
 		#
 		# Dependencies
 		#
 
-		rm -fr "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-dependencies-${_PRODUCT_VERSION}"
+		rm --force --recursive "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-dependencies-${_PRODUCT_VERSION}"
 
-		mkdir -p "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-dependencies-${_PRODUCT_VERSION}"
+		mkdir --parents "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-dependencies-${_PRODUCT_VERSION}"
 
 		for jar in \
 			com.liferay.petra.concurrent.jar \
@@ -246,23 +246,23 @@ function package_portal_dependencies {
 
 		zip -qr "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-dependencies-${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}.zip" "liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-dependencies-${_PRODUCT_VERSION}"
 
-		rm -fr "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-dependencies-${_PRODUCT_VERSION}"
+		rm --force --recursive "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-dependencies-${_PRODUCT_VERSION}"
 	fi
 }
 
 function package_release {
 	if is_portal_release
 	then
-		rm -fr "${_BUNDLES_DIR}/routes/default/dxp"
+		rm --force --recursive "${_BUNDLES_DIR}/routes/default/dxp"
 	fi
 
-	rm -fr "${_BUILD_DIR}/release"
+	rm --force --recursive "${_BUILD_DIR}/release"
 
 	local package_dir="${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}"
 
-	mkdir -p "${package_dir}"
+	mkdir --parents "${package_dir}"
 
-	cp -a "${_BUNDLES_DIR}"/* "${package_dir}"
+	cp --archive "${_BUNDLES_DIR}"/* "${package_dir}"
 
 	echo "${_GIT_SHA}" > "${package_dir}"/.githash
 	echo "${_PRODUCT_VERSION}" > "${package_dir}"/.liferay-version
@@ -277,7 +277,10 @@ function package_release {
 
 	echo "liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-tomcat-${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}.7z" > "${_BUILD_DIR}"/release/.lfrrelease-tomcat-bundle
 
-	tar czf "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-tomcat-${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}.tar.gz" "liferay-${LIFERAY_RELEASE_PRODUCT_NAME}"
+	tar --create \
+		--gzip \
+		--file "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-tomcat-${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}.tar.gz" \
+		"liferay-${LIFERAY_RELEASE_PRODUCT_NAME}"
 
 	zip -qr "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-tomcat-${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}.zip" "liferay-${LIFERAY_RELEASE_PRODUCT_NAME}"
 
@@ -300,13 +303,13 @@ function package_release {
 
 	lc_cd "${_PROJECTS_DIR}"/liferay-portal-ee
 
-	cp -a sql liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-sql
+	cp --archive sql liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-sql
 
 	zip -qr "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-sql-${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}.zip" "liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-sql" -i "*.sql"
 
-	rm -fr "liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-sql"
+	rm --force --recursive "liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-sql"
 
-	rm -fr "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}"
+	rm --force --recursive "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}"
 
 	generate_javadocs
 }

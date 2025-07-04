@@ -28,7 +28,7 @@ function check_usage {
 
 	LIFERAY_COMMON_LOG_DIR="${_RELEASE_ROOT_DIR}/logs"
 
-	mkdir -p "${LIFERAY_COMMON_LOG_DIR}"
+	mkdir --parents "${LIFERAY_COMMON_LOG_DIR}"
 }
 
 function main {
@@ -70,7 +70,7 @@ function scan_docker_images {
 			--request POST \
 			--silent)
 
-	if (! echo "${auth_response}" | grep -q "login_successful")
+	if (! echo "${auth_response}" | grep --quiet "login_successful")
 	then
 		lc_log ERROR "Unable to authenticate with ${api_url}."
 
@@ -78,7 +78,7 @@ function scan_docker_images {
 	fi
 
 	local console_url="https://europe-west3.cloud.twistlock.com/eu-1614931"
-	local token=$(echo "${auth_response}" | jq -r '.token')
+	local token=$(echo "${auth_response}" | jq --raw-output '.token')
 
 	curl \
 		"${console_url}/api/v1/util/twistcli" \
@@ -125,7 +125,7 @@ function scan_docker_images {
 		fi
 	done
 
-	rm -f ./twistcli
+	rm --force ./twistcli
 }
 
 main

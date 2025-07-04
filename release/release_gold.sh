@@ -15,7 +15,7 @@ function add_property {
 	local new_value="${2}"
 	local search_key="${3}"
 
-	sed -i "/${search_key}/a\	\\${new_key}=${new_value}" "build.properties"
+	sed --in-place "/${search_key}/a\	\\${new_key}=${new_value}" "build.properties"
 }
 
 function check_supported_versions {
@@ -57,9 +57,9 @@ function check_usage {
 
 	_PROMOTION_DIR="${_RELEASE_ROOT_DIR}/release-data/promotion/files"
 
-	rm -fr "${_PROMOTION_DIR}"
+	rm --force --recursive "${_PROMOTION_DIR}"
 
-	mkdir -p "${_PROMOTION_DIR}"
+	mkdir --parents "${_PROMOTION_DIR}"
 
 	lc_cd "${_PROMOTION_DIR}"
 
@@ -128,7 +128,7 @@ function main {
 }
 
 function prepare_next_release_branch {
-	if [ ! $(echo "${LIFERAY_RELEASE_PREPARE_NEXT_RELEASE_BRANCH}" | grep -i "true") ] ||
+	if [ ! $(echo "${LIFERAY_RELEASE_PREPARE_NEXT_RELEASE_BRANCH}" | grep --ignore-case "true") ] ||
 	   ! is_quarterly_release
 	then
 		lc_log INFO "Skipping the preparation of the next release branch."
@@ -138,7 +138,7 @@ function prepare_next_release_branch {
 
 	if [ -z "${LIFERAY_RELEASE_TEST_MODE}" ]
 	then
-		rm -fr releases.json
+		rm --force --recursive releases.json
 
 		LIFERAY_COMMON_DOWNLOAD_SKIP_CACHE="true" lc_download "https://releases.liferay.com/releases.json" releases.json
 	fi
@@ -146,13 +146,13 @@ function prepare_next_release_branch {
 	local product_group_version="$(get_product_group_version)"
 
 	local latest_quarterly_product_version="$(\
-		jq -r ".[] | \
+		jq --raw-output ".[] | \
 			select(.productGroupVersion == \"${product_group_version}\" and .promoted == \"true\") | \
 			.targetPlatformVersion" releases.json)"
 
 	if [ -z "${LIFERAY_RELEASE_TEST_MODE}" ]
 	then
-		rm -fr releases.json
+		rm --force --recursive releases.json
 	fi
 
 	if [ "${_PRODUCT_VERSION}" != "${latest_quarterly_product_version}" ]
@@ -184,11 +184,11 @@ function prepare_next_release_branch {
 			fi
 		fi
 
-		sed -i \
+		sed --in-place \
 			-e "s/release.info.version.display.name\[master-private\]=.*/release.info.version.display.name[master-private]=${product_group_version^^}.${next_release_patch_version}/" \
 			"${_PROJECTS_DIR}/liferay-portal-ee/release.properties"
 
-		sed -i \
+		sed --in-place \
 			-e "s/release.info.version.display.name\[release-private\]=.*/release.info.version.display.name[release-private]=${product_group_version^^}.${next_release_patch_version}/" \
 			"${_PROJECTS_DIR}/liferay-portal-ee/release.properties"
 
@@ -285,12 +285,12 @@ function reference_new_releases {
 		grep "portal.latest.bundle.version\[${product_group_version}" \
 			"build.properties" | \
 			tail -1 | \
-			cut -d '=' -f 2)"
+			cut --delimiter '=' --fields 2)"
 
 	if [ -z "${previous_product_version}" ]
 	then
 		latest_quarterly_release="true"
-		previous_product_version="$(grep "portal.latest.bundle.version\[master\]=" "build.properties" | cut -d '=' -f 2)"
+		previous_product_version="$(grep "portal.latest.bundle.version\[master\]=" "build.properties" | cut --delimiter '=' --fields 2)"
 	fi
 
 	for component in osgi sql tools
@@ -334,8 +334,8 @@ function reference_new_releases {
 	local latest_product_group_version="$(\
 		grep "portal.latest.bundle.version\[master\]=" \
 			"build.properties" | \
-			cut -d '=' -f 2 | \
-			cut -d '.' -f 1,2)"
+			cut --delimiter '=' --fields 2 | \
+			cut --delimiter '.' --fields 1,2)"
 
 	if [ "${product_group_version}" == "${latest_product_group_version}" ] || [ "${latest_quarterly_release}" == "true" ] 
 	then
@@ -349,8 +349,8 @@ function reference_new_releases {
 		grep "portal.latest.bundle.version" \
 			"build.properties" | \
 			tail -1 | \
-			cut -d '[' -f 2 | \
-			cut -d ']' -f 1)"
+			cut --delimiter '[' --fields 2 | \
+			cut --delimiter ']' --fields 1)"
 
 	local quarterly_release_branch="release-$(get_product_group_version)"
 
@@ -412,7 +412,7 @@ function replace_property {
 	local new_value="${2}"
 	local search_key="${3}"
 
-	sed -i "s/${search_key}/${new_key}=${new_value}/" "build.properties"
+	sed --in-place "s/${search_key}/${new_key}=${new_value}/" "build.properties"
 }
 
 function tag_release {
@@ -490,7 +490,7 @@ function tag_release {
 
 	if is_7_4_u_release
 	then
-		local temp_branch="release-$(echo "${_PRODUCT_VERSION}" | sed -r "s/-u/\./")"
+		local temp_branch="release-$(echo "${_PRODUCT_VERSION}" | sed --regexp-extended "s/-u/\./")"
 
 		if [ $(invoke_github_api_delete "brianchandotcom" "${repository}/git/refs/heads/${temp_branch}") -eq "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}" ]
 		then
@@ -509,9 +509,9 @@ function test_boms {
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	rm -f "${HOME}/.liferay/workspace/releases.json"
+	rm --force "${HOME}/.liferay/workspace/releases.json"
 
-	mkdir -p "temp_dir_test_boms"
+	mkdir --parents "temp_dir_test_boms"
 
 	lc_cd "temp_dir_test_boms"
 
@@ -520,14 +520,14 @@ function test_boms {
 		blade init -v "${LIFERAY_RELEASE_PRODUCT_NAME}-${_PRODUCT_VERSION}"
 	else
 		local product_group_version="$(get_product_group_version)"
-		local product_version_suffix=$(echo "${_PRODUCT_VERSION}" | cut -d '-' -f 2)
+		local product_version_suffix=$(echo "${_PRODUCT_VERSION}" | cut --delimiter '-' --fields 2)
 
 		blade init -v "${LIFERAY_RELEASE_PRODUCT_NAME}-${product_group_version}-${product_version_suffix}"
 	fi
 
 	export LIFERAY_RELEASES_MIRRORS="https://releases.liferay.com"
 
-	sed -i "s/version: \"10.1.0\"/version: \"10.1.2\"/" "temp_dir_test_boms/settings.gradle"
+	sed --in-place "s/version: \"10.1.0\"/version: \"10.1.2\"/" "temp_dir_test_boms/settings.gradle"
 
 	for module in api mvc-portlet
 	do
@@ -549,7 +549,7 @@ function test_boms {
 
 	pgrep --full --list-name temp_dir_test_boms | awk '{print $1}' | xargs --no-run-if-empty kill -9
 
-	rm -fr "temp_dir_test_boms"
+	rm --force --recursive "temp_dir_test_boms"
 
 	if [[ "${build_result}" != *"BUILD SUCCESSFUL"* ]]
 	then
@@ -559,7 +559,7 @@ function test_boms {
 
 function update_release_info_date {
 	if ! is_quarterly_release ||
-	   [ ! $(echo "${LIFERAY_RELEASE_PREPARE_NEXT_RELEASE_BRANCH}" | grep -i "true") ] ||
+	   [ ! $(echo "${LIFERAY_RELEASE_PREPARE_NEXT_RELEASE_BRANCH}" | grep --ignore-case "true") ] ||
 	   [[ "$(get_release_patch_version)" -eq 0 ]] ||
 	   [[ "$(get_release_year)" -lt 2024 ]]
 	then
@@ -581,7 +581,7 @@ function update_release_info_date {
 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
 
-	sed -i \
+	sed --in-place \
 		-e "s/release.info.date=.*/release.info.date=$(date -d "next monday" +"%B %-d, %Y")/" \
 		release.properties
 
