@@ -459,12 +459,17 @@ function _copy_tld {
 		arguments+="-name \"${tld}\""
 	done
 
-	for file in $(eval find "${_PROJECTS_DIR}" \
+	for file in $(eval find "${_PROJECTS_DIR}/liferay-portal-ee" \
 		"${arguments}" -type f | \
+			grep \
+				--extended-regexp "(/build/|/classes/|/test/|/testIntegration/|/gradleTest/|/sdk/)" \
+				--invert-match | \
 			awk -F "/" '{print $NF, $0}' | \
 			sort -k 1,1 -u | \
 			awk '{print $2}')
 	do
+		log INFO "Copying file ${file} to ${1}."
+
 		cp "${file}" "${1}"
 	done
 }
