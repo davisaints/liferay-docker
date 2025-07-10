@@ -18,6 +18,7 @@ function main {
 	test_release_common_is_7_4_u_release
 	test_release_common_is_dxp_release
 	test_release_common_is_early_product_version_than
+	test_release_common_is_later_product_version_than
 	test_release_common_is_ga_release
 	test_release_common_is_lts_release
 	test_release_common_is_nightly_release
@@ -121,6 +122,29 @@ function test_release_common_is_early_product_version_than {
 	_test_release_common_is_early_product_version_than "2024.q4.7" "2025.q1.0" "0"
 	_test_release_common_is_early_product_version_than "2025.q1.0" "2025.q1.1" "0"
 	_test_release_common_is_early_product_version_than "2025.q1.1-lts" "2025.q1.0-lts" "1"
+	_test_release_common_is_early_product_version_than "2025.q1.1-lts" "7.4.13-u102" "1"
+	_test_release_common_is_early_product_version_than "7.3.13-u103" "7.4.13-u102" "0"
+	_test_release_common_is_early_product_version_than "7.3.13-u103" "7.4.13-u103" "0"
+	_test_release_common_is_early_product_version_than "7.4.13-u102" "7.3.13-u103" "1"
+	_test_release_common_is_early_product_version_than "7.4.13-u102" "7.4.13-u101" "1"
+	_test_release_common_is_early_product_version_than "7.4.13-u102" "7.4.13-u102" "1"
+	_test_release_common_is_early_product_version_than "7.4.13-u102" "7.4.13-u103" "0"
+	_test_release_common_is_early_product_version_than "7.4.13-u103" "7.3.13-u103" "1"
+}
+
+function test_release_common_is_later_product_version_than {
+	_test_release_common_is_later_product_version_than "2023.q3.3" "2025.q2.0" "1"
+	_test_release_common_is_later_product_version_than "2024.q4.7" "2025.q1.0" "1"
+	_test_release_common_is_later_product_version_than "2025.q1.0" "2025.q1.1" "1"
+	_test_release_common_is_later_product_version_than "2025.q1.1-lts" "2025.q1.0-lts" "0"
+	_test_release_common_is_later_product_version_than "2025.q1.1-lts" "7.4.13-u102" "1"
+	_test_release_common_is_later_product_version_than "7.3.13-u103" "7.4.13-u102" "1"
+	_test_release_common_is_later_product_version_than "7.3.13-u103" "7.4.13-u103" "1"
+	_test_release_common_is_later_product_version_than "7.4.13-u102" "7.3.13-u103" "0"
+	_test_release_common_is_later_product_version_than "7.4.13-u102" "7.4.13-u101" "0"
+	_test_release_common_is_later_product_version_than "7.4.13-u102" "7.4.13-u102" "1"
+	_test_release_common_is_later_product_version_than "7.4.13-u102" "7.4.13-u103" "1"
+	_test_release_common_is_later_product_version_than "7.4.13-u103" "7.3.13-u103" "0"
 }
 
 function test_release_common_is_ga_release {
@@ -267,6 +291,16 @@ function _test_release_common_is_early_product_version_than {
 	echo -e "Running _test_release_common_is_early_product_version_than for ${_PRODUCT_VERSION}.\n"
 
 	is_early_product_version_than "${2}"
+
+	assert_equals "${?}" "${3}"
+}
+
+function _test_release_common_is_later_product_version_than {
+	_PRODUCT_VERSION="${1}"
+
+	echo -e "Running _test_release_common_is_later_product_version_than for ${_PRODUCT_VERSION}.\n"
+
+	is_later_product_version_than "${2}"
 
 	assert_equals "${?}" "${3}"
 }

@@ -35,6 +35,7 @@ function generate_api_jars {
 			(! echo "${artifact}" | grep -q "com.liferay.portletmvc4spring:com.liferay.portletmvc4spring.test:") &&
 			(! echo "${artifact}" | grep -q "com.liferay:biz.aQute.bnd.annotation:") &&
 			(! echo "${artifact}" | grep -q "io.swagger") &&
+			(! echo "${artifact}" | grep -q "jakarta") &&
 			(! echo "${artifact}" | grep -q "javax") &&
 			(! echo "${artifact}" | grep -q "org.jsoup") &&
 			(! echo "${artifact}" | grep -q "org.osgi")
@@ -111,6 +112,17 @@ function generate_api_jars {
 		do
 			_manage_bom_jar "${module_jar}"
 		done
+	fi
+
+	if is_quarterly_release ||
+	   is_u_release
+	then
+		if is_later_product_version_than "2025.q2.3" ||
+		   is_later_product_version_than "7.4.13-u135"
+		then
+			_manage_bom_jar "${_BUNDLES_DIR}/tomcat/lib/servlet-api.jar"
+			_manage_bom_jar "${_BUNDLES_DIR}/tomcat/webapps/ROOT/WEB-INF/shielded-container-lib/com.liferay.jakarta.portlet-api.jar"
+		fi
 	fi
 
 	for file in $(ls api-jar/META-INF --almost-all | grep --extended-regexp --invert-match '^(alloy-util.tld|alloy.tld|c.tld|liferay.tld)$')
@@ -478,7 +490,8 @@ function _manage_bom_jar {
 
 	#rm -f "${name}-${version}.jar"
 
-	if (basename "${1}" | grep -Eq "^com.liferay.")
+	if (basename "${1}" | grep --extended-regexp --quiet "^com.liferay." &&
+	   ! basename "${1}" | grep --quiet "com.liferay.jakarta.portlet-api.jar")
 	then
 		local current_file
 
