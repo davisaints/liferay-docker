@@ -33,6 +33,9 @@ function get_release_version {
 	elif is_u_release "${product_version}"
 	then
 		echo "${product_version}" | cut --delimiter '-' --fields 1
+	elif is_quarterly_release "${product_version}"
+	then
+		echo "${product_version}"
 	fi
 }
 
@@ -127,55 +130,7 @@ function is_dxp_release {
 }
 
 function is_early_product_version_than {
-	local product_version_1=""
-
-	if [ -n "${ACTUAL_PRODUCT_VERSION}" ]
-	then
-		product_version_1=$(echo "${ACTUAL_PRODUCT_VERSION}" | sed --expression "s/-lts//")
-	else
-		product_version_1=$(_get_product_version | sed --expression "s/-lts//")
-	fi
-
-	local product_version_1_quarter
-	local product_version_1_suffix
-
-	IFS='.' read -r product_version_1_year product_version_1_quarter product_version_1_suffix <<< "${product_version_1}"
-
-	product_version_1_quarter=$(echo "${product_version_1_quarter}" | sed --expression "s/q//")
-
-	local product_version_2=$(echo "${1}" | sed --expression "s/-lts//")
-	local product_version_2_quarter
-	local product_version_2_suffix
-
-	IFS='.' read -r product_version_2_year product_version_2_quarter product_version_2_suffix <<< "${product_version_2}"
-
-	product_version_2_quarter=$(echo "${product_version_2_quarter}" | sed --expression "s/q//")
-
-	if [ "${product_version_1_year}" -lt "${product_version_2_year}" ]
-	then
-		return 0
-	elif [ "${product_version_1_year}" -gt "${product_version_2_year}" ]
-	then
-		return 1
-	fi
-
-	if [ "${product_version_1_quarter}" -lt "${product_version_2_quarter}" ]
-	then
-		return 0
-	elif [ "${product_version_1_quarter}" -gt "${product_version_2_quarter}" ]
-	then
-		return 1
-	fi
-
-	if [ "${product_version_1_suffix}" -lt "${product_version_2_suffix}" ]
-	then
-		return 0
-	elif [ "${product_version_1_suffix}" -gt "${product_version_2_suffix}" ]
-	then
-		return 1
-	fi
-
-	return 1
+	_compare_product_versions "${1}" "early"
 }
 
 function is_ga_release {
@@ -185,6 +140,10 @@ function is_ga_release {
 	fi
 
 	return 1
+}
+
+function is_later_product_version_than {
+	_compare_product_versions "${1}" "later"
 }
 
 function is_lts_release {
@@ -234,6 +193,72 @@ function is_u_release {
 
 function set_actual_product_version {
 	ACTUAL_PRODUCT_VERSION="${1}"
+}
+
+function _compare_product_versions {
+	local product_version_1
+
+	if [ -n "${ACTUAL_PRODUCT_VERSION}" ]
+	then
+		product_version_1="${ACTUAL_PRODUCT_VERSION}"
+	else
+		product_version_1=$(_get_product_version)
+	fi
+
+	local product_version_2="${1}"
+
+	local operator_1
+	local operator_2
+
+	if [ "${2}" == "early" ]
+	then
+		operator_1="-lt"
+		operator_2="-gt"
+	elif [ "${2}" == "later" ]
+	then
+		operator_1="-gt"
+		operator_2="-lt"
+	fi
+
+	if (is_ga_release "${product_version_1}" && is_ga_release "${product_version_2}") ||
+	   (is_u_release "${product_version_1}" && is_u_release "${product_version_2}")
+	then
+		if [ "$(get_release_version_trivial ${product_version_1})" "${operator_1}" "$(get_release_version_trivial ${product_version_2})" ]
+		then
+			return 0
+		elif [ "$(get_release_version_trivial ${product_version_1})" "${operator_2}" "$(get_release_version_trivial ${product_version_2})" ]
+		then
+			return 1
+		fi
+	elif is_quarterly_release "${product_version_1}" &&
+		 is_quarterly_release "${product_version_2}"
+	then
+		if [ "$(get_release_year ${product_version_1})" "${operator_1}" "$(get_release_year ${product_version_2})" ]
+		then
+			return 0
+		elif [ "$(get_release_year ${product_version_1})" "${operator_2}" "$(get_release_year ${product_version_2})" ]
+		then
+			return 1
+		fi
+
+		if [ "$(get_release_quarter ${product_version_1})" "${operator_1}" "$(get_release_quarter ${product_version_2})" ]
+		then
+			return 0
+		elif [ "$(get_release_quarter ${product_version_1})" "${operator_2}" "$(get_release_quarter ${product_version_2})" ]
+		then
+			return 1
+		fi
+
+		if [ "$(get_release_patch_version ${product_version_1})" "${operator_1}" "$(get_release_patch_version ${product_version_2})" ]
+		then
+			return 0
+		elif [ "$(get_release_patch_version ${product_version_1})" "${operator_2}" "$(get_release_patch_version ${product_version_2})" ]
+		then
+			return 1
+		fi
+	fi
+
+	return 1
 }
 
 function _get_product_version {
