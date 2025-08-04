@@ -159,7 +159,7 @@ function compare_jars {
 			# TODO Modify "ant all" to not update this file every time
 			#
 			grep --invert-match "META-INF/system.packages.extra.mf" | \
-			sed --expression "s/[0-9][0-9][-]*[0-9][0-9][-]*[0-9][0-9][-]*[0-9][0-9]\ [0-9][0-9]:[0-9][0-9]//"
+			sed --expression="s/[0-9][0-9][-]*[0-9][0-9][-]*[0-9][0-9][-]*[0-9][0-9]\ [0-9][0-9]:[0-9][0-9]//"
 	}
 
 	local jar_descriptions=$( (
@@ -264,7 +264,7 @@ function copy_release_info_date {
 	lc_cd "${_PROJECTS_DIR}/liferay-portal-ee"
 
 	sed \
-		--expression "s/release.info.date=.*/release.info.date=$(date -d "${build_date}" +"%B %d, %Y")/" \
+		--expression="s/release.info.date=.*/release.info.date=$(date -d "${build_date}" +"%B %d, %Y")/" \
 		--in-place \
 		release.properties
 }
@@ -386,7 +386,7 @@ function create_hotfix {
 		then
 			local removed_file=${change#Only in }
 
-			removed_file=$(echo "${removed_file}" | sed --expression "s#: #/#" | sed --expression "s#${_RELEASE_DIR}##")
+			removed_file=$(echo "${removed_file}" | sed --expression="s#: #/#" | sed --expression="s#${_RELEASE_DIR}##")
 			removed_file=${removed_file#/}
 
 			echo "${removed_file}"
@@ -408,7 +408,7 @@ function create_hotfix {
 		then
 			local new_file=${change#Only in }
 
-			new_file=$(echo "${new_file}" | sed --expression "s#: #/#" | sed --expression "s#${_BUNDLES_DIR}##")
+			new_file=$(echo "${new_file}" | sed --expression="s#: #/#" | sed --expression="s#${_BUNDLES_DIR}##")
 			new_file=${new_file#/}
 
 			if [ ! -f "${_BUNDLES_DIR}/${new_file}" ]
@@ -428,7 +428,7 @@ function create_hotfix {
 			local changed_file=${change#Files }
 
 			changed_file=${changed_file%% *}
-			changed_file=$(echo "${changed_file}" | sed --expression "s#${_BUNDLES_DIR}##")
+			changed_file=$(echo "${changed_file}" | sed --expression="s#${_BUNDLES_DIR}##")
 			changed_file=${changed_file#/}
 
 			if [ ! -f "${_BUNDLES_DIR}/${changed_file}" ]
@@ -582,13 +582,13 @@ function sign_hotfix {
 }
 
 function transform_file_name {
-	local file_name=$(echo "${1}" | sed --expression s#osgi/#OSGI_BASE_PATH/#)
+	local file_name=$(echo "${1}" | sed --expression=s#osgi/#OSGI_BASE_PATH/#)
 
-	file_name=$(echo "${file_name}" | sed --expression s#tomcat/webapps/ROOT#WAR_PATH#)
+	file_name=$(echo "${file_name}" | sed --expression=s#tomcat/webapps/ROOT#WAR_PATH#)
 
 	if is_7_3_release
 	then
-		file_name=$(echo "${file_name}" | sed --expression s#tomcat/lib/ext#GLOBAL_LIB_PATH#)
+		file_name=$(echo "${file_name}" | sed --expression=s#tomcat/lib/ext#GLOBAL_LIB_PATH#)
 	fi
 
 	echo "${file_name}"

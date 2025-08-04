@@ -187,12 +187,12 @@ function prepare_next_release_branch {
 		fi
 
 		sed \
-			--expression "s/release.info.version.display.name\[master-private\]=.*/release.info.version.display.name[master-private]=${product_group_version^^}.${next_release_patch_version}/" \
+			--expression="s/release.info.version.display.name\[master-private\]=.*/release.info.version.display.name[master-private]=${product_group_version^^}.${next_release_patch_version}/" \
 			--in-place \
 			"${_PROJECTS_DIR}/liferay-portal-ee/release.properties"
 
 		sed \
-			--expression "s/release.info.version.display.name\[release-private\]=.*/release.info.version.display.name[release-private]=${product_group_version^^}.${next_release_patch_version}/" \
+			--expression="s/release.info.version.display.name\[release-private\]=.*/release.info.version.display.name[release-private]=${product_group_version^^}.${next_release_patch_version}/" \
 			--in-place \
 			"${_PROJECTS_DIR}/liferay-portal-ee/release.properties"
 
@@ -582,7 +582,7 @@ function update_release_info_date {
 	fi
 
 	sed \
-		--expression "s/release.info.date=.*/release.info.date=$(date -d "next monday" +"%B %-d, %Y")/" \
+		--expression="s/release.info.date=.*/release.info.date=$(date -d "next monday" +"%B %-d, %Y")/" \
 		--in-place \
 		release.properties
 

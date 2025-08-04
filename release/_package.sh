@@ -14,9 +14,9 @@ function generate_checksum_files {
 			# TODO Remove *.MD5 in favor of *.sha512.
 			#
 
-			md5sum "${file}" | sed --expression "s/ .*//" > "${file}.MD5"
+			md5sum "${file}" | sed --expression="s/ .*//" > "${file}.MD5"
 
-			sha512sum "${file}" | sed --expression "s/ .*//" > "${file}.sha512"
+			sha512sum "${file}" | sed --expression="s/ .*//" > "${file}.sha512"
 		fi
 	done
 }

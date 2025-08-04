@@ -17,9 +17,9 @@ function generate_product_info_json {
 	cp --force "${_PROMOTION_DIR}/.product_info.json.tmp" "${LIFERAY_COMMON_LOG_DIR}/.product_info.json-BACKUP.txt"
 
 	sed \
-		--expression 's@\r?\n        "@"@g' \
-		--expression 's@\r?\n    \}(,)?@\}\1@g' \
-		--expression 's@[ ]+"@"@g' \
+		--expression='s@\r?\n        "@"@g' \
+		--expression='s@\r?\n    \}(,)?@\}\1@g' \
+		--expression='s@[ ]+"@"@g' \
 		--in-place \
 		--null-data \
 		--regexp-extended \
@@ -30,8 +30,8 @@ function generate_product_info_json {
 	lc_log DEBUG "Updating ${_PROMOTION_DIR}/.product_info.json."
 
 	sed \
-		--expression "s@\(${product_version}.*\),\"promoted\":\"true\",\(.*\)@\1,\"promoted\":\"false\",\2@" \
-		--expression "s/^\}/,/" \
+		--expression="s@\(${product_version}.*\),\"promoted\":\"true\",\(.*\)@\1,\"promoted\":\"false\",\2@" \
+		--expression="s/^\}/,/" \
 		--in-place \
 		"${_PROMOTION_DIR}/.product_info.json.tmp"
 

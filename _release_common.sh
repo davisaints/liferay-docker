@@ -9,7 +9,7 @@ function get_release_patch_version {
 
 	if is_lts_release "${product_version}"
 	then
-		echo "${product_version}" | cut --delimiter='.' --fields=3 | sed --expression "s/-lts//"
+		echo "${product_version}" | cut --delimiter='.' --fields=3 | sed --expression="s/-lts//"
 	else
 		echo "${product_version}" | cut --delimiter='.' --fields=3
 	fi
