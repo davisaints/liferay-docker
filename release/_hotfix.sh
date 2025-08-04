@@ -582,13 +582,13 @@ function sign_hotfix {
 }
 
 function transform_file_name {
-	local file_name=$(echo "${1}" | sed --expression=s#osgi/#OSGI_BASE_PATH/#)
+	local file_name=$(echo "${1}" | sed --expression="s#osgi/#OSGI_BASE_PATH/#")
 
-	file_name=$(echo "${file_name}" | sed --expression=s#tomcat/webapps/ROOT#WAR_PATH#)
+	file_name=$(echo "${file_name}" | sed --expression="s#tomcat/webapps/ROOT#WAR_PATH#")
 
 	if is_7_3_release
 	then
-		file_name=$(echo "${file_name}" | sed --expression=s#tomcat/lib/ext#GLOBAL_LIB_PATH#)
+		file_name=$(echo "${file_name}" | sed --expression="s#tomcat/lib/ext#GLOBAL_LIB_PATH#")
 	fi
 
 	echo "${file_name}"
