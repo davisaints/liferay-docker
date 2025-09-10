@@ -1,5 +1,6 @@
 #!/bin/bash
 
+source ../_common.sh
 source ../_release_common.sh
 
 function generate_releases_json {
