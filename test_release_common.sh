@@ -14,6 +14,7 @@ function main {
 		test_release_common_get_release_version
 		test_release_common_get_release_version_trivial
 		test_release_common_get_release_year
+		test_release_common_get_tag_name
 		test_release_common_is_7_3_ga_release
 		test_release_common_is_7_3_release
 		test_release_common_is_7_3_u_release
@@ -231,6 +232,25 @@ function _test_release_common_get_release_version_trivial {
 	_PRODUCT_VERSION="${1}"
 
 	assert_equals "$(get_release_version_trivial)" "${2}"
+}
+
+function test_release_common_get_tag_name {
+	_test_release_common_get_tag_name "2024.q1.12" "2024.q1.12" "2024.q1.12"
+	_test_release_common_get_tag_name "2025.q1.0" "2025.q1.0-lts" "2025.q1.0"
+	_test_release_common_get_tag_name "7.4.13.u136" "7.4.13-u136" "7.4.13-u136"
+
+	LIFERAY_RELEASE_PRODUCT_NAME="portal"
+
+	_test_release_common_get_tag_name "7.4.3.132" "7.4.3.132-ga132" "7.4.3.132-ga132"
+
+	LIFERAY_RELEASE_PRODUCT_NAME="dxp"
+}
+
+function _test_release_common_get_tag_name {
+	_ARTIFACT_VERSION="${1}"
+	_PRODUCT_VERSION="${2}"
+
+	assert_equals "$(get_tag_name)" "${3}"
 }
 
 function _test_release_common_is_7_3_ga_release {
