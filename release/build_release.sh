@@ -10,6 +10,7 @@ source ./_package.sh
 source ./_patcher.sh
 source ./_product.sh
 source ./_publishing.sh
+source ./_release_common.sh
 source ./_releases_json.sh
 
 function check_usage {
