@@ -128,10 +128,16 @@ function download_file_from_github {
 	local file_name=${1}
 	local file_path=${2}
 	local repository_name=${3}
+	local tag=${4}
+
+    if [ -z "${tag}" ]
+    then
+        tag="master"
+    fi
 
 	local http_response=$(\
 		curl \
-			"https://api.github.com/repos/liferay/${repository_name}/contents/${file_path}?ref=master" \
+			"https://api.github.com/repos/liferay/${repository_name}/contents/${file_path}?ref=${tag}" \
 			--header "Accept: application/vnd.github.v3.raw" \
 			--header "Authorization: token ${LIFERAY_RELEASE_GITHUB_PAT}" \
 			--include \
