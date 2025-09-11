@@ -16,13 +16,14 @@ function generate_releases_json {
 		fi
 	fi
 
+	_add_database_schema_versions
 	_add_major_versions
 	_promote_product_versions
 	_tag_recommended_product_versions
 
 	_merge_json_snippets
 
-	_upload_releases_json
+	# _upload_releases_json
 }
 
 function _add_database_schema_versions {
