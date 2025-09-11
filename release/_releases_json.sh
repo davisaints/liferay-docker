@@ -48,6 +48,57 @@ function _add_major_versions {
 	done
 }
 
+function _get_database_schema_version {
+	local product_version=${1}
+	local repository=${2}
+
+	download_file_from_github \
+		"PortalUpgradeProcessRegistryImpl.java" \
+		"portal-impl/src/com/liferay/portal/upgrade/$(_get_liferay_upgrade_folder_version "${product_version}")/PortalUpgradeProcessRegistryImpl.java" \
+		"${repository}" \
+		"$(get_tag_name "${product_version}")" &> /dev/null
+
+	if [ "${?}" -ne 0 ]
+	then
+		echo ""
+
+		return
+	fi
+
+	local database_schema_version=$(\
+		grep \
+			--only-matching \
+			--perl-regexp "new Version\(\K[^)]+" \
+			"${_PROMOTION_DIR}"/PortalUpgradeProcessRegistryImpl.java |
+		tail --lines=1 |
+		cut --delimiter=',' --fields=1,2,3 |
+		tr ',' '.' |
+		tr --delete '[:space:]')
+
+	if [ -z "${database_schema_version}" ] ||
+	   [[ ! "${database_schema_version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+	then
+		echo ""
+
+		return
+	fi
+
+	rm --force "${_PROMOTION_DIR}"/PortalUpgradeProcessRegistryImpl.java
+
+	echo "${database_schema_version}"
+}
+
+function _get_liferay_upgrade_folder_version {
+	local product_version=${1}
+
+	if is_quarterly_release "${product_version}"
+	then
+		echo "v7_4_x"
+	else
+		echo "v$(get_product_group_version "${product_version}" | tr '.' '_')_x"
+	fi
+}
+
 function _merge_json_snippets {
 	if (! jq --slurp add $(ls ./*.json | sort --reverse) > releases.json)
 	then
