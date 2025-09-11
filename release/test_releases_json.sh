@@ -12,6 +12,7 @@ function main {
 	then
 		"${1}"
 	else
+		test_releases_json_add_database_schema_versions
 		test_releases_json_add_major_versions
 		test_releases_json_get_latest_product_version
 		test_releases_json_merge_json_snippets
@@ -42,6 +43,16 @@ function tear_down {
 	unset _RELEASE_ROOT_DIR
 
 	rm ./*.json
+}
+
+function test_releases_json_add_database_schema_versions {
+	_add_database_schema_versions &> /dev/null
+
+	assert_equals \
+		"$(jq "[.[] | select(.databaseSchemaVersion == \"32.0.0\")] | length == 1" "$(ls "${_PROMOTION_DIR}" | grep "2025.q2.1")")" \
+		"true" \
+		"$(jq "[.[] | select(.databaseSchemaVersion == \"31.14.0\")] | length == 1" "$(ls "${_PROMOTION_DIR}" | grep "7.4.3.132-ga132")")" \
+		"true"
 }
 
 function test_releases_json_add_major_versions {
@@ -91,6 +102,8 @@ function test_releases_json_process_new_product {
 	_process_products &> /dev/null
 
 	_process_new_product &> /dev/null
+
+	_add_database_schema_versions &> /dev/null
 
 	_add_major_versions &> /dev/null
 
