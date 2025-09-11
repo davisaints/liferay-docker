@@ -15,6 +15,7 @@ function main {
 		test_releases_json_add_database_schema_versions
 		test_releases_json_add_major_versions
 		test_releases_json_get_latest_product_version
+		test_releases_json_get_liferay_upgrade_folder_version
 		test_releases_json_merge_json_snippets
 		test_releases_json_not_process_new_product
 		test_releases_json_process_new_product
@@ -77,6 +78,14 @@ function test_releases_json_get_latest_product_version {
 	_test_releases_json_get_latest_product_version "lts" "2025.q1.8-lts"
 	_test_releases_json_get_latest_product_version "quarterly" "2025.q2.1"
 	_test_releases_json_get_latest_product_version "quarterly-candidate" "2025.q2.1"
+}
+
+function test_releases_json_get_liferay_upgrade_folder_version {
+	_test_releases_json_get_liferay_upgrade_folder_version "2025.q3.0" "v7_4_x"
+	_test_releases_json_get_liferay_upgrade_folder_version "7.1.10-dxp-28" "v7_1_x"
+	_test_releases_json_get_liferay_upgrade_folder_version "7.2.10.8" "v7_2_x"
+	_test_releases_json_get_liferay_upgrade_folder_version "7.3.10-u36" "v7_3_x"
+	_test_releases_json_get_liferay_upgrade_folder_version "7.4.3.132-ga132" "v7_4_x"
 }
 
 function test_releases_json_merge_json_snippets {
@@ -145,6 +154,12 @@ function test_releases_json_tag_recommended_product_versions {
 function _test_releases_json_get_latest_product_version {
 	assert_equals \
 		"$(get_latest_product_version "${1}")" \
+		"${2}"
+}
+
+function _test_releases_json_get_liferay_upgrade_folder_version {
+	assert_equals \
+		"$(get_liferay_upgrade_folder_version "${1}")" \
 		"${2}"
 }
 
