@@ -1,5 +1,34 @@
 #!/bin/bash
 
+function download_file_from_github {
+	local file_name=${1}
+	local file_path=${2}
+	local repository_name=${3}
+	local tag=${4}
+
+    if [ -z "${tag}" ]
+    then
+        tag="master"
+    fi
+
+	local http_response=$(\
+		curl \
+			"https://api.github.com/repos/liferay/${repository_name}/contents/${file_path}?ref=${tag}" \
+			--header "Accept: application/vnd.github.v3.raw" \
+			--header "Authorization: token ${LIFERAY_RELEASE_GITHUB_PAT}" \
+			--include \
+			--max-time 10 \
+			--output "${file_name}" \
+			--request GET \
+			--retry 3 \
+			--write-out "%{http_code}")
+
+	if [ "${http_response}" != "200" ]
+	then
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
+}
+
 function get_latest_product_version {
 	local product_name=""
 	local product_version="${1}"
