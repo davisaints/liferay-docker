@@ -23,7 +23,7 @@ function generate_releases_json {
 
 	_merge_json_snippets
 
-	_upload_releases_json
+	# _upload_releases_json
 }
 
 function _add_database_schema_versions {
