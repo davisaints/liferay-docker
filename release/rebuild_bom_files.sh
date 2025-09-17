@@ -15,7 +15,7 @@ function check_usage {
 	fi
 
 	LIFERAY_RELEASE_UPLOAD="true"
-	_BUILD_TIMESTAMP=$(date +%s)
+	_BUILD_TIMESTAMP=$(/usr/bin/date +%s)
 
 	LIFERAY_RELEASE_RC_BUILD_TIMESTAMP="${_BUILD_TIMESTAMP}"
 

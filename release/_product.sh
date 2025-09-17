@@ -539,7 +539,7 @@ function update_release_info_date {
 	lc_cd "${_PROJECTS_DIR}/liferay-portal-ee"
 
 	sed \
-		--expression "s/release.info.date=.*/release.info.date=$(date +"%B %d, %Y")/" \
+		--expression "s/release.info.date=.*/release.info.date=$(/usr/bin/date +"%B %d, %Y")/" \
 		--in-place \
 		release.properties
 }

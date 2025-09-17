@@ -30,7 +30,7 @@ function check_usage {
 		print_help
 	fi
 
-	_BUILD_TIMESTAMP=$(date +%s)
+	_BUILD_TIMESTAMP=$(/usr/bin/date +%s)
 
 	if [ -z "${LIFERAY_RELEASE_HOTFIX_ID}" ]
 	then
@@ -242,11 +242,11 @@ function main {
 		lc_time_run report_patcher_status
 	fi
 
-	local end_time=$(date +%s)
+	local end_time=$(/usr/bin/date +%s)
 
 	local seconds=$((end_time - _BUILD_TIMESTAMP))
 
-	lc_log INFO "Completed ${LIFERAY_RELEASE_OUTPUT} building in $(lc_echo_time ${seconds}) on $(date)."
+	lc_log INFO "Completed ${LIFERAY_RELEASE_OUTPUT} building in $(lc_echo_time ${seconds}) on $(/usr/bin/date)."
 }
 
 function print_help {

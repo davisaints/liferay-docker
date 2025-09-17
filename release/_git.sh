@@ -134,7 +134,7 @@ function prepare_branch_to_commit {
 
 	local repository_name="${2}"
 
-	_TEMP_BRANCH="temp-branch-$(date "+%Y%m%d%H%M%S")"
+	_TEMP_BRANCH="temp-branch-$(/usr/bin/date "+%Y%m%d%H%M%S")"
 
 	git fetch --no-tags "git@github.com:liferay/${repository_name}.git" "${base_branch}:${_TEMP_BRANCH}"
 

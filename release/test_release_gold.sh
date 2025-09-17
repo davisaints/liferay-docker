@@ -145,7 +145,7 @@ function test_release_gold_update_release_info_date {
 
 	assert_equals \
 		"$(lc_get_property "${_PROJECTS_DIR}"/liferay-portal-ee/release.properties "release.info.date")" \
-		"$(date -d "next monday" +"%B %-d, %Y")"
+		"$(/usr/bin/date -d "next monday" +"%B %-d, %Y")"
 }
 
 function _test_release_gold_not_prepare_next_release_branch {
