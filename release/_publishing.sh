@@ -379,40 +379,40 @@ function upload_release {
 }
 
 function upload_to_docker_hub {
-	if [ "${1}" == "release-candidate" ] &&
-	   [ "${LIFERAY_RELEASE_UPLOAD}" != "true" ]
-	then
-		lc_log INFO "Set the environment variable LIFERAY_RELEASE_UPLOAD to \"true\" to enable."
+	# if [ "${1}" == "release-candidate" ] &&
+	#    [ "${LIFERAY_RELEASE_UPLOAD}" != "true" ]
+	# then
+	# 	lc_log INFO "Set the environment variable LIFERAY_RELEASE_UPLOAD to \"true\" to enable."
 
-		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
-	fi
+	# 	return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
+	# fi
 
-	lc_cd "${_BASE_DIR}"
+	# lc_cd "${_BASE_DIR}"
 
-	if [ "${1}" == "release-candidate" ]
-	then
-		LIFERAY_DOCKER_IMAGE_FILTER="${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}" LIFERAY_DOCKER_RELEASE_CANDIDATE="true" ./build_all_images.sh --push
-	else
-		prepare_branch_to_commit "${_BASE_DIR}" "liferay-docker"
+	# if [ "${1}" == "release-candidate" ]
+	# then
+	# 	LIFERAY_DOCKER_IMAGE_FILTER="${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}" LIFERAY_DOCKER_RELEASE_CANDIDATE="true" ./build_all_images.sh --push
+	# else
+	# 	prepare_branch_to_commit "${_BASE_DIR}" "liferay-docker"
 
-		if [ "${?}" -ne 0 ]
-		then
-			lc_log ERROR "Unable to prepare the branch to update bundles.yml."
+	# 	if [ "${?}" -ne 0 ]
+	# 	then
+	# 		lc_log ERROR "Unable to prepare the branch to update bundles.yml."
 
-			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
-		fi
+	# 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	# 	fi
 
-		_update_bundles_yml
+	# 	_update_bundles_yml
 
-		LIFERAY_DOCKER_IMAGE_FILTER="${_PRODUCT_VERSION}" LIFERAY_DOCKER_RELEASE_CANDIDATE="false" ./build_all_images.sh --push-all
-	fi
+	# 	LIFERAY_DOCKER_IMAGE_FILTER="${_PRODUCT_VERSION}" LIFERAY_DOCKER_RELEASE_CANDIDATE="false" ./build_all_images.sh --push-all
+	# fi
 
-	local exit_code="${?}"
+	# local exit_code="${?}"
 
-	if [ "${exit_code}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
-	then
-		lc_log ERROR "Unable to build the Docker image."
-	fi
+	# if [ "${exit_code}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
+	# then
+	# 	lc_log ERROR "Unable to build the Docker image."
+	# fi
 
 	if [ "${1}" == "release-gold" ]
 	then
