@@ -3,7 +3,7 @@
 function get_latest_product_version {
 	local product_name=""
 	local product_version="${1}"
-	local product_version_regex="(?<=<a href=\")"
+	local product_version_regex="(?<=<a href=\"/(?:dxp|portal)/)"
 
 	if [ "${product_version}" == "dxp" ]
 	then
@@ -43,6 +43,7 @@ function get_latest_product_version {
 			--only-matching \
 			--perl-regexp \
 			"${product_version_regex}" | \
+		sort --version-sort | \
 		tail --lines=1
 }
 
