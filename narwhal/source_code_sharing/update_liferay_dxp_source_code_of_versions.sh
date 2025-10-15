@@ -111,6 +111,36 @@ function get_all_tags {
 	git tag -l --sort=creatordate --format='%(refname:short)' "20*.q*.[0-9]" "20*.q*.[0-9][0-9]" "7.[0-9].[0-9]-u[0-9]*" "7.[0-9].[0-9][0-9]-u[0-9]*"
 }
 
+function get_baseline_version {
+	local tag_name="${1}"
+
+	local http_response=$(\
+		curl \
+			"https://api.github.com/repos/liferay/liferay-portal-ee/contents/release.properties?ref=${tag_name}" \
+			--header "Accept: application/vnd.github.v3.raw" \
+			--header "Authorization: token ${LIFERAY_RELEASE_GITHUB_PAT}" \
+			--include \
+			--max-time 10 \
+			--request GET \
+			--retry 3 \
+			--silent \
+			--write-out "%{http_code}")
+
+	local release_version_trivial=$(\
+		echo "${http_response}" | \
+		grep "release.info.version.trivial=" | \
+		cut --delimiter='=' --fields=2)
+
+	if [[ ! "${release_version_trivial}" =~ ^[0-9]{1,4}$ ]]
+	then
+		echo ""
+
+		return
+	fi
+
+	echo "7.4.13-u${release_version_trivial}"
+}
+
 function get_new_tags {
 	get_all_tags liferay-portal-ee > "${TAGS_FILE_EE}"
 
