@@ -103,6 +103,20 @@ function copy_tag {
 	lc_time_run commit_and_tag "${tag_name}"
 }
 
+function delete_if_exists {
+	local ref="${1}"
+
+	if git show-ref --quiet --verify "refs/heads/${ref}"
+	then
+		git branch -D "${ref}"
+	fi
+
+	if git show-ref --quiet --verify "refs/tags/${ref}"
+	then
+		git tag -d "${ref}"
+	fi
+}
+
 function get_all_tags {
 	local repository="${1}"
 
@@ -195,7 +209,7 @@ function main {
 	do
 		echo ""
 
-		lc_log DEBUG "Processing: ${tag_name}"
+		echo "Processing: ${tag_name}"
 
 		lc_time_run lc_clone_repository liferay-portal-ee "${REPO_PATH_EE}"
 
@@ -203,35 +217,68 @@ function main {
 
 		lc_time_run prepare_branch_in_dxp "${tag_name}"
 
+		if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}" ]
+		then
+			echo "Could not prepare branch in liferay-dxp for ${tag_name}"
+
+			rm -fr "${REPO_PATH_EE}"
+
+			continue
+		fi
+
 		rm -fr "${REPO_PATH_EE}"
 	done
 }
 
 function prepare_branch_in_dxp {
+	local tag_name="${1}"
+
 	lc_cd "${REPO_PATH_DXP}"
 
 	git checkout master
 
-	git branch -D 7.4.13
+	if [[ "${tag_name}" == *q* ]]
+	then
+		local quarterly_release_baseline_version=$(get_baseline_version "${tag_name}")
 
-	git checkout -b 7.4.13 upstream/7.4.13
+		if [ -z "${quarterly_release_baseline_version}" ]
+		then
+			echo "Unable to get baseline version for ${tag_name}"
+
+			return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
+		fi
+
+		echo "Baseline version for ${tag_name} is ${quarterly_release_baseline_version}"
+
+		delete_if_exists "${quarterly_release_baseline_version}"
+
+		delete_if_exists "${tag_name}"
+
+		git fetch upstream "refs/tags/${quarterly_release_baseline_version}:refs/tags/${quarterly_release_baseline_version}"
+
+		git checkout -b "${tag_name}" "${quarterly_release_baseline_version}"
+	else
+		delete_if_exists "7.4.13"
+
+		git checkout -b 7.4.13 upstream/7.4.13
+	fi
 
 	rsync -avz --exclude='.git/' --exclude='.github/' "${REPO_PATH_EE}/" "${REPO_PATH_DXP}"
 
 	git add . --force
 
-	git commit -m "${1}"
+	git commit -m "${tag_name}"
 
-	git tag "${1}"
+	git tag --force "${tag_name}"
 
-	if [[ "${1}" == 7.4.13-u* ]]
+	if [[ "${tag_name}" == 7.4.13-u* ]]
 	then
-		git push -f upstream 7.4.13
+		git push --force upstream 7.4.13
 	fi
 
-	git push --verbose upstream "${1}"
+	git push --force --verbose upstream "refs/tags/${tag_name}"
 
-	git checkout master
+	git checkout master --force
 }
 
 function prepare_branch_in_portal_ee {
