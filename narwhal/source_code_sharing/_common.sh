@@ -40,6 +40,46 @@ function commit_and_tag {
 	git tag "${tag_name}"
 }
 
+function clone_repository {
+	local repository_name=${1}
+	local repository_path=${2}
+
+	if [ -z "${repository_path}" ]
+	then
+		repository_path="${BASE_DIR}/${repository_name}"
+	fi
+
+	if [ -e "${repository_path}" ]
+	then
+		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
+	fi
+
+	if [ -e "/home/me/dev/projects/${repository_name}" ]
+	then
+		lc_log DEBUG "Copying Git repository from /home/me/dev/projects/${repository_name}."
+
+		cp -a "/home/me/dev/projects/${repository_name}" "${BASE_DIR}"
+	elif [ -e "/workspace/IS/Source-Code-Sharing/SCS_pipeline/backup/${repository_name}" ]
+	then
+		lc_log DEBUG "Copying Git repository from /workspace/IS/Source-Code-Sharing/SCS_pipeline/backup/${repository_name}."
+
+		cp -a "/workspace/IS/Source-Code-Sharing/SCS_pipeline/backup/${repository_name}" "${BASE_DIR}"
+	else
+		git clone "git@github.com:liferay/${repository_name}.git" "${repository_path}"
+	fi
+
+	lc_cd "${repository_path}"
+
+	if (git remote get-url upstream &>/dev/null)
+	then
+		git remote set-url upstream "git@github.com:liferay/${repository_name}.git"
+	else
+		git remote add upstream "git@github.com:liferay/${repository_name}.git"
+	fi
+
+	git remote --verbose
+}
+
 function fetch_repository {
 	if [ "${RUN_FETCH_REPOSITORY}" != "true" ]
 	then
@@ -72,11 +112,13 @@ function run_git_maintenance {
 }
 
 function prepare_repositories {
-	lc_time_run lc_clone_repository liferay-dxp
+	lc_cd "${BASE_DIR}"
+
+	lc_time_run clone_repository liferay-dxp
 
 	lc_cd "${BASE_DIR}"
 
-	lc_time_run lc_clone_repository liferay-portal-ee
+	lc_time_run clone_repository liferay-portal-ee
 
 	lc_cd "${BASE_DIR}"
 

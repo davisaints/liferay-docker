@@ -211,7 +211,7 @@ function main {
 
 		echo "Processing: ${tag_name}"
 
-		lc_time_run lc_clone_repository liferay-portal-ee "${REPO_PATH_EE}"
+		lc_time_run clone_repository liferay-portal-ee
 
 		lc_time_run prepare_branch_in_portal_ee "${tag_name}"
 
