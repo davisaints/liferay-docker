@@ -60,9 +60,9 @@ function lc_clone_repository {
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	if [ -e "/home/me/dev/projects/${repository_name}" ]
+	if [ -e "/workspace/IS/Source-Code-Sharing/SCS_pipeline/backup/${repository_name}" ]
 	then
-		lc_log DEBUG "Copying Git repository from /home/me/dev/projects/${repository_name}."
+		lc_log DEBUG "Copying Git repository from /workspace/IS/Source-Code-Sharing/SCS_pipeline/backup/${repository_name}."
 
 		cp --archive "/home/me/dev/projects/${repository_name}" "${repository_path}"
 	elif [ -e "/opt/dev/projects/github/${repository_name}" ]
