@@ -59,11 +59,11 @@ function clone_repository {
 		lc_log DEBUG "Copying Git repository from /home/me/dev/projects/${repository_name}."
 
 		cp -a "/home/me/dev/projects/${repository_name}" "${BASE_DIR}"
-	elif [ -e "/workspace/IS/Source-Code-Sharing/SCS_pipeline/backup/${repository_name}" ]
+	elif [ -e "/opt/dev/projects/github/${repository_name}" ]
 	then
-		lc_log DEBUG "Copying Git repository from /workspace/IS/Source-Code-Sharing/SCS_pipeline/backup/${repository_name}."
+		lc_log DEBUG "Copying Git repository from /opt/dev/projects/github/${repository_name}."
 
-		cp -a "/workspace/IS/Source-Code-Sharing/SCS_pipeline/backup/${repository_name}" "${BASE_DIR}"
+		cp -a "/opt/dev/projects/github/${repository_name}" "${BASE_DIR}"
 	else
 		git clone "git@github.com:liferay/${repository_name}.git" "${repository_path}"
 	fi
