@@ -8,14 +8,14 @@ set -o pipefail
 source "$(dirname "$(readlink /proc/$$/fd/255 2>/dev/null)")/_common.sh"
 
 function check_if_tag_exists {
-	local repository="${1}"
+	local repository_path="${1}"
 	local tag_name="${2}"
 
-	lc_cd "${BASE_DIR}/${repository}"
+	lc_cd "${repository_path}"
 
 	if (git -P tag -l "${tag_name}" | grep -q "[[:alnum:]]")
 	then
-		lc_log DEBUG "The tag '${tag_name}' already exists in the ${repository} repository. Updating ${IGNORE_ZIP_FILES_CACHE_FILE}."
+		lc_log DEBUG "The tag '${tag_name}' already exists in the $(basename "${repository_path}") repository. Updating ${IGNORE_ZIP_FILES_CACHE_FILE}."
 
 		if (! grep -q "${hotfix_zip_file}" "${IGNORE_ZIP_FILES_CACHE_FILE}")
 		then
@@ -26,7 +26,7 @@ function check_if_tag_exists {
 
 		return "${LIFERAY_COMMON_EXIT_CODE_OK}"
 	else
-		lc_log DEBUG "The tag '${tag_name}' does not exist in the ${repository} repository."
+		lc_log DEBUG "The tag '${tag_name}' does not exist in the $(basename "${repository_path}") repository."
 
 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
@@ -91,7 +91,7 @@ function check_usage {
 	LIFERAY_COMMON_DOWNLOAD_MAX_TIME="120"
 	LIFERAY_COMMON_LOG_DIR="${PWD}/logs"
 	IGNORE_ZIP_FILES=""
-	REPO_PATH_DXP="${BASE_DIR}/liferay-dxp"
+	REPO_PATH_DXP="/opt/dev/projects/github/liferay-dxp"
 	REPO_PATH_EE="${BASE_DIR}/liferay-portal-ee"
 	RUN_FETCH_REPOSITORY="true"
 	RUN_GIT_MAINTENANCE="false"
@@ -174,12 +174,12 @@ function checkout_commit {
 
 function checkout_hotfix_tag {
 	local base_branch_name="${3}"
-	local repository="${1}"
+	local repository_path="${1}"
 	local temporary_branch_name="${2}"
 
 	trap 'return ${LIFERAY_COMMON_EXIT_CODE_BAD}' ERR
 
-	lc_cd "${BASE_DIR}/${repository}"
+	lc_cd "${repository_path}"
 
 	git reset --hard -q
 
@@ -200,9 +200,9 @@ function copy_hotfix_commit {
 
 	if [[ "${tag_name_new}" == 20* ]]
 	then
-		lc_time_run checkout_hotfix_tag liferay-dxp "${temporary_branch_name}" "${base_branch_name}"
+		lc_time_run checkout_hotfix_tag "${REPO_PATH_DXP}" "${temporary_branch_name}" "${base_branch_name}"
 	else
-		lc_time_run checkout_tag liferay-dxp "${tag_name_base}"
+		lc_time_run checkout_tag "${REPO_PATH_DXP}" "${tag_name_base}"
 	fi
 
 	lc_time_run run_rsync
@@ -477,7 +477,7 @@ function process_zip_list_file {
 
 		check_ignore_via_file "${IGNORE_ZIP_FILES_CACHE_FILE}" && continue
 
-		check_if_tag_exists liferay-dxp "${tag_name_new}" && continue
+		check_if_tag_exists "${REPO_PATH_DXP}" "${tag_name_new}" && continue
 
 		lc_time_run lc_download "${file_url}"
 

@@ -8,7 +8,7 @@ source "$(dirname "$(readlink /proc/$$/fd/255 2>/dev/null)")/_common.sh"
 
 BASE_DIR="${PWD}"
 
-REPO_PATH_DXP="${BASE_DIR}/liferay-dxp"
+REPO_PATH_DXP="/opt/dev/projects/github/liferay-dxp"
 REPO_PATH_EE="${BASE_DIR}/liferay-portal-ee"
 
 TAGS_FILE_DXP="/tmp/tags_file_dxp.txt"
@@ -118,9 +118,9 @@ function delete_if_exists {
 }
 
 function get_all_tags {
-	local repository="${1}"
+	local repository_path="${1}"
 
-	lc_cd "${BASE_DIR}/${repository}"
+	lc_cd "${repository_path}"
 
 	git tag -l --sort=creatordate --format='%(refname:short)' "20*.q*.[0-9]" "20*.q*.[0-9][0-9]" "7.[0-9].[0-9]-u[0-9]*" "7.[0-9].[0-9][0-9]-u[0-9]*"
 }
@@ -156,9 +156,9 @@ function get_baseline_version {
 }
 
 function get_new_tags {
-	get_all_tags liferay-portal-ee > "${TAGS_FILE_EE}"
+	get_all_tags "${REPO_PATH_EE}" > "${TAGS_FILE_EE}"
 
-	get_all_tags liferay-dxp > "${TAGS_FILE_DXP}"
+	get_all_tags "${REPO_PATH_DXP}" > "${TAGS_FILE_DXP}"
 
 	local tag_name
 

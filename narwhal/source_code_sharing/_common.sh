@@ -13,16 +13,16 @@ export GIT_AUTHOR_NAME="Enterprise Release"
 export GIT_COMMITTER_EMAIL="${GIT_AUTHOR_EMAIL}"
 export GIT_COMMITTER_NAME="${GIT_AUTHOR_NAME}"
 
-export REPO_PATH_DXP="${BASE_DIR}/liferay-dxp"
+export REPO_PATH_DXP="/opt/dev/projects/github/liferay-dxp"
 export REPO_PATH_EE="${BASE_DIR}/liferay-portal-ee"
 
 function checkout_tag {
-	local repository="${1}"
+	local repository_path="${1}"
 	local tag_name="${2}"
 
 	trap 'return ${LIFERAY_COMMON_EXIT_CODE_BAD}' ERR
 
-	lc_cd "${BASE_DIR}/${repository}"
+	lc_cd "${repository_path}"
 
 	git reset --hard -q
 	git clean -dfqX
@@ -86,7 +86,9 @@ function fetch_repository {
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	lc_cd "${BASE_DIR}/${1}"
+	local repository_path="${1}"
+
+	lc_cd "${repository_path}"
 
 	git fetch upstream --tags
 
@@ -114,19 +116,11 @@ function run_git_maintenance {
 function prepare_repositories {
 	lc_cd "${BASE_DIR}"
 
-	lc_time_run clone_repository liferay-dxp
-
-	lc_cd "${BASE_DIR}"
-
 	lc_time_run clone_repository liferay-portal-ee
 
-	lc_cd "${BASE_DIR}"
+	lc_time_run fetch_repository "${REPO_PATH_DXP}"
 
-	lc_time_run fetch_repository liferay-dxp
-
-	lc_cd "${BASE_DIR}"
-
-	lc_time_run fetch_repository liferay-portal-ee
+	lc_time_run fetch_repository "${REPO_PATH_EE}"
 
 	lc_cd "${BASE_DIR}"
 }
