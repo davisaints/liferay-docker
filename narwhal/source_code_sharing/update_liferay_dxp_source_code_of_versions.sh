@@ -89,6 +89,24 @@ function checkout_branch {
 	fi
 }
 
+function clean_repository {
+	local repository_path="${1}"
+
+	if [ -e "${repository_path}/.git/index.lock" ]
+	then
+		rm -f "${repository_path}/.git/index.lock"
+	fi
+
+	if [ -d "${repository_path}/.git/rebase-apply" ]
+	then
+		git am --abort &> /dev/null
+	fi
+
+	git clean -dfx &> /dev/null
+
+	git checkout master -f
+}
+
 function copy_tag {
 	local tag_name="${1}"
 
@@ -211,8 +229,6 @@ function main {
 
 		echo "Processing: ${tag_name}"
 
-		lc_time_run clone_repository liferay-portal-ee
-
 		lc_time_run prepare_branch_in_portal_ee "${tag_name}"
 
 		lc_time_run prepare_branch_in_dxp "${tag_name}"
@@ -221,13 +237,11 @@ function main {
 		then
 			echo "Could not prepare branch in liferay-dxp for ${tag_name}"
 
-			rm -fr "${REPO_PATH_EE}"
-
 			continue
 		fi
-
-		rm -fr "${REPO_PATH_EE}"
 	done
+
+	rm -fr "${REPO_PATH_EE}"
 }
 
 function prepare_branch_in_dxp {
@@ -285,6 +299,8 @@ function prepare_branch_in_portal_ee {
 	local tag_name="${1}"
 
 	lc_cd "${REPO_PATH_EE}"
+
+	clean_repository "${REPO_PATH_EE}"
 
 	git fetch upstream "refs/tags/${1}:refs/tags/${1}" --no-tags
 
