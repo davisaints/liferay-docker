@@ -90,6 +90,11 @@ function fetch_repository {
 
 	lc_cd "${repository_path}"
 
+	if ! git remote show | grep --quiet "^upstream$"
+	then
+		git remote add upstream "git@github.com:liferay/$(basename "${repository_path}").git"
+	fi
+
 	git fetch upstream --tags
 
 	git config --add checkout.defaultRemote origin
