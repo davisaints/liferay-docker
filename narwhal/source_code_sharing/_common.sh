@@ -130,15 +130,15 @@ function prepare_repositories {
 	lc_cd "${BASE_DIR}"
 }
 
-function push_to_origin {
-	if [ "${RUN_PUSH_TO_ORIGIN}" != "true" ]
+function push_to_upstream {
+	if [ "${RUN_PUSH_TO_UPSTREAM}" != "true" ]
 		then
 			return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
 	lc_cd "${REPO_PATH_DXP}"
 
-	git push -q origin "${1}"
+	git push upstream --force "${1}"
 
 	if [[ "${2}" == 20* ]]
 	then

@@ -27,7 +27,7 @@ function check_new_tags {
 function check_usage {
 	LIFERAY_COMMON_LOG_DIR="${PWD}/logs"
 	RUN_FETCH_REPOSITORY="true"
-	RUN_PUSH_TO_ORIGIN="true"
+	RUN_PUSH_TO_UPSTREAM="true"
 
 	while [ "$#" -gt "0" ]
 	do
@@ -51,7 +51,7 @@ function check_usage {
 				;;
 
 			--no-push)
-				RUN_PUSH_TO_ORIGIN="false"
+				RUN_PUSH_TO_UPSTREAM="false"
 
 				;;
 
