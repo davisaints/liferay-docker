@@ -89,24 +89,6 @@ function checkout_branch {
 	fi
 }
 
-function clean_repository {
-	local repository_path="${1}"
-
-	if [ -e "${repository_path}/.git/index.lock" ]
-	then
-		rm -f "${repository_path}/.git/index.lock"
-	fi
-
-	if [ -d "${repository_path}/.git/rebase-apply" ]
-	then
-		git am --abort &> /dev/null
-	fi
-
-	git clean -dfx &> /dev/null
-
-	git checkout master -f
-}
-
 function copy_tag {
 	local tag_name="${1}"
 

@@ -40,6 +40,26 @@ function commit_and_tag {
 	git tag "${tag_name}"
 }
 
+function clean_repository {
+	local repository_path="${1}"
+
+	if [ -e "${repository_path}/.git/index.lock" ]
+	then
+		rm -f "${repository_path}/.git/index.lock"
+	fi
+
+	if [ -d "${repository_path}/.git/rebase-apply" ]
+	then
+		git am --abort &> /dev/null
+	fi
+
+	git reset --hard --quiet
+
+	git clean -dfx &> /dev/null
+
+	git checkout master --force
+}
+
 function clone_repository {
 	local repository_name=${1}
 	local repository_path=${2}
@@ -122,6 +142,8 @@ function prepare_repositories {
 	lc_cd "${BASE_DIR}"
 
 	lc_time_run clone_repository liferay-portal-ee
+
+	lc_time_run clean_repository "${REPO_PATH_EE}"
 
 	lc_time_run fetch_repository "${REPO_PATH_DXP}"
 
