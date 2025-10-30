@@ -43,12 +43,16 @@ function commit_and_tag {
 function clean_repository {
 	local repository_path="${1}"
 
-	if [ -e "${repository_path}/.git/index.lock" ]
+	local current_dir="${PWD}"
+
+	lc_cd "${repository_path}"
+
+	if [ -e ".git/index.lock" ]
 	then
-		rm -f "${repository_path}/.git/index.lock"
+		rm -f ".git/index.lock"
 	fi
 
-	if [ -d "${repository_path}/.git/rebase-apply" ]
+	if [ -d ".git/rebase-apply" ]
 	then
 		git am --abort &> /dev/null
 	fi
@@ -57,7 +61,9 @@ function clean_repository {
 
 	git clean -dfx &> /dev/null
 
-	git checkout master --force
+	git checkout master --force --quiet
+
+	lc_cd "${current_dir}"
 }
 
 function clone_repository {
