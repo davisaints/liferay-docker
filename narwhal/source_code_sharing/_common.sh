@@ -154,7 +154,7 @@ function prepare_repositories {
 
 function push_to_upstream {
 	if [ "${RUN_PUSH_TO_UPSTREAM}" != "true" ]
-		then
+	then
 			return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
