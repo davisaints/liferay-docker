@@ -27,7 +27,7 @@ function checkout_tag {
 	git reset --hard -q
 	git clean -dfqX
 
-	git checkout -f -q "${tag_name}"
+	git checkout -f -q "refs/tags/${tag_name}"
 }
 
 function commit_and_tag {
@@ -37,7 +37,7 @@ function commit_and_tag {
 
 	git commit -a -m "${tag_name}" -q
 
-	git tag "${tag_name}"
+	git tag -f "${tag_name}"
 }
 
 function clean_repository {
@@ -177,5 +177,29 @@ function push_to_upstream {
 }
 
 function run_rsync {
-	rsync -ar --inplace --delete --exclude '.git' --times "${REPO_PATH_EE}/" "${REPO_PATH_DXP}/"
+	if [ -z "${changed_files}" ]
+	then
+		lc_log DEBUG "Unable to detect changed files. Syncing the entire repository."
+
+		rsync \
+		--archive \
+		--delete \
+		--exclude '.git' \
+		--inplace \
+		--recursive \
+		--times \
+		"${REPO_PATH_EE}/" \
+		"${REPO_PATH_DXP}/"
+	else
+		lc_log DEBUG "Detected $(echo ${file_count} | tr " " "\n" | wc --lines) changed file(s). Syncing only hotfix changes."
+
+		echo "${changed_files}" | \
+		rsync \
+			--archive \
+			--files-from=- \
+			--inplace \
+			--times \
+			"${REPO_PATH_EE}/" \
+			"${REPO_PATH_DXP}/"
+	fi
 }

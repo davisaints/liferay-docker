@@ -183,9 +183,9 @@ function checkout_hotfix_tag {
 
 	git reset --hard -q
 
-	git clean -dfqX
+	git clean -dfqx
 
-	git checkout -b "${temporary_branch_name}" -q "${base_branch_name}"
+	git checkout -B "${temporary_branch_name}" -q "${base_branch_name}"
 }
 
 function copy_hotfix_commit {
@@ -197,6 +197,13 @@ function copy_hotfix_commit {
 	local temporary_branch_name="${tag_name_new}-branch"
 
 	lc_time_run checkout_commit liferay-portal-ee "${commit_hash}"
+
+	local changed_files=""
+
+	if [[ "${tag_name_new}" == *q* ]]
+	then
+		changed_files=$(git diff --diff-filter=ACMRT --name-only "${base_branch_name}" "${commit_hash}")
+	fi
 
 	if [[ "${tag_name_new}" == 20* ]]
 	then
