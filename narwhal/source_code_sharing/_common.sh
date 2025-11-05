@@ -191,7 +191,7 @@ function run_rsync {
 		"${REPO_PATH_EE}/" \
 		"${REPO_PATH_DXP}/"
 	else
-		lc_log DEBUG "Detected $(echo ${file_count} | tr " " "\n" | wc --lines) changed file(s). Syncing only hotfix changes."
+		lc_log DEBUG "Detected $(echo ${changed_files} | tr " " "\n" | wc --lines) changed file(s). Syncing only hotfix changes."
 
 		echo "${changed_files}" | \
 		rsync \
@@ -201,5 +201,13 @@ function run_rsync {
 			--times \
 			"${REPO_PATH_EE}/" \
 			"${REPO_PATH_DXP}/"
+
+		if [ -n "${removed_files}" ]
+		then
+			while IFS= read -r removed_file
+			do
+				rm --force "${REPO_PATH_DXP}/${removed_file}"
+			done <<< "${removed_files}"
+		fi
 	fi
 }

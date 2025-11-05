@@ -199,10 +199,13 @@ function copy_hotfix_commit {
 	lc_time_run checkout_commit liferay-portal-ee "${commit_hash}"
 
 	local changed_files=""
+	local removed_files=""
+
 
 	if [[ "${tag_name_new}" == *q* ]]
 	then
 		changed_files=$(git diff --diff-filter=ACMRT --name-only "${base_branch_name}" "${commit_hash}")
+		removed_files=$(git diff --diff-filter=D --name-only "${base_branch_name}" "${commit_hash}")
 	fi
 
 	if [[ "${tag_name_new}" == 20* ]]
