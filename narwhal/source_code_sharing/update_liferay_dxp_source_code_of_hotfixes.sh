@@ -365,9 +365,7 @@ function process_argument_ignore_zip_files {
 function process_argument_version {
 	local IFS=" "
 
-	read -r -a VERSION_ARRAY <<< "${VERSION_INPUT}"
-
-	VERSION_LIST=("${VERSION_ARRAY[@]}")
+	read -r -a VERSION_LIST <<< "${VERSION_INPUT}"
 
 	lc_cd "${REPO_PATH_DXP}"
 
@@ -376,41 +374,32 @@ function process_argument_version {
 		VERSION_LIST+=("${tag}")
 	done < <(git tag -l --format='%(refname:short)' "20*.q*.[0-9]" "20*.q*.[0-9][0-9]" | sed "s|tags/||g")
 
+	local valid_versions=()
+
 	for release_version in "${VERSION_LIST[@]}"
 	do
-		if [[ ${release_version} == 7* ]]
+		partial_url="${release_version}"
+		recursive="-r"
+
+		if [[ "${release_version}" != *-u* ]] && [[ "${release_version}" != *q* ]]
 		then
-			local zip_directory_url="https://files.liferay.com/private/ee/fix-packs/${release_version}/hotfix"
-		else
-			if [[ "${release_version}" == *q1* ]] &&
-			   [[ "${release_version}" != 2023* ]] &&
-			   [[ "${release_version}" != 2024* ]]
-			then
-				local zip_directory_url="https://releases.liferay.com/dxp/hotfix/${release_version}-lts"
-			else
-				local zip_directory_url="https://releases.liferay.com/dxp/hotfix/${release_version}"
-			fi
+			partial_url="${release_version}/hotfix"
+			recursive=""
+		elif [[ $(echo "${release_version}" | cut --delimiter="." --fields 1) -ge 2025 ]] &&
+			 [[ "${release_version}" == *q1* ]]
+		then
+			partial_url="${release_version}-lts"
 		fi
 
-		curl --head --silent --fail "${zip_directory_url}" > /dev/null
+		gsutil ls ${recursive} "gs://liferay-releases-hotfix/${partial_url}/" &> /dev/null
 
-		if [ $? -ne 0 ]
+		if [ "${?}" -eq 0 ]
 		then
-			VERSION_LIST=("${VERSION_LIST[@]/$release_version}")
-		fi
-	done
-
-	temporary_version_list=()
-
-	for version in "${VERSION_LIST[@]}"
-	do
-		if [ -n "${version}" ]
-		then
-			temporary_version_list+=("${version}")
+			valid_versions+=("${release_version}")
 		fi
 	done
 
-	VERSION_LIST=("${temporary_version_list[@]}")
+	VERSION_LIST=("${valid_versions[@]}")
 }
 
 function process_version_list {
