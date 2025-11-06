@@ -201,7 +201,6 @@ function copy_hotfix_commit {
 	local changed_files=""
 	local removed_files=""
 
-
 	if [[ "${tag_name_new}" == *q* ]]
 	then
 		changed_files=$(git diff --diff-filter=ACMRT --name-only "${base_branch_name}" "${commit_hash}")
