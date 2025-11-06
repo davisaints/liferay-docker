@@ -374,7 +374,7 @@ function process_argument_version {
 	while IFS= read -r tag
 	do
 		VERSION_LIST+=("${tag}")
-	done < <(git tag -l --format='%(refname:short)' "20*.q*.[0-9]" "20*.q*.[0-9][0-9]")
+	done < <(git tag -l --format='%(refname:short)' "20*.q*.[0-9]" "20*.q*.[0-9][0-9]" | sed "s|tags/||g")
 
 	for release_version in "${VERSION_LIST[@]}"
 	do
