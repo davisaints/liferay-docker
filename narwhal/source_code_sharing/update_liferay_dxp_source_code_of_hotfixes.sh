@@ -226,6 +226,92 @@ function copy_hotfix_commit {
 	echo ""
 }
 
+function download_hotfix {
+    local file_url=${1}
+
+    if [ -z "${file_url}" ]
+	then
+        lc_log ERROR "File URL is not set."
+
+        return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+    fi
+
+    local file_name=${2}
+
+    if [ -z "${file_name}" ]
+	then
+        file_name=$(basename "${file_url}")
+
+        local skip_copy="true"
+    fi
+
+	if [ -e "${file_name}" ]
+	then
+		lc_log DEBUG "Skipping the download of ${file_url} because it already exists."
+
+		echo "${file_name}"
+
+		return
+	fi
+
+    local cache_file="${LIFERAY_COMMON_DOWNLOAD_CACHE_DIR}/$(echo ${file_url} | sed 's|^gs://||')"
+
+	if [ -e "${cache_file}" ]
+	then
+		if [ -n "${LIFERAY_COMMON_DOWNLOAD_SKIP_CACHE}" ]
+		then
+			lc_log DEBUG "Deleting file from cache: ${cache_file}."
+
+			rm -f "${cache_file}"
+		else
+			lc_log DEBUG "Skipping the download of ${file_url} because it already exists."
+
+			if [ "${skip_copy}" = "true" ]
+			then
+				lc_log DEBUG "Skipping copy."
+
+				echo "${cache_file}"
+			else
+				lc_log DEBUG "Copying from cache: ${cache_file}."
+
+				cp "${cache_file}" "${file_name}"
+
+				echo "${file_name}"
+			fi
+
+			return
+		fi
+	fi
+
+    local cache_file_dir="$(dirname "${cache_file}")"
+
+    mkdir -p "${cache_file_dir}"
+
+    lc_log DEBUG "Downloading GCS file: ${file_url}"
+
+    local temp_suffix="temp_$(date +%Y%m%d%H%M%S)"
+
+    if ! gsutil cp "${file_url}" "${cache_file}.${temp_suffix}"
+	then
+        lc_log ERROR "Failed to download ${file_url}"
+
+        return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+    fi
+
+    mv "${cache_file}.${temp_suffix}" "${cache_file}"
+
+    if [ "${skip_copy}" = "true" ]
+	then
+        echo "${cache_file}"
+    else
+        lc_log DEBUG "Copying from cache: ${cache_file}"
+
+        cp "${cache_file}" "${file_name}"
+
+        echo "${file_name}"
+    fi
+}
+
 function get_hotfix_properties {
 	local cache_file="${1}"
 	local release_version="${2}"
@@ -440,7 +526,7 @@ function process_zip_list_file {
 			tag_name_new="${tag_name_new#*liferay-dxp-}"
 		fi
 
-		local file_url="https://storage.googleapis.com/$(get_hotfixes_url "${release_version}")/${hotfix_zip_file}"
+		local file_url="gs://$(get_hotfixes_url "${release_version}")/${hotfix_zip_file}"
 
 		check_ignore_via_argument "${IGNORE_ZIP_FILES}" && continue
 
@@ -450,7 +536,7 @@ function process_zip_list_file {
 
 		check_if_tag_exists "${REPO_PATH_DXP}" "${tag_name_new}" && continue
 
-		lc_time_run lc_download "${file_url}"
+		lc_time_run download_hotfix "${file_url}"
 
 		local cache_file="${LIFERAY_COMMON_DOWNLOAD_CACHE_DIR}/${file_url##*://}"
 
