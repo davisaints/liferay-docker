@@ -279,6 +279,23 @@ function get_hotfix_properties {
 	rm -f "${tmp_properties_json}"
 }
 
+function get_hotfixes_url {
+	local release_version="${1}"
+
+	local partial_url="${release_version}"
+
+	if [[ "${release_version}" != *-u* ]] && [[ "${release_version}" != *q* ]]
+	then
+		partial_url="${release_version}/hotfix"
+	elif [[ $(echo "${release_version}" | cut --delimiter="." --fields 1) -ge 2025 ]] &&
+			[[ "${release_version}" == *q1* ]]
+	then
+		partial_url="${release_version}-lts"
+	fi
+
+	echo "liferay-releases-hotfix/${partial_url}"
+}
+
 function get_hotfix_zip_list_file {
 	local release_version="${1}"
 	local zip_list_file="${2}"
@@ -300,19 +317,10 @@ function get_hotfix_zip_list_file {
 	else
 		lc_log DEBUG "Generating the zip list file ${zip_list_file} from the liferay-releases-hotfix bucket."
 
-		local partial_url="${release_version}"
-		local recursive="-r"
-
-		if [[ "${release_version}" != *-u* ]] && [[ "${release_version}" != *q* ]]
-		then
-			partial_url="${release_version}/hotfix"
-			recursive=""
-		fi
-
-		gsutil ls ${recursive} "gs://liferay-releases-hotfix/${partial_url}/" | \
+		gsutil ls "gs://$(get_hotfixes_url ${release_version})/*" | \
 			grep --extended-regexp "liferay-(dxp|hotfix)" | \
 			sed --regexp-extended "s/.*(liferay-(dxp|hotfix).*)/\1/" | \
-			sort --numeric-sort --reverse > \
+			sort --reverse --version-sort > \
 			"${zip_list_file}"
 	fi
 }
@@ -378,20 +386,7 @@ function process_argument_version {
 
 	for release_version in "${VERSION_LIST[@]}"
 	do
-		partial_url="${release_version}"
-		recursive="-r"
-
-		if [[ "${release_version}" != *-u* ]] && [[ "${release_version}" != *q* ]]
-		then
-			partial_url="${release_version}/hotfix"
-			recursive=""
-		elif [[ $(echo "${release_version}" | cut --delimiter="." --fields 1) -ge 2025 ]] &&
-			 [[ "${release_version}" == *q1* ]]
-		then
-			partial_url="${release_version}-lts"
-		fi
-
-		gsutil ls ${recursive} "gs://liferay-releases-hotfix/${partial_url}/" &> /dev/null
+		gsutil ls "gs://$(get_hotfixes_url ${release_version})/*" &> /dev/null
 
 		if [ "${?}" -eq 0 ]
 		then
@@ -445,7 +440,7 @@ function process_zip_list_file {
 			tag_name_new="${tag_name_new#*liferay-dxp-}"
 		fi
 
-		local file_url="${zip_directory_url}/${hotfix_zip_file}"
+		local file_url="https://storage.googleapis.com/$(get_hotfixes_url "${release_version}")/${hotfix_zip_file}"
 
 		check_ignore_via_argument "${IGNORE_ZIP_FILES}" && continue
 
