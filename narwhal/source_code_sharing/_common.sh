@@ -179,7 +179,10 @@ function push_to_upstream {
 function run_rsync {
 	if [ -z "${changed_files}" ]
 	then
-		lc_log DEBUG "Unable to detect changed files. Syncing the entire repository."
+		if [[ "${tag_name_new}" == *q* ]]
+		then
+			lc_log DEBUG "Unable to detect changed files. Syncing the entire repository."
+		fi
 
 		rsync \
 		--archive \
