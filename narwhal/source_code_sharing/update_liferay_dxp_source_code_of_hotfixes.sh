@@ -298,31 +298,22 @@ function get_hotfix_zip_list_file {
 
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	else
-		if [ ! -s "${zip_list_file}" ]
-		then
-			files=($(curl -s "${zip_directory_url}/" | sed -n 's/^.*href="\([^"]*\.zip\)".*$/\1/p'))
+		lc_log DEBUG "Generating the zip list file ${zip_list_file} from the liferay-releases-hotfix bucket."
 
-			for file in "${files[@]}"
-			do
-				echo "${file}" >> "${zip_list_file}"
-			done
+		local partial_url="${release_version}"
+		local recursive="-r"
+
+		if [[ "${release_version}" != *-u* ]] && [[ "${release_version}" != *q* ]]
+		then
+			partial_url="${release_version}/hotfix"
+			recursive=""
 		fi
 
-		lc_log DEBUG "Generating the zip list file: '${zip_list_file}' from '${zip_directory_url}/'."
-
-		if [[ "${release_version}" == 20* ]]
-		then
-			if [[ "${release_version}" == *q1* ]] &&
-			   [[ "${release_version}" != 2023* ]] &&
-			   [[ "${release_version}" != 2024* ]]
-			then
-				lc_curl "${zip_directory_url}/" - | grep -E -o "liferay-dxp-20[a-z0-9\.]+-lts-hotfix-[0-9]{0,9}.zip" | uniq - "${zip_list_file}"
-			else
-				lc_curl "${zip_directory_url}/" - | grep -E -o "liferay-dxp-20[a-z0-9\.]+-hotfix-[0-9]{0,9}.zip" | uniq - "${zip_list_file}"
-			fi
-		else
-			lc_curl "${zip_directory_url}/" - | grep -E -o "liferay-hotfix-[0-9-]+.zip" | uniq - "${zip_list_file}"
-		fi
+		gsutil ls ${recursive} "gs://liferay-releases-hotfix/${partial_url}/" | \
+			grep --extended-regexp "liferay-(dxp|hotfix)" | \
+			sed --regexp-extended "s/.*(liferay-(dxp|hotfix).*)/\1/" | \
+			sort --numeric-sort --reverse > \
+			"${zip_list_file}"
 	fi
 }
 
@@ -430,20 +421,6 @@ function process_version_list {
 		local zip_list_file="${DEDICATED_CACHE_DIR}/list-of-${release_version}.txt"
 
 		lc_log DEBUG "Processing version: ${release_version}."
-
-		if [[ ${release_version} == 7* ]]
-		then
-			local zip_directory_url="https://files.liferay.com/private/ee/fix-packs/${release_version}/hotfix"
-		else
-			if [[ "${release_version}" == *q1* ]] &&
-			   [[ "${release_version}" != 2023* ]] &&
-			   [[ "${release_version}" != 2024* ]]
-			then
-				local zip_directory_url="https://releases.liferay.com/dxp/hotfix/${release_version}-lts"
-			else
-				local zip_directory_url="https://releases.liferay.com/dxp/hotfix/${release_version}"
-			fi
-		fi
 
 		lc_time_run get_hotfix_zip_list_file "${release_version}" "${zip_list_file}"
 
