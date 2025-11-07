@@ -173,7 +173,7 @@ function checkout_commit {
 }
 
 function checkout_hotfix_tag {
-	local base_branch_name="${3}"
+	local base_tag_name="${3}"
 	local repository_path="${1}"
 	local temporary_branch_name="${2}"
 
@@ -185,7 +185,7 @@ function checkout_hotfix_tag {
 
 	git clean -dfqx
 
-	git checkout -B "${temporary_branch_name}" -q "${base_branch_name}"
+	git checkout -B "${temporary_branch_name}" -q "refs/tags/${base_tag_name}"
 }
 
 function copy_hotfix_commit {
@@ -193,7 +193,7 @@ function copy_hotfix_commit {
 	local tag_name_base="${2}"
 	local tag_name_new="${3}"
 
-	local base_branch_name=$(echo "${tag_name_new}" | cut -d '-' -f 1)
+	local base_tag_name=$(echo "${tag_name_new}" | cut -d '-' -f 1)
 	local temporary_branch_name="${tag_name_new}-branch"
 
 	lc_time_run checkout_commit liferay-portal-ee "${commit_hash}"
@@ -203,13 +203,13 @@ function copy_hotfix_commit {
 
 	if [[ "${tag_name_new}" == *q* ]]
 	then
-		changed_files=$(git diff --diff-filter=ACMRT --name-only "${base_branch_name}" "${commit_hash}")
-		removed_files=$(git diff --diff-filter=D --name-only "${base_branch_name}" "${commit_hash}")
+		changed_files=$(git diff --diff-filter=ACMRT --name-only "${base_tag_name}" "${commit_hash}")
+		removed_files=$(git diff --diff-filter=D --name-only "${base_tag_name}" "${commit_hash}")
 	fi
 
 	if [[ "${tag_name_new}" == 20* ]]
 	then
-		lc_time_run checkout_hotfix_tag "${REPO_PATH_DXP}" "${temporary_branch_name}" "${base_branch_name}"
+		lc_time_run checkout_hotfix_tag "${REPO_PATH_DXP}" "${temporary_branch_name}" "${base_tag_name}"
 	else
 		lc_time_run checkout_tag "${REPO_PATH_DXP}" "${tag_name_base}"
 	fi
