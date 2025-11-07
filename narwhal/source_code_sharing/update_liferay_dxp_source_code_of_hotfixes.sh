@@ -90,7 +90,6 @@ function check_usage {
 	DEDICATED_CACHE_DIR="${BASE_DIR}/cache"
 	LIFERAY_COMMON_DOWNLOAD_MAX_TIME="120"
 	LIFERAY_COMMON_LOG_DIR="${PWD}/logs"
-	IGNORE_ZIP_FILES=""
 	REPO_PATH_DXP="/opt/dev/projects/github/liferay-dxp"
 	REPO_PATH_EE="${BASE_DIR}/liferay-portal-ee"
 	RUN_FETCH_REPOSITORY="true"
@@ -105,13 +104,6 @@ function check_usage {
 			--debug)
 				LIFERAY_COMMON_LOG_LEVEL="DEBUG"
 				LIFERAY_COMMON_DEBUG_ENABLED="true"
-
-				;;
-
-			--ignore-zip-files)
-				IGNORE_ZIP_FILES="${2}"
-
-				shift 1
 
 				;;
 
@@ -425,10 +417,9 @@ function prepare_cache_dir {
 }
 
 function print_help {
-	echo "Usage: ${0} [--debug] [--ignore-zip-files <file1,...,fileN>] [--logdir <logdir>] [--zip-list-retention-time '<time>'] [--version <version>] [--no-fetch] [--no-push]"
+	echo "Usage: ${0} [--debug] [--logdir <logdir>] [--zip-list-retention-time '<time>'] [--version <version>] [--no-fetch] [--no-push]"
 	echo ""
 	echo "    --debug (optional):                                     Enabling debug mode"
-	echo "    --ignore-zip-files <file1,...,fileN> (optional):        Comma-separated list of files to be not processed (useful if a file is corrupted on the remote server)"
 	echo "    --logdir <logdir> (optional):                           Logging directory, defaults to \"\${PWD}/logs\""
 	echo "    --zip-list-retention-time '<time>' (optinal):           Retention time after the update of the zip list is enforced, defaults to '1 min'"
 	echo "    --version <version> (optional):                         Version to handle, defaults to \"7.3.10 7.4.13 2023.q3\""
@@ -526,8 +517,6 @@ function process_zip_list_file {
 		fi
 
 		local file_url="gs://$(get_hotfixes_url "${release_version}")/${hotfix_zip_file}"
-
-		check_ignore_via_argument "${IGNORE_ZIP_FILES}" && continue
 
 		check_ignore_via_file "${IGNORE_ZIP_FILES_PRESISTENT_FILE}" && continue
 
