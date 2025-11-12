@@ -231,7 +231,7 @@ function prepare_branch_in_dxp {
 
 	lc_cd "${REPO_PATH_DXP}"
 
-	git checkout master
+	git checkout master --force --quiet
 
 	if [[ "${tag_name}" == *q* ]]
 	then
