@@ -122,7 +122,7 @@ function get_all_tags {
 
 	lc_cd "${repository_path}"
 
-	git tag -l --sort=creatordate --format='%(refname:short)' "20*.q*.[0-9]" "20*.q*.[0-9][0-9]" "7.[0-9].[0-9]-u[0-9]*" "7.[0-9].[0-9][0-9]-u[0-9]*"
+	git tag -l --sort=creatordate --format='%(refname:short)' "20*.q*.[0-9]" "20*.q*.[0-9][0-9]" "7.[0-9].[0-9]-u[0-9]*" "7.[0-9].[0-9][0-9]-u[0-9]*" | sed "s|tags/||g"
 }
 
 function get_baseline_version {
