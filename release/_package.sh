@@ -217,7 +217,7 @@ function package_common_release {
 
 	rm --force --recursive "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}"
 
-	generate_javadocs
+	# generate_javadocs
 }
 
 function package_nightly_release {
