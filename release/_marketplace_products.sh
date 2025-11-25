@@ -1,6 +1,139 @@
 #!/bin/bash
 
 source ../_liferay_common.sh
+source ../_release_common.sh
+source ./_product.sh
+
+function check_marketplace_products_compatibility {
+	if ! is_first_quarterly_release
+	then
+		lc_log INFO "Marketplace product compatibility should not be checked on the ${_PRODUCT_VERSION} release."
+
+		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
+	fi
+
+	_set_liferay_marketplace_oauth2_token
+
+	if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
+	then
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
+
+	mkdir --parents "${_BUILD_DIR}/marketplace"
+
+	declare -A LIFERAY_MARKETPLACE_PRODUCTS=(
+		["adyen"]="f05ab2d6-1d54-c72d-988a-91fcd5669ef3"
+		["drools"]="15099181"
+		["liferaycommerceminium4globalcss"]="bee3adc0-891c-5828-c4f6-3d244135c972"
+		["liferaypaypalbatch"]="a1946869-212f-0793-d703-b623d0f149a6"
+		["liferayupscommerceshippingengine"]="f1cb4b5e-fbdd-7f70-df5d-9f1a736784b2"
+		["opensearch"]="ea19fdc8-b908-690d-9f90-15edcdd23a87"
+		["punchout"]="175496027"
+		["solr"]="30536632"
+		["stripe"]="6a02a832-083b-f08c-888a-0a59d7c09119"
+	)
+
+	for liferay_marketplace_product_name in $(printf "%s\n" "${!LIFERAY_MARKETPLACE_PRODUCTS[@]}" | sort --ignore-case)
+	do
+		lc_log INFO "Downloading product ${liferay_marketplace_product_name}."
+
+		_download_product_by_external_reference_code "${LIFERAY_MARKETPLACE_PRODUCTS[${liferay_marketplace_product_name}]}" "${liferay_marketplace_product_name}"
+
+		if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
+		then
+			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+		fi
+
+		lc_log INFO "Deploying product zip file ${liferay_marketplace_product_name}.zip to ${_BUNDLES_DIR}/deploy."
+
+		_deploy_product_zip_file "${_BUILD_DIR}/marketplace/${liferay_marketplace_product_name}.zip"
+
+		if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
+		then
+			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+		fi
+	done
+
+	rm --force "${_BUILD_DIR}/warm-up-tomcat"
+
+	_MARKETPLACE_PRODUCTS_DEPLOYMENT_LOG_FILE="${_BUILD_DIR}/log_$(date +%s)_marketplace_products_deployment.txt"
+
+	warm_up_tomcat "print-startup-logs" > "${_MARKETPLACE_PRODUCTS_DEPLOYMENT_LOG_FILE}"
+
+	echo "include-and-override=portal-developer.properties" > "${_BUNDLES_DIR}/portal-ext.properties"
+
+	start_tomcat "print-startup-logs" >> "${_MARKETPLACE_PRODUCTS_DEPLOYMENT_LOG_FILE}"
+
+	for liferay_marketplace_product_name in $(printf "%s\n" "${!LIFERAY_MARKETPLACE_PRODUCTS[@]}" | sort --ignore-case)
+	do
+		_check_product_compatibility "${LIFERAY_MARKETPLACE_PRODUCTS[${liferay_marketplace_product_name}]}" "${liferay_marketplace_product_name}"
+
+		if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
+		then
+			stop_tomcat &> /dev/null
+
+			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+		fi
+	done
+
+	stop_tomcat &> /dev/null
+}
+
+function _check_product_compatibility {
+	local product_external_reference_code=${1}
+	local product_name=${2}
+
+	lc_log INFO "Checking the compatibility of product ${product_name} with ${_PRODUCT_VERSION} release."
+
+	if [ ! -f "${_BUILD_DIR}/marketplace/${product_name}.zip" ]
+	then
+		lc_log ERROR "Unable to check compatibility for product ${product_name} because the product zip file ${product_name}.zip was not downloaded."
+
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
+
+	local modules_info=$(blade sh lb -s | grep "${product_name}")
+
+	if [ -z "${modules_info}" ]
+	then
+		lc_log ERROR "Unable to check compatibility for product ${product_name}."
+
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
+
+	if (echo "${modules_info}" | grep --extended-regexp --invert-match "Active|Resolved" &>/dev/null)
+	then
+		lc_log ERROR "One or more modules of ${product_name} are not compatible with release ${_PRODUCT_VERSION}:"
+
+		while IFS= read -r module_info
+		do
+			local module_name=$(\
+				echo "${module_info}" | \
+				cut --delimiter "|" --fields=4 | \
+				sed "s/ (.*)//" | \
+				xargs)
+
+			lc_log ERROR "Module ${module_name} is not compatible with release ${_PRODUCT_VERSION}."
+
+			local module_id=$(echo "${module_info}" | cut --delimiter "|" --fields=1 | xargs)
+
+			lc_log INFO "OSGI diagnostics: $(blade sh diag "${module_id}" | tail --lines=+3 | xargs)"
+
+			if (grep --quiet "${module_name}" "${_MARKETPLACE_PRODUCTS_DEPLOYMENT_LOG_FILE}")
+			then
+				lc_log INFO "Deployment logs for ${module_name}:"
+
+				cat "${_MARKETPLACE_PRODUCTS_DEPLOYMENT_LOG_FILE}" | grep "${module_name}"
+			fi
+		done <<< "${modules_info}"
+
+		return
+	fi
+
+	lc_log INFO "Module ${product_name} is compatible with release ${_PRODUCT_VERSION}. Updating list of supported versions."
+
+	_update_product_supported_versions "${product_external_reference_code}" "${product_name}"
+}
 
 function _deploy_product_zip_file {
 	local product_zip_file_path=${1}
@@ -206,62 +339,6 @@ function _set_liferay_marketplace_oauth2_token {
 	fi
 
 	_LIFERAY_MARKETPLACE_OAUTH2_TOKEN=$(echo "${liferay_marketplace_oauth2_token_response}" | jq --raw-output ".access_token")
-}
-
-function _check_product_compatibility {
-	local product_external_reference_code=${1}
-	local product_name=${2}
-
-	lc_log INFO "Checking the compatibility of product ${product_name} with ${_PRODUCT_VERSION} release."
-
-	if [ ! -f "${_BUILD_DIR}/marketplace/${product_name}.zip" ]
-	then
-		lc_log ERROR "Unable to check compatibility for product ${product_name} because the product zip file ${product_name}.zip was not downloaded."
-
-		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
-	fi
-
-	local modules_info=$(blade sh lb -s | grep "${product_name}")
-
-	if [ -z "${modules_info}" ]
-	then
-		lc_log ERROR "Unable to check compatibility for product ${product_name}."
-
-		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
-	fi
-
-	if (echo "${modules_info}" | grep --extended-regexp --invert-match "Active|Resolved" &>/dev/null)
-	then
-		lc_log ERROR "One or more modules of ${product_name} are not compatible with release ${_PRODUCT_VERSION}:"
-
-		while IFS= read -r module_info
-		do
-			local module_name=$(\
-				echo "${module_info}" | \
-				cut --delimiter "|" --fields=4 | \
-				sed "s/ (.*)//" | \
-				xargs)
-
-			lc_log ERROR "Module ${module_name} is not compatible with release ${_PRODUCT_VERSION}."
-
-			local module_id=$(echo "${module_info}" | cut --delimiter "|" --fields=1 | xargs)
-
-			lc_log INFO "OSGI diagnostics: $(blade sh diag "${module_id}" | tail --lines=+3 | xargs)"
-
-			if (grep --quiet "${module_name}" "${_MARKETPLACE_PRODUCTS_DEPLOYMENT_LOG_FILE}")
-			then
-				lc_log INFO "Deployment logs for ${module_name}:"
-
-				cat "${_MARKETPLACE_PRODUCTS_DEPLOYMENT_LOG_FILE}" | grep "${module_name}"
-			fi
-		done <<< "${modules_info}"
-
-		return
-	fi
-
-	lc_log INFO "Module ${product_name} is compatible with release ${_PRODUCT_VERSION}. Updating list of supported versions."
-
-	_update_product_supported_versions "${product_external_reference_code}" "${product_name}"
 }
 
 function _update_product_supported_versions {
