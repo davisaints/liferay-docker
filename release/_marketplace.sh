@@ -228,10 +228,14 @@ function _get_product_by_external_reference_code {
 	then
 		echo ""
 
+		rm --force "${http_status_code_file}"
+
 		return
 	fi
 
 	echo "${product_response}"
+
+	rm --force "${http_status_code_file}"
 }
 
 function _get_product_virtual_settings_file_entries_by_external_reference_code {
@@ -262,10 +266,14 @@ function _get_product_virtual_settings_file_entries_by_external_reference_code {
 	then
 		echo ""
 
+		rm --force "${http_status_code_file}"
+
 		return
 	fi
 
 	echo "${product_virtual_settings_file_entries_response}"
+
+	rm --force "${http_status_code_file}"
 }
 
 function _set_liferay_marketplace_oauth2_token {
@@ -285,10 +293,14 @@ function _set_liferay_marketplace_oauth2_token {
 	then
 		lc_log ERROR "Unable to get Liferay Marketplace OAuth2 token. HTTP status: ${http_status_code}."
 
+		rm --force "${http_status_code_file}"
+
 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
 
 	_LIFERAY_MARKETPLACE_OAUTH2_TOKEN=$(echo "${liferay_marketplace_oauth2_token_response}" | jq --raw-output ".access_token")
+
+	rm --force "${http_status_code_file}"
 }
 
 function _check_product_compatibility {
