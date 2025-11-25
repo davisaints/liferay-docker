@@ -245,7 +245,7 @@ function _get_product_virtual_settings_file_entries_by_external_reference_code {
 
 	local http_status_code_file=$(mktemp)
 
-	local product_virtual_file_entries_response=$(\
+	local product_virtual_settings_file_entries_response=$(\
 		curl \
 			"https://marketplace-uat.liferay.com/o/headless-commerce-admin-catalog/v1.0/product-virtual-settings/${product_virtual_settings_id}/product-virtual-settings-file-entries?pageSize=20" \
 			--header "Authorization: Bearer ${_LIFERAY_MARKETPLACE_OAUTH2_TOKEN}" \
@@ -262,7 +262,7 @@ function _get_product_virtual_settings_file_entries_by_external_reference_code {
 		return
 	fi
 
-	echo "${product_virtual_file_entries_response}"
+	echo "${product_virtual_settings_file_entries_response}"
 }
 
 function _set_liferay_marketplace_oauth2_token {
