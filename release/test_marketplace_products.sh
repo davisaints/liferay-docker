@@ -1,7 +1,7 @@
 #!/bin/bash
 
 source ../_test_common.sh
-source ./_marketplace_products.sh
+source ./_marketplace.sh
 
 function main {
 	test_marketplace_products_get_latest_product_virtual_settings_file_entry_json_index
