@@ -19,29 +19,35 @@ function check_marketplace_products_compatibility {
 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
 
-	mkdir --parents "${_BUILD_DIR}/marketplace"
+	if [ -z "${LIFERAY_RELEASE_TEST_MODE}" ]
+	then
+		mkdir --parents "${_BUILD_DIR}/marketplace"
 
-	declare -A LIFERAY_MARKETPLACE_PRODUCTS=(
-		["adyen"]="f05ab2d6-1d54-c72d-988a-91fcd5669ef3"
-		["drools"]="15099181"
-		["liferaycommerceminium4globalcss"]="bee3adc0-891c-5828-c4f6-3d244135c972"
-		["liferaypaypalbatch"]="a1946869-212f-0793-d703-b623d0f149a6"
-		["liferayupscommerceshippingengine"]="f1cb4b5e-fbdd-7f70-df5d-9f1a736784b2"
-		["opensearch"]="ea19fdc8-b908-690d-9f90-15edcdd23a87"
-		["punchout"]="175496027"
-		["solr"]="30536632"
-		["stripe"]="6a02a832-083b-f08c-888a-0a59d7c09119"
-	)
+		declare -A LIFERAY_MARKETPLACE_PRODUCTS=(
+			["adyen"]="f05ab2d6-1d54-c72d-988a-91fcd5669ef3"
+			["drools"]="15099181"
+			["liferaycommerceminium4globalcss"]="bee3adc0-891c-5828-c4f6-3d244135c972"
+			["liferaypaypalbatch"]="a1946869-212f-0793-d703-b623d0f149a6"
+			["liferayupscommerceshippingengine"]="f1cb4b5e-fbdd-7f70-df5d-9f1a736784b2"
+			["opensearch"]="ea19fdc8-b908-690d-9f90-15edcdd23a87"
+			["punchout"]="175496027"
+			["solr"]="30536632"
+			["stripe"]="6a02a832-083b-f08c-888a-0a59d7c09119"
+		)
+	fi
 
 	for liferay_marketplace_product_name in $(printf "%s\n" "${!LIFERAY_MARKETPLACE_PRODUCTS[@]}" | sort --ignore-case)
 	do
-		lc_log INFO "Downloading product ${liferay_marketplace_product_name}."
-
-		_download_product_by_external_reference_code "${LIFERAY_MARKETPLACE_PRODUCTS[${liferay_marketplace_product_name}]}" "${liferay_marketplace_product_name}"
-
-		if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
+		if [ -z "${LIFERAY_RELEASE_TEST_MODE}" ]
 		then
-			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+			lc_log INFO "Downloading product ${liferay_marketplace_product_name}."
+
+			_download_product_by_external_reference_code "${LIFERAY_MARKETPLACE_PRODUCTS[${liferay_marketplace_product_name}]}" "${liferay_marketplace_product_name}"
+
+			if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
+			then
+				return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+			fi
 		fi
 
 		lc_log INFO "Deploying product zip file ${liferay_marketplace_product_name}.zip to ${_BUNDLES_DIR}/deploy."
