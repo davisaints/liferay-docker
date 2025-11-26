@@ -5,6 +5,8 @@ source ../_test_common.sh
 source ./_marketplace.sh
 
 function main {
+	echo "current dir in main ${PWD}"
+
 	if [ "${#}" -eq 1 ]
 	then
 		if [[ "${1}" == *_compatibility ]]
@@ -36,7 +38,7 @@ function set_up {
 	export _BUNDLES_DIR="${_RELEASE_ROOT_DIR}/test-dependencies/liferay-dxp"
 	export _PRODUCT_VERSION="2025.q3.0"
 
-	lc_cd test-dependencies
+	lc_cd "${_RELEASE_ROOT_DIR}/test-dependencies"
 
 	lc_download \
 		https://releases-cdn.liferay.com/dxp/2025.q3.0/liferay-dxp-tomcat-2025.q3.0-1756231955.zip \
@@ -68,11 +70,13 @@ function tear_down {
 }
 
 function test_marketplace_check_marketplace_products_compatibility {
+	echo "current dir ${PWD}"
+
 	declare -A LIFERAY_MARKETPLACE_PRODUCTS=(
 		["liferaycommerceminium4globalcss"]="bee3adc0-891c-5828-c4f6-3d244135c972"
 	)
 
-	check_marketplace_products_compatibility &> /dev/null
+	check_marketplace_products_compatibility
 
 	assert_equals \
 		"${?}" "${LIFERAY_COMMON_EXIT_CODE_OK}" \
@@ -81,6 +85,8 @@ function test_marketplace_check_marketplace_products_compatibility {
 }
 
 function test_marketplace_get_latest_product_virtual_settings_file_entry_json_index {
+	echo "current dir ${PWD}"
+
 	_test_marketplace_get_latest_product_virtual_settings_file_entry_json_index "2025.Q1" "2"
 	_test_marketplace_get_latest_product_virtual_settings_file_entry_json_index "7.4" "2"
 	_test_marketplace_get_latest_product_virtual_settings_file_entry_json_index "empty_version" ""

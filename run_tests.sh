@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function main {
-	export DISPLAY_SUCCESSFUL_TEST_RESULT="false"
+	# export DISPLAY_SUCCESSFUL_TEST_RESULT="false"
 
 	local test_results=""
 
@@ -34,7 +34,7 @@ function main {
 		exit 1
 	fi
 
-	unset DISPLAY_SUCCESSFUL_TEST_RESULT
+	# unset DISPLAY_SUCCESSFUL_TEST_RESULT
 }
 
 function _run_docker_tests {
