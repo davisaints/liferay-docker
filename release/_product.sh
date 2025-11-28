@@ -461,9 +461,11 @@ function start_tomcat {
 	rm --force --recursive "${_BUNDLES_DIR}/tomcat/temp"
 	rm --force --recursive "${_BUNDLES_DIR}/tomcat/work"
 
+	local current_dir="${PWD}"
+
 	lc_cd "${_BUNDLES_DIR}/tomcat/bin"
 
-	./catalina.sh start
+	./catalina.sh start &>/dev/null
 
 	lc_log INFO "Waiting for Tomcat to start up..."
 
@@ -478,6 +480,11 @@ function start_tomcat {
 
 		sleep 3
 	done
+
+	if [ "${1}" == "print-startup-logs" ]
+	then
+		cat ../logs/catalina.out
+	fi
 
 	if (! curl --fail --max-time 3 --output /dev/null --silent http://localhost:8080)
 	then
@@ -494,14 +501,18 @@ function start_tomcat {
 
 		sleep 20
 	fi
+
+	lc_cd "${current_dir}"
 }
 
 function stop_tomcat {
+	local current_dir="${PWD}"
+
 	lc_cd "${_BUNDLES_DIR}/tomcat/bin"
 
 	lc_log INFO "Stopping Tomcat."
 
-	./catalina.sh stop
+	./catalina.sh stop &>/dev/null
 
 	local backslash_and_slash_regex="\\\\\/"
 	local slash_regex="\/"
@@ -533,6 +544,8 @@ function stop_tomcat {
 
 	rm --force --recursive ../logs/*
 	rm --force --recursive ../../logs/*
+
+	lc_cd "${current_dir}"
 }
 
 function update_release_info_date {
@@ -552,7 +565,12 @@ function warm_up_tomcat {
 
 	export LIFERAY_CLEAN_OSGI_STATE=true
 
-	start_tomcat
+	if [ "${1}" == "print-startup-logs" ]
+	then
+		start_tomcat "print-startup-logs"
+	else
+		start_tomcat
+	fi
 
 	if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
 	then
