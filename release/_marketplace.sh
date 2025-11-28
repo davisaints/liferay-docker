@@ -62,13 +62,13 @@ function check_marketplace_products_compatibility {
 
 	rm --force "${_BUILD_DIR}/warm-up-tomcat"
 
-	_MARKETPLACE_PRODUCTS_DEPLOYMENT_LOG_FILE="${_BUILD_DIR}/log_$(date +%s)_marketplace_products_deployment.txt"
+	_LIFERAY_MARKETPLACE_PRODUCTS_DEPLOYMENT_LOG_FILE="${_BUILD_DIR}/log_$(date +%s)_liferay_marketplace_products_deployment.txt"
 
-	warm_up_tomcat "print-startup-logs" > "${_MARKETPLACE_PRODUCTS_DEPLOYMENT_LOG_FILE}"
+	warm_up_tomcat "print-startup-logs" > "${_LIFERAY_MARKETPLACE_PRODUCTS_DEPLOYMENT_LOG_FILE}"
 
 	echo "include-and-override=portal-developer.properties" > "${_BUNDLES_DIR}/portal-ext.properties"
 
-	start_tomcat "print-startup-logs" >> "${_MARKETPLACE_PRODUCTS_DEPLOYMENT_LOG_FILE}"
+	start_tomcat "print-startup-logs" >> "${_LIFERAY_MARKETPLACE_PRODUCTS_DEPLOYMENT_LOG_FILE}"
 
 	for liferay_marketplace_product_name in $(printf "%s\n" "${!LIFERAY_MARKETPLACE_PRODUCTS[@]}" | sort --ignore-case)
 	do
@@ -125,11 +125,11 @@ function _check_product_compatibility {
 
 			lc_log INFO "OSGI diagnostics: $(blade sh diag "${module_id}" | tail --lines=+3 | xargs)"
 
-			if (grep --quiet "${module_name}" "${_MARKETPLACE_PRODUCTS_DEPLOYMENT_LOG_FILE}")
+			if (grep --quiet "${module_name}" "${_LIFERAY_MARKETPLACE_PRODUCTS_DEPLOYMENT_LOG_FILE}")
 			then
 				lc_log INFO "Deployment logs for ${module_name}:"
 
-				cat "${_MARKETPLACE_PRODUCTS_DEPLOYMENT_LOG_FILE}" | grep "${module_name}"
+				cat "${_LIFERAY_MARKETPLACE_PRODUCTS_DEPLOYMENT_LOG_FILE}" | grep "${module_name}"
 			fi
 		done <<< "${modules_info}"
 
