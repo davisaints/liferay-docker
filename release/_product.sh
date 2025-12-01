@@ -262,9 +262,9 @@ function decrement_module_versions {
 
 		if ! [[ "${micro_version}" =~ ^[0-9]+$ ]]
 		then
-		    echo "There is an incorrect version in ${bnd_bnd_file}."
+			echo "There is an incorrect version in ${bnd_bnd_file}."
 
-		    continue
+			continue
 		fi
 
 		if [ "${micro_version}" -eq "0" ]
