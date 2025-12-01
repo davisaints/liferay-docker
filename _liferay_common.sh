@@ -233,7 +233,7 @@ function lc_download {
 
 	if [ "${?}" -gt 0 ]
 	then
-		lc_log DEBUG "Unable to download ${file_url}. HTTP response code was ${http_code}."
+		lc_log DEBUG "Unable to download ${file_url}. HTTP code was ${http_code}."
 
 		if [ "${http_code}" == "404" ]
 		then

@@ -12,7 +12,7 @@ function trigger_ci_test_suite {
 
 		for ci_slave_number in {41..48}
 		do
-			local http_response=$(curl \
+			local http_code=$(curl \
 				"https://test-1-${ci_slave_number}.liferay.com/job/test-portal-release/buildWithParameters" \
 				--data-urlencode "CI_TEST_SUITE=${CI_TEST_SUITE}" \
 				--data-urlencode "RUN_SCANCODE_PIPELINE=${RUN_SCANCODE_PIPELINE}" \
@@ -36,7 +36,7 @@ function trigger_ci_test_suite {
 				--user "${LIFERAY_RELEASE_JENKINS_USER}:${JENKINS_API_TOKEN}" \
 				--write-out "%{http_code}")
 
-			if [ "${http_response}" == "201" ]
+			if [ "${http_code}" == "201" ]
 			then
 				lc_log INFO "Test build triggered on test-1-${ci_slave_number}.liferay.com."
 

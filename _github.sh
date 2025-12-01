@@ -8,7 +8,7 @@ function download_file_from_github {
 	local ref=${3}
 	local repository_name=${4}
 
-	local http_response=$(\
+	local http_code=$(\
 		curl \
 			"https://api.github.com/repos/liferay/${repository_name}/contents/${file_path}?ref=${ref}" \
 			--header "Accept: application/vnd.github.v3.raw" \
@@ -20,7 +20,7 @@ function download_file_from_github {
 			--retry 3 \
 			--write-out "%{http_code}")
 
-	if [ "${http_response}" != "200" ]
+	if [ "${http_code}" != "200" ]
 	then
 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
