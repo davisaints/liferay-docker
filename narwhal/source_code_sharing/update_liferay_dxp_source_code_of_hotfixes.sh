@@ -546,7 +546,12 @@ function process_zip_list_file {
 			fi
 		fi
 
-		copy_hotfix_commit "${GIT_REVISION}" "${PRODUCT_VERSION}" "${tag_name_new}" && continue
+		copy_hotfix_commit "${GIT_REVISION}" "${PRODUCT_VERSION}" "${tag_name_new}"
+
+		if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}" ]
+		then
+			echo "${hotfix_zip_file}" >> "${IGNORE_ZIP_FILES_CACHE_FILE}"
+		fi
 	done
 }
 
