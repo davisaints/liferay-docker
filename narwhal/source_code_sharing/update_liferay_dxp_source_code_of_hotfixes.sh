@@ -28,7 +28,7 @@ function check_if_tag_exists {
 	else
 		lc_log DEBUG "The tag '${tag_name}' does not exist in the $(basename "${repository_path}") repository."
 
-		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 }
 
@@ -151,17 +151,16 @@ function checkout_commit {
 
 	lc_cd "${BASE_DIR}/${1}"
 
-	if git cat-file -e "${commit_hash}"
+	if ! git cat-file -e "${commit_hash}"
 	then
-		git reset --hard
-		git clean -fdX
-
-		git checkout -f "${commit_hash}"
-	else
-		lc_log ERROR "The commit '${commit_hash}' is missing in the repository 'liferay-portal-ee'."
-
-		exit "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
+		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
+
+	git reset --hard
+
+	git clean -fdX
+
+	git checkout -f "${commit_hash}"
 }
 
 function checkout_hotfix_tag {
@@ -188,7 +187,14 @@ function copy_hotfix_commit {
 	local base_tag_name=$(echo "${tag_name_new}" | cut -d '-' -f 1)
 	local temporary_branch_name="${tag_name_new}-branch"
 
-	lc_time_run checkout_commit liferay-portal-ee "${commit_hash}"
+	checkout_commit liferay-portal-ee "${commit_hash}"
+
+	if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}" ]
+	then
+		lc_log ERROR "The commit ${commit_hash} is missing in the repository 'liferay-portal-ee'."
+
+		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
+	fi
 
 	local changed_files=""
 	local removed_files=""
@@ -540,7 +546,7 @@ function process_zip_list_file {
 			fi
 		fi
 
-		copy_hotfix_commit "${GIT_REVISION}" "${PRODUCT_VERSION}" "${tag_name_new}"
+		copy_hotfix_commit "${GIT_REVISION}" "${PRODUCT_VERSION}" "${tag_name_new}" && continue
 	done
 }
 
