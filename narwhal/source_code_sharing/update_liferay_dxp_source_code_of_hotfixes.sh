@@ -224,23 +224,23 @@ function copy_hotfix_commit {
 }
 
 function download_hotfix {
-    local file_url=${1}
+	local file_url=${1}
 
-    if [ -z "${file_url}" ]
+	if [ -z "${file_url}" ]
 	then
-        lc_log ERROR "File URL is not set."
+		lc_log ERROR "File URL is not set."
 
-        return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
-    fi
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
 
-    local file_name=${2}
+	local file_name=${2}
 
-    if [ -z "${file_name}" ]
+	if [ -z "${file_name}" ]
 	then
-        file_name=$(basename "${file_url}")
+		file_name=$(basename "${file_url}")
 
-        local skip_copy="true"
-    fi
+		local skip_copy="true"
+	fi
 
 	if [ -e "${file_name}" ]
 	then
@@ -251,7 +251,7 @@ function download_hotfix {
 		return
 	fi
 
-    local cache_file="${LIFERAY_COMMON_DOWNLOAD_CACHE_DIR}/$(echo ${file_url} | sed 's|^gs://||')"
+	local cache_file="${LIFERAY_COMMON_DOWNLOAD_CACHE_DIR}/$(echo ${file_url} | sed 's|^gs://||')"
 
 	if [ -e "${cache_file}" ]
 	then
@@ -280,33 +280,33 @@ function download_hotfix {
 		fi
 	fi
 
-    local cache_file_dir="$(dirname "${cache_file}")"
+	local cache_file_dir="$(dirname "${cache_file}")"
 
-    mkdir -p "${cache_file_dir}"
+	mkdir -p "${cache_file_dir}"
 
-    lc_log DEBUG "Downloading GCS file: ${file_url}"
+	lc_log DEBUG "Downloading GCS file: ${file_url}"
 
-    local temp_suffix="temp_$(date +%Y%m%d%H%M%S)"
+	local temp_suffix="temp_$(date +%Y%m%d%H%M%S)"
 
-    if ! gsutil cp "${file_url}" "${cache_file}.${temp_suffix}"
+	if ! gsutil cp "${file_url}" "${cache_file}.${temp_suffix}"
 	then
-        lc_log ERROR "Failed to download ${file_url}"
+		lc_log ERROR "Failed to download ${file_url}"
 
-        return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
-    fi
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
 
-    mv "${cache_file}.${temp_suffix}" "${cache_file}"
+	mv "${cache_file}.${temp_suffix}" "${cache_file}"
 
-    if [ "${skip_copy}" = "true" ]
+	if [ "${skip_copy}" = "true" ]
 	then
-        echo "${cache_file}"
-    else
-        lc_log DEBUG "Copying from cache: ${cache_file}"
+		echo "${cache_file}"
+	else
+		lc_log DEBUG "Copying from cache: ${cache_file}"
 
-        cp "${cache_file}" "${file_name}"
+		cp "${cache_file}" "${file_name}"
 
-        echo "${file_name}"
-    fi
+		echo "${file_name}"
+	fi
 }
 
 function get_hotfix_properties {
