@@ -244,7 +244,7 @@ function reference_new_releases {
 
 	if [ -z "${LIFERAY_RELEASE_TEST_MODE}" ]
 	then
-		issue_key="$(\
+		issue_key="$( \
 			add_jira_issue \
 				"60a3f462391e56006e6b661b" \
 				"Release Tester" \
@@ -277,11 +277,11 @@ function reference_new_releases {
 
 	local product_group_version="$(get_product_group_version)"
 
-	local previous_product_version="$(\
+	local previous_product_version=$( \
 		grep "portal.latest.bundle.version\[${product_group_version}" \
 			"build-shared.properties" | \
 			tail -1 | \
-			cut --delimiter='=' --fields=2)"
+			cut --delimiter='=' --fields=2)
 
 	if [ -z "${previous_product_version}" ]
 	then
@@ -322,11 +322,11 @@ function reference_new_releases {
 		"${_PRODUCT_VERSION}" \
 		"portal.latest.bundle.version\[${previous_product_version}\]="
 
-	local latest_product_group_version="$(\
+	local latest_product_group_version=$( \
 		grep "portal.latest.bundle.version\[master\]=" \
 			"build-shared.properties" | \
 			cut --delimiter='=' --fields=2 | \
-			cut --delimiter='.' --fields=1,2)"
+			cut --delimiter='.' --fields=1,2)
 
 	if [ "${product_group_version}" == "${latest_product_group_version}" ] || [ "${latest_quarterly_release}" == "true" ] 
 	then
@@ -336,12 +336,12 @@ function reference_new_releases {
 			"portal.latest.bundle.version\[master\]=${previous_product_version}"
 	fi
 
-	local previous_quarterly_release_branch="$(\
+	local previous_quarterly_release_branch=$( \
 		grep "portal.latest.bundle.version" \
 			"build-shared.properties" | \
 			tail -1 | \
 			cut --delimiter='[' --fields=2 | \
-			cut --delimiter=']' --fields=1)"
+			cut --delimiter=']' --fields=1)
 
 	local quarterly_release_branch="release-$(get_product_group_version)"
 
