@@ -50,14 +50,14 @@ function print_help {
 }
 
 function _notify_info_sec {
-	if ! is_quarterly_release_docker_image "${LIFERAY_DOCKER_IMAGE_NAME}" || [ "${LIFERAY_RELEASE_UPLOAD}" != "true" ]
+	if ! is_quarterly_release_docker_image "${1}" || [ "${LIFERAY_RELEASE_UPLOAD}" != "true" ]
 	then
-		lc_log INFO "Skipping InfoSec notification."
+		lc_log INFO "Skipping InfoSec notification for ${1}."
 
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	local issue_key="$( \
+	_LIFERAY_DOCKER_IMAGE_SCAN_ISSUE_KEY="$( \
 		add_jira_issue_with_description \
 			"Sec R&D-Sec Engineering" \
 			"Hi team, the Prisma Cloud Scan of image ${1} had the following output: ${2}" \
@@ -66,13 +66,13 @@ function _notify_info_sec {
 			"LRINFOSEC" \
 			"${1} - Release Candidate | Prisma Cloud Scan Vulnerabilities")"
 
-	if [[ "${issue_key}" != LRINFOSEC-* ]]
+	if [[ "${_LIFERAY_DOCKER_IMAGE_SCAN_ISSUE_KEY}" != LRINFOSEC-* ]]
 	then
 		lc_log ERROR "Unable to create a Jira issue for ${1}."
 
 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	else
-		lc_log INFO "Jira issue ${issue_key} created successfully for ${1}."
+		lc_log INFO "Jira issue ${_LIFERAY_DOCKER_IMAGE_SCAN_ISSUE_KEY} created successfully for ${1}."
 	fi
 }
 
@@ -135,45 +135,58 @@ function _scan_docker_images {
 
 	chmod +x ./twistcli
 
-	local scan_result=0
+	lc_log INFO "Scanning ${LIFERAY_DOCKER_IMAGE_NAME}."
 
-	while read -r liferay_docker_image_name
-	do
-		lc_log INFO "Scanning ${liferay_docker_image_name}."
+	docker pull "${LIFERAY_DOCKER_IMAGE_NAME}"
 
-		docker pull "${liferay_docker_image_name}"
+	local scan_output=$( \
+		./twistcli images scan \
+			--address "${console_url}" \
+			--docker-address "$( \
+				find \
+					/run/user/$(id --user) \
+					-name docker.sock 2> /dev/null)" \
+			--password "${LIFERAY_PRISMA_CLOUD_SECRET}" \
+			--user "${LIFERAY_PRISMA_CLOUD_ACCESS_KEY}" \
+			"${LIFERAY_DOCKER_IMAGE_NAME}")
 
-		local scan_output=$( \
-			./twistcli images scan \
-				--address "${console_url}" \
-				--docker-address "$( \
-					find \
-						/run/user/$(id --user) \
-						-name docker.sock 2> /dev/null)" \
-				--password "${LIFERAY_PRISMA_CLOUD_SECRET}" \
-				--user "${LIFERAY_PRISMA_CLOUD_ACCESS_KEY}" \
-				"${liferay_docker_image_name}")
+	lc_log INFO "Scan output for ${LIFERAY_DOCKER_IMAGE_NAME}:"
 
-		lc_log INFO "Scan output for ${liferay_docker_image_name}:"
+	lc_log INFO "${scan_output}"
 
-		lc_log INFO "${scan_output}"
+	local scan_result="${LIFERAY_COMMON_EXIT_CODE_OK}"
 
-		if [[ ${scan_output} == *"Compliance threshold check results: PASS"* ]] &&
-		   [[ ${scan_output} == *"Vulnerability threshold check results: PASS"* ]]
-		then
-			lc_log INFO "The result of scan for ${liferay_docker_image_name} is: PASS."
-		else
-			lc_log INFO "The result of scan for ${liferay_docker_image_name} is: FAIL."
+	if [[ ${scan_output} == *"Compliance threshold check results: PASS"* ]] &&
+	   [[ ${scan_output} == *"Vulnerability threshold check results: PASS"* ]]
+	then
+		lc_log INFO "The result of scan for ${LIFERAY_DOCKER_IMAGE_NAME} is: PASS."
+	else
+		lc_log INFO "The result of scan for ${LIFERAY_DOCKER_IMAGE_NAME} is: FAIL."
 
-			lc_log ERROR "The Liferay Docker image ${liferay_docker_image_name} has security vulnerabilities."
+		lc_log ERROR "The Liferay Docker image ${LIFERAY_DOCKER_IMAGE_NAME} has security vulnerabilities."
 
-			scan_output=$(echo "${scan_output}" | perl -pe 's/\e\[[0-9;]*[mGJK]//g')
+		scan_output=$(echo "${scan_output}" | perl -pe 's/\e\[[0-9;]*[mGJK]//g')
 
-			_notify_info_sec "${liferay_docker_image_name}" "${scan_output}"
+		_LIFERAY_DOCKER_IMAGE_SCAN_ISSUE_KEY="LRINFOSEC-5950"
 
-			scan_result="${LIFERAY_COMMON_EXIT_CODE_BAD}"
-		fi
-	done < <(echo "${LIFERAY_DOCKER_IMAGE_NAME}" | tr ',' '\n')
+		# _notify_info_sec "${LIFERAY_DOCKER_IMAGE_NAME}" "${scan_output}"
+
+		local prisma_cloud_link=$( \
+			echo "${scan_output}" | \
+			grep \
+				--extended-regexp \
+				--only-matching \
+				"https://\S+prismacloud.io\S+" | \
+			head --lines=1)
+
+		(
+			echo -e "*Affected release:* \`$(echo "${LIFERAY_DOCKER_IMAGE_NAME}" | sed 's/.*://')\`\n"
+			echo -e "*Prisma Cloud scan result:* ${prisma_cloud_link}\n"
+			echo -e "*InfoSec ticket:* https://liferay.atlassian.net/browse/${_LIFERAY_DOCKER_IMAGE_SCAN_ISSUE_KEY}\n"
+		) > scan_failure_slack_message.txt
+
+		scan_result="${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
 
 	rm --force ./twistcli
 
