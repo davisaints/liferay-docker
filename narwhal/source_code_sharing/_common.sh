@@ -121,7 +121,7 @@ function fetch_repository {
 		git remote add upstream "git@github.com:liferay/$(basename "${repository_path}").git"
 	fi
 
-	git fetch upstream --tags
+	git fetch upstream --tags --quiet
 
 	git config --add checkout.defaultRemote origin
 }
