@@ -452,15 +452,20 @@ function tag_release {
 
 	local product_version_without_lts_suffix="$(get_product_version_without_lts_suffix)"
 
-	local repository=liferay-portal-ee
+	local targets=(
+		brianchandotcom/liferay-portal-ee
+		liferay/liferay-portal-ee
+	)
 
-	if is_portal_release
+	if is_first_quarterly_release
 	then
-		repository=liferay-portal
+		targets+=(liferay/liferay-portal)
 	fi
 
-	for repository_owner in brianchandotcom liferay
+	for target in "${targets[@]}"
 	do
+		local repository=$(echo "${target}" | cut --delimiter='/' --fields=2)
+		local repository_owner=$(echo "${target}" | cut --delimiter='/' --fields=1)
 		local tag_data=$(
 			cat <<- END
 			{
@@ -474,12 +479,12 @@ function tag_release {
 
 		if [ $(invoke_github_api_post "${repository_owner}" "${repository}/git/tags" "${tag_data}") -eq "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}" ]
 		then
-			lc_log ERROR "Unable to create tag ${product_version_without_lts_suffix} in ${repository_owner}/${repository}."
+			lc_log ERROR "Unable to create tag ${product_version_without_lts_suffix} in ${target}."
 
 			return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 		fi
 
-		lc_log INFO "Tag ${product_version_without_lts_suffix} was created successfully in ${repository_owner}/${repository}."
+		lc_log INFO "Tag ${product_version_without_lts_suffix} was created successfully in ${target}."
 
 		local ref_data=$(
 			cat <<- END
@@ -493,12 +498,12 @@ function tag_release {
 
 		if [ $(invoke_github_api_post "${repository_owner}" "${repository}/git/refs" "${ref_data}") -eq "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}" ]
 		then
-			lc_log ERROR "Unable to create tag reference for ${product_version_without_lts_suffix} in ${repository_owner}/${repository}."
+			lc_log ERROR "Unable to create tag reference for ${product_version_without_lts_suffix} in ${target}."
 
 			return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 		fi
 
-		lc_log INFO "Tag reference for ${product_version_without_lts_suffix} was created successfully in ${repository_owner}/${repository}."
+		lc_log INFO "Tag reference for ${product_version_without_lts_suffix} was created successfully in ${target}."
 	done
 
 	if is_7_4_u_release
