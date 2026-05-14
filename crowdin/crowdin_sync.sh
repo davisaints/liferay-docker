@@ -1,107 +1,138 @@
 #!/bin/bash
 
-source "$(dirname "$(readlink -f "$0")")/../_common.sh"
+source ../_liferay_common.sh
 
-set -euo pipefail
+function check_usage {
+	if [ -z "${CROWDIN_PERSONAL_TOKEN}" ] ||
+	   [ -z "${CROWDIN_PROJECT_ID}" ]
+	then
+		print_help
+	fi
 
-PORTAL_REPO="${PORTAL_REPO:-liferay-release/liferay-portal}"
-BASE_BRANCH="${BASE_BRANCH:-master}"
-BRANCH_NAME="crowdin/translations-$(date +%Y%m%d-%H%M%S)"
+	lc_check_utils crowdin gh jq
+
+	_CROWDIN_BRANCH_NAME="translations-$(date +%Y%m%d-%H%M%S)"
+	_CROWDIN_DIR=$(dirname "$(readlink /proc/$$/fd/255 2>/dev/null)")
+}
 
 function close_existing_crowdin_pr {
-	echo "Checking for existing open Crowdin PR..."
+	lc_log INFO "Checking for existing open Crowdin PR..."
 
-	local existing_pr
-
-	existing_pr=$(gh pr list \
-		--repo "${PORTAL_REPO}" \
-		--search "head:crowdin/translations-" \
-		--state open \
+	local existing_pr=$(gh pr list \
+		--jq '.[0]' \
 		--json number,headRefName \
-		--jq '.[0]')
+		--repo "liferay/liferay-portal" \
+		--search "head:crowdin/translations-" \
+		--state open)
 
-	if [[ -z "${existing_pr}" ]]; then
+	if [ -z "${existing_pr}" ]
+	then
 		return
 	fi
 
-	local pr_number old_branch
+	local pr_number=$(echo "${existing_pr}" | jq --raw-output '.number')
 
-	pr_number=$(echo "${existing_pr}" | jq -r '.number')
-	old_branch=$(echo "${existing_pr}" | jq -r '.headRefName')
+	lc_log INFO "Closing existing Crowdin PR #${pr_number}..."
 
-	echo "Closing existing Crowdin PR #${pr_number} (${old_branch})..."
-
-	gh pr close "${pr_number}" --repo "${PORTAL_REPO}"
-
-	git push \
-		"https://x-access-token:${LIFERAY_RELEASE_GITHUB_PAT}@github.com/${PORTAL_REPO}.git" \
-		--delete "${old_branch}" 2>/dev/null || true
+	gh pr close "${pr_number}" --delete-branch --repo "liferay/liferay-portal"
 }
 
-function clone_portal {
-	echo "Cloning ${PORTAL_REPO}..."
+function commit_translations {
+	local file_pattern='(Language|bundle)(_[a-zA-Z].*)?\.properties$'
 
-	git clone --depth=1 \
-		"https://x-access-token:${LIFERAY_RELEASE_GITHUB_PAT}@github.com/${PORTAL_REPO}.git" \
-		portal
-}
+	local changed_files=$(git diff --name-only | grep --extended-regexp "${file_pattern}")
 
-function download_translations {
-	echo "Downloading translations from Crowdin..."
-
-	crowdin download translations \
-		--no-progress \
-		--project-id="${CROWDIN_PROJECT_ID}" \
-		--token="${CROWDIN_PERSONAL_TOKEN}"
-}
-
-function create_pr {
-	local changed_file_count="${1}"
-
-	echo "Opening PR with ${changed_file_count} changed translation file(s)..."
-
-	git push \
-		"https://x-access-token:${LIFERAY_RELEASE_GITHUB_PAT}@github.com/${PORTAL_REPO}.git" \
-		"${BRANCH_NAME}"
-
-	gh pr create \
-		--repo "${PORTAL_REPO}" \
-		--base "${BASE_BRANCH}" \
-		--head "${BRANCH_NAME}" \
-		--title "TRL-0000 Update translations from Crowdin" \
-		--body "Automated translations update from Crowdin.
-
-Contains only \`Language*.properties\` and \`bundle*.properties\` changes. Do not edit this PR manually."
-}
-
-function main {
-	close_existing_crowdin_pr
-
-	clone_portal
-
-	cd portal
-
-	git checkout -b "${BRANCH_NAME}"
-
-	download_translations
-
-	mapfile -t changed_files < <(git diff --name-only | \
-		grep -E '(Language|bundle)(_[a-zA-Z].*)?\.properties$' || true)
-
-	if [[ ${#changed_files[@]} -eq 0 ]]; then
-		echo "No translation changes. Nothing to do."
+	if [ -z "${changed_files}" ]
+	then
+		lc_log INFO "No translation changes. Nothing to do."
 
 		exit 0
 	fi
 
-	git add -- "${changed_files[@]}"
+	echo "${changed_files}" | xargs git add --
 
-	git config user.email "crowdin-bot@users.noreply.github.com"
-	git config user.name "crowdin-bot"
+	git config user.email "liferay-release@users.noreply.github.com"
+	git config user.name "liferay-release"
 
-	git commit -m "TRL-0000 Update translations from Crowdin"
+	git commit -m "LPD-XXX Update translations from Crowdin"
+}
 
-	create_pr "${#changed_files[@]}"
+function create_pr {
+	lc_log INFO "Opening PR with new translation file(s)..."
+
+	git push origin "${_CROWDIN_BRANCH_NAME}"
+
+	gh pr create \
+		--base "master" \
+		--body "Automated translations update from Crowdin." \
+		--head "${_CROWDIN_BRANCH_NAME}" \
+		--repo "liferay/liferay-portal" \
+		--title "LPD-XXXX Update translations from Crowdin"
+}
+
+function download_translations {
+	lc_log INFO "Downloading translations from Crowdin..."
+
+	cp "${_CROWDIN_DIR}/crowdin.yml" .
+
+	local exit_code=0
+
+	crowdin download translations \
+		--branch master \
+		--language pt-BR \
+		--language pt-PT \
+		--no-progress \
+		--project-id="${CROWDIN_PROJECT_ID}" \
+		--token="${CROWDIN_PERSONAL_TOKEN}" || exit_code="${?}"
+
+	if [ "${exit_code}" -ne 0 ] && [ "${exit_code}" -ne 2 ]
+	then
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
+}
+
+function set_up_liferay_portal_repository {
+	lc_cd "liferay-portal"
+
+	git reset --hard &> /dev/null && git clean -dfx &> /dev/null 
+
+	if (git remote get-url upstream &>/dev/null)
+	then
+		git remote set-url upstream "git@github.com:liferay/liferay-portal.git"
+	fi
+
+	git pull upstream master &> /dev/null
+
+	git branch --list "translations-*" | xargs --no-run-if-empty git branch --delete --force
+
+	git checkout -b "${_CROWDIN_BRANCH_NAME}"
+}
+
+function main {
+	check_usage
+
+	# close_existing_crowdin_pr
+
+	# lc_time_run lc_clone_repository "liferay-portal"
+
+	set_up_liferay_portal_repository
+
+	lc_time_run download_translations
+
+	lc_time_run commit_translations
+
+	# create_pr
+}
+
+function print_help {
+	echo "Usage: ${0}"
+	echo ""
+	echo "The script reads the following environment variables:"
+	echo ""
+	echo "    CROWDIN_PERSONAL_TOKEN (required): Personal access token for Crowdin."
+	echo "    CROWDIN_PROJECT_ID (required): Project ID in Crowdin."
+
+	exit "${LIFERAY_COMMON_EXIT_CODE_HELP}"
 }
 
 main

@@ -1,0 +1,141 @@
+project_id_env: CROWDIN_PROJECT_ID
+api_token_env: CROWDIN_PERSONAL_TOKEN
+base_path: "."
+preserve_hierarchy: true
+
+files:
+  - source: "**/Language.properties"
+    translation: "/**/%file_name%_%locale%.%file_extension%"
+    escape_quotes: 0
+    escape_special_characters: 0
+    skip_untranslated_strings: true
+    ignore:
+      - "/modules/dxp/apps/osb/osb-customer/**"
+      - "/modules/dxp/apps/osb/osb-distributed-messaging/**"
+      - "/modules/dxp/apps/osb/osb-faro/**"
+      - "/modules/dxp/apps/osb/osb-koroneiki/**"
+      - "/modules/dxp/apps/osb/osb-loop/**"
+      - "/modules/dxp/apps/osb/osb-provisioning/**"
+      - "/modules/dxp/apps/osb/osb-testray/**"
+    languages_mapping:
+      locale:
+        ar: ar
+        bg: bg
+        ca: ca
+        cs: cs
+        da: da
+        de: de
+        el: el
+        en-AU: en_AU
+        en-GB: en_GB
+        es-AR: es_AR
+        es-CO: es_CO
+        es-ES: es
+        es-MX: es_MX
+        et: et
+        eu: eu
+        fa: fa
+        fi: fi
+        fr: fr
+        fr-CA: fr_CA
+        gl: gl
+        he: iw
+        hi: hi_IN
+        hr: hr
+        hu: hu
+        id: in
+        it: it
+        ja: ja
+        kk: kk
+        ko: ko
+        lo: lo
+        lt: lt
+        ms: ms
+        nb: nb
+        nl: nl
+        nl-BE: nl_BE
+        pl: pl
+        pt-BR: pt_BR
+        pt-PT: pt_PT
+        ro: ro
+        ru: ru
+        sk: sk
+        sl: sl
+        sr: sr_RS
+        sr-CS: sr_RS_latin
+        sv-SE: sv
+        ta: ta_IN
+        th: th
+        tr: tr
+        uk: uk
+        vi: vi
+        zh-CN: zh_CN
+        zh-TW: zh_TW
+
+  - source: "**/bundle.properties"
+    translation: "/**/%file_name%_%locale%.%file_extension%"
+    escape_quotes: 0
+    escape_special_characters: 0
+    skip_untranslated_strings: true
+    ignore:
+      - "/modules/dxp/apps/osb/osb-customer/**"
+      - "/modules/dxp/apps/osb/osb-distributed-messaging/**"
+      - "/modules/dxp/apps/osb/osb-faro/**"
+      - "/modules/dxp/apps/osb/osb-koroneiki/**"
+      - "/modules/dxp/apps/osb/osb-loop/**"
+      - "/modules/dxp/apps/osb/osb-provisioning/**"
+      - "/modules/dxp/apps/osb/osb-testray/**"
+    languages_mapping:
+      locale:
+        ar: ar
+        bg: bg
+        ca: ca
+        cs: cs
+        da: da
+        de: de
+        el: el
+        en-AU: en_AU
+        en-GB: en_GB
+        es-AR: es_AR
+        es-CO: es_CO
+        es-ES: es
+        es-MX: es_MX
+        et: et
+        eu: eu
+        fa: fa
+        fi: fi
+        fr: fr
+        fr-CA: fr_CA
+        gl: gl
+        he: iw
+        hi: hi_IN
+        hr: hr
+        hu: hu
+        id: in
+        it: it
+        ja: ja
+        kk: kk
+        ko: ko
+        lo: lo
+        lt: lt
+        ms: ms
+        nb: nb
+        nl: nl
+        nl-BE: nl_BE
+        pl: pl
+        pt-BR: pt_BR
+        pt-PT: pt_PT
+        ro: ro
+        ru: ru
+        sk: sk
+        sl: sl
+        sr: sr_RS
+        sr-CS: sr_RS_latin
+        sv-SE: sv
+        ta: ta_IN
+        th: th
+        tr: tr
+        uk: uk
+        vi: vi
+        zh-CN: zh_CN
+        zh-TW: zh_TW
