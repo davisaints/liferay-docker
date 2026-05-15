@@ -55,6 +55,8 @@ function commit_translations {
 	git config user.name "liferay-release"
 
 	git commit -m "LPD-XXX Update translations from Crowdin"
+
+	git show -1
 }
 
 function create_pr {
@@ -73,28 +75,32 @@ function create_pr {
 function download_translations {
 	lc_log INFO "Downloading translations from Crowdin..."
 
-	cp "${_CROWDIN_DIR}/crowdin.yml" .
-
-	local exit_code=0
-
 	crowdin download translations \
-		--branch master \
-		--language pt-BR \
+		--branch master-test \
 		--language pt-PT \
-		--no-progress \
-		--project-id="${CROWDIN_PROJECT_ID}" \
-		--token="${CROWDIN_PERSONAL_TOKEN}" || exit_code="${?}"
+		--verbose
 
-	if [ "${exit_code}" -ne 0 ] && [ "${exit_code}" -ne 2 ]
+	if [ "${?}" -ne 0 ]
 	then
 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
 }
 
+function upload_sources {
+	lc_log INFO "Uploading sources to Crowdin..."
+
+	crowdin upload sources \
+		--branch master-test \
+		--no-progress \
+		--project-id="${CROWDIN_PROJECT_ID}" \
+		--token="${CROWDIN_PERSONAL_TOKEN}" \
+		--verbose
+}
+
 function set_up_liferay_portal_repository {
 	lc_cd "liferay-portal"
 
-	git reset --hard &> /dev/null && git clean -dfx &> /dev/null 
+	git reset --hard &> /dev/null && git clean -dfx &> /dev/null
 
 	if (git remote get-url upstream &>/dev/null)
 	then
@@ -103,9 +109,13 @@ function set_up_liferay_portal_repository {
 
 	git pull upstream master &> /dev/null
 
+	git checkout master --force &> /dev/null
+
 	git branch --list "translations-*" | xargs --no-run-if-empty git branch --delete --force
 
 	git checkout -b "${_CROWDIN_BRANCH_NAME}"
+
+	cp "${_CROWDIN_DIR}/crowdin.yml" .
 }
 
 function main {
@@ -117,9 +127,13 @@ function main {
 
 	set_up_liferay_portal_repository
 
+	# lc_time_run upload_sources
+
 	lc_time_run download_translations
 
 	lc_time_run commit_translations
+
+	rm crowdin.yml
 
 	# create_pr
 }

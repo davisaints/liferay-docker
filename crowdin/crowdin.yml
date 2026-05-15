@@ -4,19 +4,12 @@ base_path: "."
 preserve_hierarchy: true
 
 files:
-  - source: "**/Language.properties"
-    translation: "/**/%file_name%_%locale%.%file_extension%"
+  - source: "/modules/apps/portal-language/portal-language-lang/src/main/resources/content/Language.properties"
+    dest: "/Language.properties"
+    translation: "/modules/apps/portal-language/portal-language-lang/src/main/resources/content/%file_name%_%locale%.%file_extension%"
     escape_quotes: 0
     escape_special_characters: 0
-    skip_untranslated_strings: true
-    ignore:
-      - "/modules/dxp/apps/osb/osb-customer/**"
-      - "/modules/dxp/apps/osb/osb-distributed-messaging/**"
-      - "/modules/dxp/apps/osb/osb-faro/**"
-      - "/modules/dxp/apps/osb/osb-koroneiki/**"
-      - "/modules/dxp/apps/osb/osb-loop/**"
-      - "/modules/dxp/apps/osb/osb-provisioning/**"
-      - "/modules/dxp/apps/osb/osb-testray/**"
+    skip_untranslated_strings: false
     languages_mapping:
       locale:
         ar: ar
@@ -25,9 +18,14 @@ files:
         cs: cs
         da: da
         de: de
+        de-AT: de_AT
+        de-CH: de_CH
         el: el
+        en: en
         en-AU: en_AU
+        en-CA: en_CA
         en-GB: en_GB
+        en-IE: en_IE
         es-AR: es_AR
         es-CO: es_CO
         es-ES: es
@@ -37,7 +35,9 @@ files:
         fa: fa
         fi: fi
         fr: fr
+        fr-BE: fr_BE
         fr-CA: fr_CA
+        fr-CH: fr_CH
         gl: gl
         he: iw
         hi: hi_IN
@@ -45,15 +45,20 @@ files:
         hu: hu
         id: in
         it: it
+        it-CH: it_CH
         ja: ja
         kk: kk
+        km: km
         ko: ko
         lo: lo
         lt: lt
+        mk: mk
         ms: ms
+        my: my
         nb: nb
         nl: nl
         nl-BE: nl_BE
+        "no": "no"
         pl: pl
         pt-BR: pt_BR
         pt-PT: pt_PT
@@ -72,19 +77,11 @@ files:
         zh-CN: zh_CN
         zh-TW: zh_TW
 
-  - source: "**/bundle.properties"
-    translation: "/**/%file_name%_%locale%.%file_extension%"
+  - source: "**/app.bnd-localization/bundle.properties"
+    translation: "/**/app.bnd-localization/%file_name%_%locale%.%file_extension%"
     escape_quotes: 0
     escape_special_characters: 0
-    skip_untranslated_strings: true
-    ignore:
-      - "/modules/dxp/apps/osb/osb-customer/**"
-      - "/modules/dxp/apps/osb/osb-distributed-messaging/**"
-      - "/modules/dxp/apps/osb/osb-faro/**"
-      - "/modules/dxp/apps/osb/osb-koroneiki/**"
-      - "/modules/dxp/apps/osb/osb-loop/**"
-      - "/modules/dxp/apps/osb/osb-provisioning/**"
-      - "/modules/dxp/apps/osb/osb-testray/**"
+    skip_untranslated_strings: false
     languages_mapping:
       locale:
         ar: ar
@@ -93,9 +90,14 @@ files:
         cs: cs
         da: da
         de: de
+        de-AT: de_AT
+        de-CH: de_CH
         el: el
+        en: en
         en-AU: en_AU
+        en-CA: en_CA
         en-GB: en_GB
+        en-IE: en_IE
         es-AR: es_AR
         es-CO: es_CO
         es-ES: es
@@ -105,7 +107,9 @@ files:
         fa: fa
         fi: fi
         fr: fr
+        fr-BE: fr_BE
         fr-CA: fr_CA
+        fr-CH: fr_CH
         gl: gl
         he: iw
         hi: hi_IN
@@ -113,15 +117,20 @@ files:
         hu: hu
         id: in
         it: it
+        it-CH: it_CH
         ja: ja
         kk: kk
+        km: km
         ko: ko
         lo: lo
         lt: lt
+        mk: mk
         ms: ms
+        my: my
         nb: nb
         nl: nl
         nl-BE: nl_BE
+        "no": "no"
         pl: pl
         pt-BR: pt_BR
         pt-PT: pt_PT
