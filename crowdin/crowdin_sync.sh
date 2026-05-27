@@ -267,14 +267,16 @@ function _apply_crowdin_translations {
 		}
 
 		FILENAME == head_translation_file {
-			if (is_translation($0)) {
-				key = parse_key($0)
+			if (!is_translation($0)) {
+				print
 
-				if (key in crowdin_translations) {
-					print crowdin_translations[key]
-				} else {
-					print
-				}
+				next
+			}
+
+			key = parse_key($0)
+
+			if (key in crowdin_translations) {
+				print crowdin_translations[key]
 			} else {
 				print
 			}
