@@ -13,10 +13,9 @@ function main {
 
 function set_up {
 	export _CROWDIN_DIR="${PWD}"
+	export _LIFERAY_PORTAL_REPOSITORY_NAME="liferay-portal"
 	export _PROJECTS_DIR=$(mktemp --directory)
 	export _TEST_DEPENDENCIES_DIR="${_CROWDIN_DIR}/test-dependencies"
-
-	export _LIFERAY_PORTAL_REPOSITORY_NAME="liferay-portal"
 
 	mkdir "${_PROJECTS_DIR}/${_LIFERAY_PORTAL_REPOSITORY_NAME}"
 
