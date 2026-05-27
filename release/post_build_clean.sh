@@ -44,10 +44,23 @@ function main {
 			-type d \
 			-exec rm --force --recursive {} \; &> /dev/null
 
+		local liferay_portal_repository_name=""
+
+		if [ -f "${PWD}/release-data/build/liferay-portal-ee.sha" ]
+		then
+			liferay_portal_repository_name="liferay-portal-ee"
+		elif [ -f "${PWD}/release-data/build/liferay-portal.sha" ]
+		then
+			liferay_portal_repository_name="liferay-portal"
+		fi
+
+		for repository_name in liferay-binaries-cache-2020 "${liferay_portal_repository_name}"
+		do
+			_clean_up_repository "${repository_name}"
+		done
+	
 		rm --force --recursive downloads
 		rm --force --recursive release/release-data
-
-		_clean_up_repository "liferay-binaries-cache-2020"
 	elif [ "${current_job}" == "crowdin-sync" ]
 	then
 		rm --force --recursive crowdin/logs
@@ -67,18 +80,14 @@ function main {
 			-mindepth 1 \
 			-exec rm --force --recursive {} \; &> /dev/null
 	fi
-
-	local liferay_portal_repository_name="liferay-portal-ee"
-
-	if [ ! -f "${PWD}/release-data/build/${liferay_portal_repository_name}.sha" ]
-	then
-		liferay_portal_repository_name="liferay-portal"
-	fi
-
-	_clean_up_repository "${liferay_portal_repository_name}"
 }
 
 function _clean_up_repository {
+	if [ -z "${1}" ]
+	then
+		return
+	fi
+
 	lc_cd "/opt/dev/projects/github/${1}"
 
 	git clean -dfx &> /dev/null
