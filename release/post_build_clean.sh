@@ -3,6 +3,8 @@
 source ./_liferay_common.sh
 
 function main {
+	local workspace_dir="${PWD}"
+
 	local current_job=$(basename "${PWD}")
 
 	lc_log INFO "Cleaning workspace for job ${current_job}."
@@ -46,10 +48,10 @@ function main {
 
 		local liferay_portal_repository_name=""
 
-		if [ -f "${PWD}/release-data/build/liferay-portal-ee.sha" ]
+		if [ -f "${workspace_dir}/release/release-data/build/liferay-portal-ee.sha" ]
 		then
 			liferay_portal_repository_name="liferay-portal-ee"
-		elif [ -f "${PWD}/release-data/build/liferay-portal.sha" ]
+		elif [ -f "${workspace_dir}/release/release-data/build/liferay-portal.sha" ]
 		then
 			liferay_portal_repository_name="liferay-portal"
 		fi
@@ -58,17 +60,17 @@ function main {
 		do
 			_clean_up_repository "${repository_name}"
 		done
-	
-		rm --force --recursive downloads
-		rm --force --recursive release/release-data
+
+		rm --force --recursive "${workspace_dir}/downloads"
+		rm --force --recursive "${workspace_dir}/release/release-data"
 	elif [ "${current_job}" == "crowdin-sync" ]
 	then
-		rm --force --recursive crowdin/logs
+		rm --force --recursive "${workspace_dir}/crowdin/logs"
 
 		_clean_up_repository "liferay-portal"
 	elif [ "${current_job}" == "source-code-sharing" ]
 	then
-		rm --force --recursive narwhal/source_code_sharing/liferay-portal-ee
+		rm --force --recursive "${workspace_dir}/narwhal/source_code_sharing/liferay-portal-ee"
 	fi
 
 	local liferay_common_cache_dir="${HOME}/.liferay-common-cache"
