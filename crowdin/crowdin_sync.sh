@@ -57,7 +57,7 @@ function fetch_brianchandotcom_master {
 		git remote add brianchandotcom git@github.com:brianchandotcom/liferay-portal.git
 	fi
 
-	git fetch brianchandotcom master
+	git fetch --force brianchandotcom "master:refs/remotes/brianchandotcom/master"
 
 	git log -1 brianchandotcom/master
 }
