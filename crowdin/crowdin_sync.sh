@@ -23,20 +23,12 @@ function check_usage {
 	fi
 }
 
-function close_existing_crowdin_pull_requests {
-	local repository_owner
+function clean_portal_repository {
+	lc_cd "${_PROJECTS_DIR}/liferay-portal"
 
-	for repository_owner in brianchandotcom liferay-release
-	do
-		close_pull_request \
-			"head:crowdin-translations" \
-			"${repository_owner}/liferay-portal"
+	git checkout master --force
 
-		if [ "${?}" -ne 0 ]
-		then
-			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
-		fi
-	done
+	git reset --hard && git clean -dfx
 }
 
 function download_translations {
@@ -57,6 +49,19 @@ function download_translations {
 	fi
 }
 
+function fetch_brianchandotcom_master {
+	lc_cd "${_PROJECTS_DIR}/liferay-portal"
+
+	if ! git remote get-url brianchandotcom &> /dev/null
+	then
+		git remote add brianchandotcom git@github.com:brianchandotcom/liferay-portal.git
+	fi
+
+	git fetch brianchandotcom master
+
+	git log -1 brianchandotcom/master
+}
+
 function main {
 	if [[ "${BASH_SOURCE[0]}" != "${0}" ]]
 	then
@@ -65,7 +70,9 @@ function main {
 
 	check_usage
 
-	lc_time_run close_existing_crowdin_pull_requests
+	lc_time_run close_pull_request \
+		"head:crowdin-translations" \
+		"liferay-release/liferay-portal"
 
 	if [ "${_PROJECTS_DIR}" == "${_CROWDIN_DIR}" ]
 	then
@@ -74,7 +81,13 @@ function main {
 		lc_wait
 	fi
 
-	lc_time_run update_portal_repository
+	lc_time_run clean_portal_repository
+
+	lc_time_run fetch_brianchandotcom_master
+
+	lc_time_run push_branch_to_liferay_release_fork \
+		"brianchandotcom/master:master" \
+		"liferay-portal"
 
 	lc_time_run set_up_branch
 
@@ -152,7 +165,7 @@ function set_up_branch {
 
 	lc_cd "${_PROJECTS_DIR}/liferay-portal"
 
-	git checkout -b "${_TEMP_BRANCH}"
+	git checkout -b "${_TEMP_BRANCH}" brianchandotcom/master
 
 	if [ "${?}" -ne 0 ]
 	then
@@ -162,23 +175,6 @@ function set_up_branch {
 	fi
 
 	cp "${_CROWDIN_DIR}/crowdin.yml" "${_PROJECTS_DIR}/liferay-portal"
-}
-
-function update_portal_repository {
-	lc_cd "${_PROJECTS_DIR}/liferay-portal"
-
-	git checkout master --force
-
-	git reset --hard && git clean -dfx
-
-	if ! git remote get-url upstream &> /dev/null
-	then
-		git remote add upstream "git@github.com:liferay/liferay-portal.git"
-	fi
-
-	git pull upstream master
-
-	git log -1
 }
 
 function upload_sources {
