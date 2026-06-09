@@ -152,6 +152,8 @@ function main {
 
 	lc_wait
 
+	exit 1
+
 	lc_time_run set_product_version
 
 	lc_time_run set_general_availability_date
