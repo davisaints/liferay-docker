@@ -45,12 +45,16 @@ function check_usage {
 
 	LIFERAY_COMMON_LOG_DIR="${_CROWDIN_DIR}/logs"
 
+	_LANG_BUILDER_LIB_DIR="tools/sdk/dependencies/com.liferay.lang.builder/lib"
+
 	_PROJECTS_DIR="/opt/dev/projects/github"
 
 	if [ ! -d "${_PROJECTS_DIR}" ]
 	then
 		_PROJECTS_DIR=${_CROWDIN_DIR}
 	fi
+
+	_TRANSLATION_FILE_REGEX="(Language|bundle)(_[a-zA-Z].*)?\.properties$"
 }
 
 function download_translations {
@@ -103,6 +107,10 @@ function main {
 
 	lc_time_run set_up_branch
 
+	lc_time_run set_up_lang_builder
+
+	lc_time_run normalize_translations
+
 	lc_time_run upload_sources
 
 	lc_time_run download_translations
@@ -128,10 +136,8 @@ function main {
 }
 
 function merge_and_commit_translations {
-	local translation_file_regex="(Language|bundle)(_[a-zA-Z].*)?\.properties$"
-
 	local changed_files=$( \
-		git diff --name-only | grep --extended-regexp "${translation_file_regex}")
+		git diff --name-only | grep --extended-regexp "${_TRANSLATION_FILE_REGEX}")
 
 	if [ -z "${changed_files}" ]
 	then
@@ -148,16 +154,70 @@ function merge_and_commit_translations {
 	done <<< "${changed_files}"
 
 	local merged_files=$( \
-		git diff --name-only | grep --extended-regexp "${translation_file_regex}")
+		git diff --name-only | grep --extended-regexp "${_TRANSLATION_FILE_REGEX}")
 
 	if [ -z "${merged_files}" ]
 	then
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	commit_changes "${merged_files}" "LPD-91206 Update Translations"
+	lc_log INFO "Normalizing merged translations with the Lang Builder."
+
+	_run_lang_builder_on_files "${merged_files}"
+
+	if [ "${?}" -ne 0 ]
+	then
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
+
+	merged_files=$( \
+		git diff --name-only | grep --extended-regexp "${_TRANSLATION_FILE_REGEX}")
+
+	if [ -z "${merged_files}" ]
+	then
+		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
+	fi
+
+	if [ "${_LANG_BUILDER_COMMITTED}" == "true" ]
+	then
+		local merged_file
+
+		while IFS= read -r merged_file
+		do
+			git add "${merged_file}"
+		done <<< "${merged_files}"
+
+		git commit --amend --message "LPD-91206 Update Translations"
+	else
+		commit_changes "${merged_files}" "LPD-91206 Update Translations"
+	fi
 
 	_CREATE_PULL_REQUEST=true
+}
+
+function normalize_translations {
+	lc_cd "${_PROJECTS_DIR}/liferay-portal"
+
+	lc_log INFO "Normalizing translation files with the Lang Builder."
+
+	_run_lang_builder "modules/apps/portal-language/portal-language-lang/src/main/resources/content" "Language"
+
+	if [ "${?}" -ne 0 ]
+	then
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
+
+	local changed_files=$( \
+		git diff --name-only | grep --extended-regexp "${_TRANSLATION_FILE_REGEX}")
+
+	if [ -z "${changed_files}" ]
+	then
+		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
+	fi
+
+	commit_changes "${changed_files}" "LPD-91206 Normalize existing translations"
+
+	_LANG_BUILDER_COMMITTED=true
 }
 
 function print_help {
@@ -187,6 +247,26 @@ function set_up_branch {
 	fi
 
 	cp "${_CROWDIN_DIR}/crowdin.yml" "${_PROJECTS_DIR}/liferay-portal"
+}
+
+function set_up_lang_builder {
+	lc_cd "${_PROJECTS_DIR}/liferay-portal"
+
+	if [ -d "${_LANG_BUILDER_LIB_DIR}" ]
+	then
+		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
+	fi
+
+	lc_log INFO "Setting up portal tools to install the Lang Builder."
+
+	./gradlew --build-file="modules/util.gradle" setUpPortalTools
+
+	if [ ! -d "${_LANG_BUILDER_LIB_DIR}" ]
+	then
+		lc_log ERROR "Unable to set up the Lang Builder."
+
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
 }
 
 function update_portal_repository {
@@ -314,6 +394,53 @@ function _merge_translation_file {
 	fi
 
 	rm --force "${head_translation_file}" "${merged_translation_file}"
+}
+
+function _run_lang_builder {
+	local lang_dir=${1}
+	local lang_file=${2}
+
+	lc_cd "${_PROJECTS_DIR}/liferay-portal"
+
+	java \
+		-Dfile.encoding=UTF-8 \
+		-Duser.country=US \
+		-Duser.language=en \
+		-classpath "${_LANG_BUILDER_LIB_DIR}/*" \
+		com.liferay.lang.builder.LangBuilder \
+		"lang.dir=${lang_dir}" \
+		"lang.file=${lang_file}" \
+		"lang.translate=false"
+
+	if [ "${?}" -ne 0 ]
+	then
+		lc_log ERROR "Unable to run the Lang Builder in ${lang_dir}."
+
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
+}
+
+function _run_lang_builder_on_files {
+	local changed_files=${1}
+
+	local lang_dir
+
+	while IFS= read -r lang_dir
+	do
+		local lang_file="bundle"
+
+		if [ "${lang_dir##*/}" != "app.bnd-localization" ]
+		then
+			lang_file="Language"
+		fi
+
+		_run_lang_builder "${lang_dir}" "${lang_file}"
+
+		if [ "${?}" -ne 0 ]
+		then
+			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+		fi
+	done <<< "$(echo "${changed_files}" | xargs dirname | sort --unique)"
 }
 
 main "${@}"
