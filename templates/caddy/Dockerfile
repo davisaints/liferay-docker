@@ -20,6 +20,7 @@ LABEL org.label-schema.vcs-url="${LABEL_VCS_URL}"
 LABEL org.label-schema.vendor="Liferay, Inc."
 LABEL org.label-schema.version="${LABEL_VERSION}"
 
-RUN apk add --no-cache bash tini && \
+RUN apk upgrade --no-cache && \
+	apk add --no-cache bash tini && \
 	\
 	mkdir -p /etc/caddy.d /public_html
