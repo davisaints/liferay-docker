@@ -114,6 +114,67 @@ function check_liferay_marketplace_products_compatibility {
 	stop_tomcat &> /dev/null
 }
 
+function check_usage {
+	if [ -z "${LIFERAY_RELEASE_PRODUCT_VERSION}" ]
+	then
+		print_help
+	fi
+
+	_PRODUCT_VERSION=${LIFERAY_RELEASE_PRODUCT_VERSION}
+
+	_RELEASE_TOOL_DIR=$(dirname "$(readlink /proc/$$/fd/255 2> /dev/null)")
+
+	lc_cd "${_RELEASE_TOOL_DIR}"
+
+	mkdir --parents release-data
+
+	lc_cd release-data
+
+	_BUILD_DIR="${PWD}/build"
+	_BUNDLES_DIR="/opt/dev/projects/github/bundles"
+	_PROJECTS_DIR="/opt/dev/projects/github"
+
+	if [ ! -d "${_PROJECTS_DIR}" ]
+	then
+		_BUNDLES_DIR="${PWD}/dev/projects/bundles"
+		_PROJECTS_DIR="${PWD}/dev/projects"
+	fi
+}
+
+function main {
+	if [[ "${BASH_SOURCE[0]}" != "${0}" ]]
+	then
+		return
+	fi
+
+	check_usage
+
+	lc_time_run check_liferay_marketplace_products_compatibility
+}
+
+function print_help {
+	echo "Usage: LIFERAY_RELEASE_PRODUCT_VERSION=<product version> ${0}"
+	echo ""
+	echo "The script reads the following environment variables:"
+	echo ""
+	echo "    LIFERAY_RELEASE_PRODUCT_VERSION: Product version of the release that was just built by the build-release job (e.g. 2026.q1.0)"
+	echo "    LIFERAY_RELEASE_DEVELOPER_MODE (optional): Set this to \"true\" to skip the compatibility check"
+	echo "    LIFERAY_RELEASE_TEST_MODE (optional): Set this to skip downloading and deploying Marketplace products"
+	echo "    LIFERAY_RELEASE_UPLOAD (optional): Set this to \"true\" to update the list of supported versions on Marketplace"
+	echo ""
+	echo "Example: LIFERAY_RELEASE_PRODUCT_VERSION=2026.q1.0 ${0}"
+
+	exit "${LIFERAY_COMMON_EXIT_CODE_HELP}"
+}
+
+function set_liferay_release_product_version {
+	export LIFERAY_RELEASE_PRODUCT_VERSION="${_PRODUCT_VERSION}"
+
+	lc_log INFO "Setting Liferay release product version to ${LIFERAY_RELEASE_PRODUCT_VERSION}"
+
+	echo "LIFERAY_RELEASE_PRODUCT_VERSION=${LIFERAY_RELEASE_PRODUCT_VERSION}" > "/tmp/liferay_release_product_version.properties"
+}
+
 function _check_liferay_marketplace_product_compatibility {
 	local product_external_reference_code=${1}
 	local product_name=${2}
@@ -553,3 +614,5 @@ function _update_product_supported_versions {
 		lc_log INFO "The supported versions list for product ${product_name} already contains the ${product_virtual_file_entry_target_version} release.\n"
 	fi
 }
+
+main "${@}"
