@@ -2,7 +2,6 @@
 
 source ../_liferay_common.sh
 source ../_release_common.sh
-source ./_product.sh
 
 function check_liferay_marketplace_products_compatibility {
 	if [ "${LIFERAY_RELEASE_DEVELOPER_MODE}" == "true" ]
@@ -18,6 +17,8 @@ function check_liferay_marketplace_products_compatibility {
 
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
+
+	mkdir --parents "${_BUILD_DIR}/deploy"
 
 	if [ -z "${LIFERAY_RELEASE_TEST_MODE}" ]
 	then
@@ -67,7 +68,7 @@ function check_liferay_marketplace_products_compatibility {
 			fi
 		fi
 
-		lc_log INFO "Deploying Liferay Marketplace product zip file ${liferay_marketplace_product_name}.zip to ${_BUNDLES_DIR}/deploy.\n"
+		lc_log INFO "Preparing Liferay Marketplace product zip file ${liferay_marketplace_product_name}.zip for deployment to ${LIFERAY_DOCKER_IMAGE_NAME}.\n"
 
 		_deploy_liferay_marketplace_product_zip_file "${_BUILD_DIR}/marketplace/${liferay_marketplace_product_name}.zip"
 
@@ -77,15 +78,18 @@ function check_liferay_marketplace_products_compatibility {
 		fi
 	done
 
-	rm --force "${_BUILD_DIR}/warm-up-tomcat"
-
 	_LIFERAY_MARKETPLACE_PRODUCTS_DEPLOYMENT_LOG_FILE="${_BUILD_DIR}/log_$(date +%s)_liferay_marketplace_products_deployment.txt"
 
-	warm_up_tomcat "print-startup-logs" > "${_LIFERAY_MARKETPLACE_PRODUCTS_DEPLOYMENT_LOG_FILE}"
+	_start_liferay_container
 
-	echo "include-and-override=portal-developer.properties" > "${_BUNDLES_DIR}/portal-ext.properties"
+	if [[ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]]
+	then
+		_stop_liferay_container
 
-	start_tomcat "print-startup-logs" >> "${_LIFERAY_MARKETPLACE_PRODUCTS_DEPLOYMENT_LOG_FILE}"
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
+
+	docker logs "${_LIFERAY_MARKETPLACE_CONTAINER_ID}" &> "${_LIFERAY_MARKETPLACE_PRODUCTS_DEPLOYMENT_LOG_FILE}"
 
 	for liferay_marketplace_product_name in $(printf "%s\n" "${!LIFERAY_MARKETPLACE_PRODUCTS[@]}" | sort --ignore-case)
 	do
@@ -93,7 +97,7 @@ function check_liferay_marketplace_products_compatibility {
 
 		if [[ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]]
 		then
-			stop_tomcat &> /dev/null
+			_stop_liferay_container
 
 			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 		fi
@@ -104,14 +108,60 @@ function check_liferay_marketplace_products_compatibility {
 
 			if [[ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]]
 			then
-				stop_tomcat &> /dev/null
+				_stop_liferay_container
 
 				return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 			fi
 		fi
 	done
 
-	stop_tomcat &> /dev/null
+	_stop_liferay_container
+}
+
+function check_usage {
+	if [ -z "${LIFERAY_DOCKER_IMAGE_NAME}" ]
+	then
+		print_help
+	fi
+
+	_PRODUCT_VERSION=$( \
+		echo "${LIFERAY_DOCKER_IMAGE_NAME}" | \
+		cut --delimiter=':' --fields=2 | \
+		cut --delimiter='-' --fields=1)
+
+	_BUILD_DIR=$(mktemp --directory)
+}
+
+function main {
+	if [[ "${BASH_SOURCE[0]}" != "${0}" ]]
+	then
+		return
+	fi
+
+	check_usage
+
+	lc_time_run check_liferay_marketplace_products_compatibility
+
+	local exit_code=${?}
+
+	rm --force --recursive "${_BUILD_DIR}"
+
+	return "${exit_code}"
+}
+
+function print_help {
+	echo "Usage: LIFERAY_DOCKER_IMAGE_NAME=<<liferay_docker_image_name>> ${0}"
+	echo ""
+	echo "The script reads the following environment variables:"
+	echo ""
+	echo "    LIFERAY_DOCKER_IMAGE_NAME: Liferay Docker image name to check Marketplace product compatibility against"
+	echo "    LIFERAY_RELEASE_DEVELOPER_MODE (optional): Set this to \"true\" to skip the compatibility check"
+	echo "    LIFERAY_RELEASE_TEST_MODE (optional): Set this to skip downloading and deploying Marketplace products"
+	echo "    LIFERAY_RELEASE_UPLOAD (optional): Set this to \"true\" to update the list of supported versions on Marketplace"
+	echo ""
+	echo "Example: LIFERAY_DOCKER_IMAGE_NAME=liferay/release-candidates:2026.q1.0-123456789 ${0}"
+
+	exit "${LIFERAY_COMMON_EXIT_CODE_HELP}"
 }
 
 function _check_liferay_marketplace_product_compatibility {
@@ -127,7 +177,7 @@ function _check_liferay_marketplace_product_compatibility {
 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
 
-	local modules_info=$(blade sh lb -s | grep "${product_name}")
+	local modules_info=$(blade sh --host localhost --port "${_LIFERAY_MARKETPLACE_CONTAINER_OSGI_CONSOLE_PORT}" lb -s | grep "${product_name}")
 
 	if [ -z "${modules_info}" ]
 	then
@@ -156,7 +206,7 @@ function _check_liferay_marketplace_product_compatibility {
 				xargs)
 
 			lc_log INFO "OSGI diagnostics: $( \
-				blade sh diag "${module_id}" | \
+				blade sh --host localhost --port "${_LIFERAY_MARKETPLACE_CONTAINER_OSGI_CONSOLE_PORT}" diag "${module_id}" | \
 				tail --lines=+3 | \
 				xargs)"
 
@@ -206,11 +256,11 @@ function _deploy_liferay_marketplace_product_zip_file {
 
 	if unzip -l "${liferay_marketplace_product_zip_file_path}" | grep "client-extension" &> /dev/null
 	then
-		cp "${liferay_marketplace_product_zip_file_path}" "${_BUNDLES_DIR}/deploy"
+		cp "${liferay_marketplace_product_zip_file_path}" "${_BUILD_DIR}/deploy"
 	elif unzip -l "${liferay_marketplace_product_zip_file_path}" | grep "\.lpkg$" &> /dev/null
 	then
 		unzip \
-			-d "${_BUNDLES_DIR}/deploy" \
+			-d "${_BUILD_DIR}/deploy" \
 			-j \
 			-o \
 			-q \
@@ -219,7 +269,7 @@ function _deploy_liferay_marketplace_product_zip_file {
 	elif unzip -l "${liferay_marketplace_product_zip_file_path}" | grep "\.zip$" &> /dev/null
 	then
 		unzip \
-			-d "${_BUNDLES_DIR}/deploy" \
+			-d "${_BUILD_DIR}/deploy" \
 			-j \
 			-o \
 			-q \
@@ -229,7 +279,7 @@ function _deploy_liferay_marketplace_product_zip_file {
 
 	if [[ "${?}" -ne 0 ]]
 	then
-		lc_log ERROR "Unable to deploy $(basename "${liferay_marketplace_product_zip_file_path}") to ${_BUNDLES_DIR}/deploy."
+		lc_log ERROR "Unable to deploy $(basename "${liferay_marketplace_product_zip_file_path}") to ${_BUILD_DIR}/deploy."
 
 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
@@ -252,9 +302,9 @@ function _deploy_punchout2go_activation_key {
 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
 
-	lc_log INFO "Deploying the Punchout2Go activation key for ${activation_key_year} to ${_BUNDLES_DIR}/deploy."
+	lc_log INFO "Deploying the Punchout2Go activation key for ${activation_key_year} to ${_BUILD_DIR}/deploy."
 
-	cp "${activation_key_file_path}" "${_BUNDLES_DIR}/deploy"
+	cp "${activation_key_file_path}" "${_BUILD_DIR}/deploy"
 
 	if [[ "${?}" -ne 0 ]]
 	then
@@ -470,6 +520,72 @@ function _set_liferay_marketplace_oauth2_token {
 	_LIFERAY_MARKETPLACE_OAUTH2_TOKEN=$(echo "${liferay_marketplace_oauth2_token_response}" | jq --raw-output ".access_token")
 }
 
+function _start_liferay_container {
+	lc_log INFO "Pulling ${LIFERAY_DOCKER_IMAGE_NAME}."
+
+	docker pull "${LIFERAY_DOCKER_IMAGE_NAME}"
+
+	if [[ "${?}" -ne 0 ]]
+	then
+		lc_log ERROR "Unable to pull ${LIFERAY_DOCKER_IMAGE_NAME}."
+
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
+
+	lc_log INFO "Starting a container from ${LIFERAY_DOCKER_IMAGE_NAME}."
+
+	_LIFERAY_MARKETPLACE_CONTAINER_ID=$( \
+		docker run \
+			--detach \
+			--publish 8080 \
+			--publish 11311 \
+			--volume "${_BUILD_DIR}/deploy:/opt/liferay/deploy:rw" \
+			"${LIFERAY_DOCKER_IMAGE_NAME}")
+
+	if [[ "${?}" -ne 0 ]]
+	then
+		lc_log ERROR "Unable to start a container from ${LIFERAY_DOCKER_IMAGE_NAME}."
+
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
+
+	_LIFERAY_MARKETPLACE_CONTAINER_OSGI_CONSOLE_PORT=$( \
+		docker port "${_LIFERAY_MARKETPLACE_CONTAINER_ID}" 11311/tcp | \
+		awk -F ":" 'END {print $NF}')
+
+	lc_log INFO "Waiting for the container to become healthy..."
+
+	local health_status
+
+	for count in {1..200}
+	do
+		health_status=$(docker inspect --format="{{json .State.Health.Status}}" "${_LIFERAY_MARKETPLACE_CONTAINER_ID}")
+
+		if [ "${health_status}" == "\"healthy\"" ]
+		then
+			lc_log INFO "Startup was successful."
+
+			return
+		fi
+
+		sleep 3
+	done
+
+	lc_log ERROR "Unable to start the container from ${LIFERAY_DOCKER_IMAGE_NAME} in 600 seconds. Health status is: ${health_status}."
+
+	docker logs "${_LIFERAY_MARKETPLACE_CONTAINER_ID}"
+
+	return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+}
+
+function _stop_liferay_container {
+	lc_log INFO "Stopping the container."
+
+	docker kill "${_LIFERAY_MARKETPLACE_CONTAINER_ID}" &> /dev/null
+
+	docker rm "${_LIFERAY_MARKETPLACE_CONTAINER_ID}" &> /dev/null
+}
+
 function _update_product_supported_versions {
 	if [ "${LIFERAY_RELEASE_UPLOAD}" != "true" ]
 	then
@@ -553,3 +669,5 @@ function _update_product_supported_versions {
 		lc_log INFO "The supported versions list for product ${product_name} already contains the ${product_virtual_file_entry_target_version} release.\n"
 	fi
 }
+
+main "${@}"

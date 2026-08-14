@@ -8,7 +8,6 @@ source ./_ci.sh
 source ./_git.sh
 source ./_hotfix.sh
 source ./_jdk.sh
-source ./_marketplace.sh
 source ./_package.sh
 source ./_patcher.sh
 source ./_product.sh
@@ -232,8 +231,6 @@ function main {
 		lc_time_run upload_to_docker_hub
 
 		lc_time_run set_liferay_docker_image_name
-
-		lc_time_run check_liferay_marketplace_products_compatibility
 	elif [ "$(get_release_output)" == "hotfix" ]
 	then
 		lc_time_run prepare_release_dir
