@@ -10,6 +10,13 @@ function trigger_ci_test_suite {
 
 	if [ "${TRIGGER_CI_TEST_SUITE}" == "true" ]
 	then
+		if [ -z "${CI_JENKINS_API_KEY}" ]
+		then
+			lc_log ERROR "Set the environment variable \"CI_JENKINS_API_KEY\"."
+
+			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+		fi
+
 		local release_url="https://storage.cloud.google.com/liferay-releases-candidates/${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}/"
 
 		for ci_slave_number in {41..48}
@@ -31,6 +38,7 @@ function trigger_ci_test_suite {
 					--data-urlencode "TEST_PORTAL_USER_BRANCH_NAME=${LIFERAY_RELEASE_GIT_REF}" \
 					--data-urlencode "TEST_PORTAL_USER_NAME=${LIFERAY_PORTAL_REPOSITORY_OWNER}" \
 					--fail \
+					--header "X-Api-Key: ${CI_JENKINS_API_KEY}" \
 					--max-time 10 \
 					--output /dev/null \
 					--request "POST" \
