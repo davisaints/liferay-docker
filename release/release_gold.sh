@@ -95,21 +95,21 @@ function main {
 
 	check_usage
 
-	lc_time_run check_supported_versions
+	# lc_time_run check_supported_versions
 
 	lc_time_run set_jdk_version_and_parameters
 
-	lc_time_run promote_packages
+	# lc_time_run promote_packages
 
-	lc_time_run tag_release
+	# lc_time_run tag_release
 
-	promote_boms xanadu
+	# promote_boms xanadu
 
-	lc_time_run generate_releases_json
+	# lc_time_run generate_releases_json
 
-	lc_time_run reference_new_releases
+	# lc_time_run reference_new_releases
 
-	lc_time_run update_salesforce_product_version
+	# lc_time_run update_salesforce_product_version
 
 	if [ -d "${_RELEASE_ROOT_DIR}/dev/projects" ]
 	then
@@ -120,7 +120,7 @@ function main {
 
 	lc_time_run clean_portal_repository
 
-	lc_time_run prepare_next_release_branch
+	# lc_time_run prepare_next_release_branch
 
 	lc_time_run add_patcher_project_version
 
