@@ -19,9 +19,9 @@ function main {
 
 		if [ -n "${buildkit_container_name}" ]
 		then
-			docker stop "${buildkit_container_name}" &> /dev/null
+			docker stop "${buildkit_container_name}"
 
-			docker rm --force "${buildkit_container_name}" &> /dev/null
+			docker rm --force "${buildkit_container_name}"
 		fi
 
 		local buildkit_volume_name=$( \
@@ -29,24 +29,24 @@ function main {
 
 		if [ -n "${buildkit_volume_name}" ]
 		then
-			docker volume rm --force "${buildkit_volume_name}" &> /dev/null
+			docker volume rm --force "${buildkit_volume_name}"
 		fi
 
-		docker system prune --all --force &> /dev/null
+		docker system prune --all --force
 
 		find . /opt/dev/projects/github/liferay-docker \
 			-maxdepth 1 \
 			-regextype posix-extended \
 			-regex ".*/(logs-[0-9]{12}|temp-.*)$" \
 			-type d \
-			-exec rm --force --recursive {} \; &> /dev/null
+			-exec rm --force --recursive {} \;
 
 		find /tmp \
 			-mindepth 1 \
 			-regextype posix-extended \
 			-regex ".*/(dart-sass|yarn).*" \
 			-type d \
-			-exec rm --force --recursive {} \; &> /dev/null
+			-exec rm --force --recursive {} \;
 
 		local liferay_repository=""
 
@@ -85,7 +85,7 @@ function main {
 	then
 		find "${liferay_common_cache_dir}" \
 			-mindepth 1 \
-			-exec rm --force --recursive {} \; &> /dev/null
+			-exec rm --force --recursive {} \;
 	fi
 }
 
@@ -97,7 +97,7 @@ function _clean_up_repository {
 
 	lc_cd "/opt/dev/projects/github/${1}"
 
-	git clean -dfx &> /dev/null
+	git clean -dfx
 }
 
 main
