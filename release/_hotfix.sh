@@ -168,10 +168,6 @@ function compare_jars {
 			#
 			grep --invert-match "com/liferay/portal/deploy/dependencies/" | \
 			#
-			# TODO Modify "ant all" to not update this file every time
-			#
-			grep --invert-match "META-INF/system.packages.extra.mf" | \
-			#
 			# Print only the relevant fields: uncompressed size, compression method, checksum, and name
 			#
 			awk '{print $1, $2, $7, $8}'
@@ -196,14 +192,20 @@ function compare_jars {
 
 	if [ -n "${jar_descriptions}" ]
 	then
-		if echo "${jar_descriptions}" | grep --quiet "META-INF/MANIFEST.MF"
-		then
-			if compare_property_in_packaged_file "${jar1}" "${jar2}" "META-INF/MANIFEST.MF" "Export-Package"
-			then
-				jar_descriptions=$(echo "${jar_descriptions}" | sed --expression "/META-INF\/MANIFEST.MF/d")
-			fi
-		fi
+		local packaged_file
 
+		for packaged_file in "META-INF/MANIFEST.MF" "META-INF/system.packages.extra.mf"
+		do
+			if echo "${jar_descriptions}" | grep --quiet "${packaged_file}"
+			then
+				if compare_property_in_packaged_file "${jar1}" "${jar2}" "${packaged_file}" "Export-Package"
+				then
+					jar_descriptions=$(echo "${jar_descriptions}" | sed --expression "\#${packaged_file}#d")
+				fi
+			fi
+		done
+
+		local line
 		local new_jar_descriptions=""
 
 		if echo "${jar_descriptions}" | grep --quiet "\.class$\|\.jar$"
@@ -260,13 +262,16 @@ function compare_jars {
 						awk '($1 == 1) && ($3 == "Defl:N") { print $5 }' | \
 						uniq)
 
-					if echo "${packaged_jar_descriptions}" | grep --quiet "META-INF/MANIFEST.MF"
-					then
-						if compare_property_in_packaged_file "${_BUILD_DIR}/tmp/jar1/${nested_jar_file_name}" "${_BUILD_DIR}/tmp/jar2/${nested_jar_file_name}" "META-INF/MANIFEST.MF" "Export-Package"
+					for packaged_file in "META-INF/MANIFEST.MF" "META-INF/system.packages.extra.mf"
+					do
+						if echo "${packaged_jar_descriptions}" | grep --quiet "${packaged_file}"
 						then
-							packaged_jar_descriptions=$(echo "${packaged_jar_descriptions}" | sed --expression "/META-INF\/MANIFEST.MF/d")
+							if compare_property_in_packaged_file "${_BUILD_DIR}/tmp/jar1/${nested_jar_file_name}" "${_BUILD_DIR}/tmp/jar2/${nested_jar_file_name}" "${packaged_file}" "Export-Package"
+							then
+								packaged_jar_descriptions=$(echo "${packaged_jar_descriptions}" | sed --expression "\#${packaged_file}#d")
+							fi
 						fi
-					fi
+					done
 
 					if [ -n "${packaged_jar_descriptions}" ]
 					then

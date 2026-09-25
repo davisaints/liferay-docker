@@ -20,9 +20,14 @@ function set_up {
 	mkdir --parents "${_BUNDLES_DIR}/osgi/modules" "${_RELEASE_DIR}/osgi/modules"
 
 	_create_module_jar "${_BUNDLES_DIR}/osgi/modules/com.liferay.test.changed.impl.jar" "new content" "2020-01-01 00:00:00" "17.0.14"
-	_create_module_jar "${_RELEASE_DIR}/osgi/modules/com.liferay.test.changed.impl.jar" "original content" "2020-01-01 00:00:00" "17.0.14"
 	_create_module_jar "${_BUNDLES_DIR}/osgi/modules/com.liferay.test.rebuilt.impl.jar" "original content" "2021-01-01 00:00:00" "17.0.14"
+	_create_module_jar "${_RELEASE_DIR}/osgi/modules/com.liferay.test.changed.impl.jar" "original content" "2020-01-01 00:00:00" "17.0.14"
 	_create_module_jar "${_RELEASE_DIR}/osgi/modules/com.liferay.test.rebuilt.impl.jar" "original content" "2020-01-01 00:00:00" "17.0.18"
+
+	_create_portal_bootstrap_jar "${_BUNDLES_DIR}/osgi/modules/com.liferay.test.portal.bootstrap.changed.jar" "1772646511768" "2.20.0"
+	_create_portal_bootstrap_jar "${_BUNDLES_DIR}/osgi/modules/com.liferay.test.portal.bootstrap.rebuilt.jar" "1772646599999" "2.17.1"
+	_create_portal_bootstrap_jar "${_RELEASE_DIR}/osgi/modules/com.liferay.test.portal.bootstrap.changed.jar" "1772646511768" "2.17.1"
+	_create_portal_bootstrap_jar "${_RELEASE_DIR}/osgi/modules/com.liferay.test.portal.bootstrap.rebuilt.jar" "1772646511768" "2.17.1"
 }
 
 function tear_down {
@@ -35,6 +40,8 @@ function tear_down {
 
 function test_hotfix_compare_jars {
 	_test_hotfix_compare_jars "osgi/modules/com.liferay.test.changed.impl.jar" "0"
+	_test_hotfix_compare_jars "osgi/modules/com.liferay.test.portal.bootstrap.changed.jar" "0"
+	_test_hotfix_compare_jars "osgi/modules/com.liferay.test.portal.bootstrap.rebuilt.jar" "1"
 	_test_hotfix_compare_jars "osgi/modules/com.liferay.test.rebuilt.impl.jar" "1"
 }
 
@@ -60,6 +67,22 @@ function _create_module_jar {
 	jar cf "${1}" -C "${module_jar_dir}" external.txt -C "${module_jar_dir}" lib/internal.jar
 
 	rm --force --recursive "${module_jar_dir}" "${packaged_jar_dir}"
+}
+
+function _create_portal_bootstrap_jar {
+	local jar_dir=$(mktemp --directory)
+
+	mkdir --parents "${jar_dir}/META-INF"
+
+	(
+		echo "Bnd-LastModified: ${2}"
+		echo "Export-Package: org.apache.logging.log4j;version=\"${3}\",org.apa"
+		echo " che.logging.log4j.spi;version=\"${3}\""
+	) > "${jar_dir}/META-INF/system.packages.extra.mf"
+
+	jar cf "${1}" -C "${jar_dir}" META-INF/system.packages.extra.mf
+
+	rm --force --recursive "${jar_dir}"
 }
 
 function _test_hotfix_compare_jars {
