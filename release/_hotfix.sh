@@ -192,6 +192,8 @@ function compare_jars {
 
 	if [ -n "${jar_descriptions}" ]
 	then
+		local packaged_file
+
 		for packaged_file in "META-INF/MANIFEST.MF" "META-INF/system.packages.extra.mf"
 		do
 			if echo "${jar_descriptions}" | grep --quiet "${packaged_file}"
@@ -203,6 +205,7 @@ function compare_jars {
 			fi
 		done
 
+		local line
 		local new_jar_descriptions=""
 
 		if echo "${jar_descriptions}" | grep --quiet "\.class$\|\.jar$"
