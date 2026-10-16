@@ -269,11 +269,12 @@ function update_release_tool_repository {
 		--force \
 		--prune \
 		--tags \
-		upstream
+		upstream \
+		master
 
 	git checkout master
 
-	git reset --hard upstream/master
+	git reset --hard FETCH_HEAD
 
 	git checkout "${release_tool_sha}"
 

@@ -51,7 +51,7 @@ function main {
 		LIFERAY_RELEASE_GIT_REF="fix-pack-fix-263630758"
 		_PRODUCT_VERSION="7.3.10-u36"
 
-		test_build_hotfix_main || exit "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+		JENKINS_HOME= test_build_hotfix_main || exit "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 
 		test_build_hotfix_has_packaged_hotfix
 	fi
@@ -105,7 +105,7 @@ function test_build_hotfix_has_packaged_hotfix {
 }
 
 function test_build_hotfix_main {
-	LIFERAY_RELEASE_OUTPUT="hotfix" ./build_release.sh &> /dev/null
+	LIFERAY_RELEASE_OUTPUT="hotfix" ./build_release.sh
 
 	local exit_code=${?}
 
@@ -224,7 +224,7 @@ function test_build_release_has_slack_message {
 }
 
 function test_build_release_main {
-	LIFERAY_RELEASE_GIT_REF="2025.q4.1" ./build_release.sh &> /dev/null
+	LIFERAY_RELEASE_GIT_REF="2025.q4.1" ./build_release.sh
 
 	local exit_code=${?}
 
