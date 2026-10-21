@@ -187,6 +187,11 @@ function copy_hotfix_commit {
 	local base_tag_name=$(echo "${tag_name_new}" | cut -d '-' -f 1)
 	local temporary_branch_name="${tag_name_new}-branch"
 
+	if [[ "${release_version}" == 7*-u* ]]
+	then
+		base_tag_name="${tag_name_base}"
+	fi
+
 	checkout_commit liferay-portal-ee "${commit_hash}"
 
 	if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}" ]
@@ -199,7 +204,7 @@ function copy_hotfix_commit {
 	local changed_files=""
 	local removed_files=""
 
-	if [[ "${tag_name_new}" == *q* ]]
+	if [[ "${tag_name_new}" == *q* ]] || [[ "${release_version}" == 7*-u* ]]
 	then
 		changed_files=$(git diff --diff-filter=ACMRT --name-only "${base_tag_name}" "${commit_hash}")
 		removed_files=$(git diff --diff-filter=D --name-only "${base_tag_name}" "${commit_hash}")
@@ -234,9 +239,9 @@ function get_hotfix_properties {
 		exit "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
 
-	local tmp_properties_json="/tmp/${cache_file##*/}"
+	local tmp_properties_json="/tmp/$(basename "${cache_file}")"
 
-	if [[ "${release_version}" == 7* ]]
+	if [[ "${release_version}" == 7* ]] && [[ "${release_version}" != *-u* ]]
 	then
 
 		if (! unzip -p "${cache_file}" fixpack_documentation.json > "${tmp_properties_json}")
@@ -267,7 +272,12 @@ function get_hotfix_properties {
 		GIT_REVISION=$(jq -r '.build."git-revision"' "${tmp_properties_json}")
 		REQUIREMENT_PRODUCT_VERSION=$(jq -r '.requirement."product-version"' "${tmp_properties_json}")
 
-		PRODUCT_VERSION=${REQUIREMENT_PRODUCT_VERSION%.*}
+		if [[ "${release_version}" == 7* ]]
+		then
+			PRODUCT_VERSION="${REQUIREMENT_PRODUCT_VERSION}"
+		else
+			PRODUCT_VERSION=$(echo "${REQUIREMENT_PRODUCT_VERSION}" | cut --delimiter="." --fields=1,2)
+		fi
 	fi
 
 	lc_log DEBUG "GIT_REVISION: '${GIT_REVISION}'."
@@ -375,6 +385,14 @@ function process_argument_version {
 		VERSION_LIST+=("${tag}")
 	done < <(git tag -l --format='%(refname:short)' "20*.q*.[0-9]" "20*.q*.[0-9][0-9]" | sed "s|tags/||g")
 
+	while IFS= read -r update_version
+	do
+		VERSION_LIST+=("${update_version}")
+	done < <(lc_curl "https://hotfixes.liferay.com/" | \
+		grep --only-matching --extended-regexp "href=\"7\.[0-9]+\.[0-9]+-u[0-9]+/\"" | \
+		cut --delimiter='"' --fields=2 | \
+		tr --delete "/")
+
 	local valid_versions=()
 
 	for release_version in "${VERSION_LIST[@]}"
@@ -435,7 +453,10 @@ function process_zip_list_file {
 
 		tag_name_new="${tag_name_new//-lts/}"
 
-		if [[ ${release_version} == 7* ]]
+		if [[ ${release_version} == 7*-u* ]]
+		then
+			tag_name_new="hotfix-$(echo "${tag_name_new}" | sed "s/.*-hotfix-//")-$(echo "${release_version}" | cut --delimiter="-" --fields=1 | tr --delete ".")"
+		elif [[ ${release_version} == 7* ]]
 		then
 			tag_name_new="${tag_name_new#liferay-}"
 		else
@@ -456,7 +477,7 @@ function process_zip_list_file {
 
 		lc_time_run get_hotfix_properties "${cache_file}" "${release_version}"
 
-		if [[ ${release_version} == 7* ]]
+		if [[ ${release_version} == 7* ]] && [[ ${release_version} != *-u* ]]
 		then
 			if (! check_patch_requirements "${PATCH_REQUIREMENTS}" "${tag_name_new}")
 			then
