@@ -393,6 +393,8 @@ function process_argument_version {
 		cut --delimiter='"' --fields=2 | \
 		tr --delete "/")
 
+	VERSION_LIST=($(printf "%s\n" "${VERSION_LIST[@]}" | grep --line-regexp "7.3.10-u36"))
+
 	local valid_versions=()
 
 	for release_version in "${VERSION_LIST[@]}"
