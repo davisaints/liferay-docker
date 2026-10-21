@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source ../_liferay_common.sh
+source ../_release_common.sh
 source ../_test_common.sh
 source ./_hotfix.sh
 
@@ -8,6 +9,10 @@ function main {
 	set_up
 
 	test_hotfix_compare_jars
+	test_hotfix_get_release_dir_name
+	test_hotfix_get_release_url
+	test_hotfix_prepare_release_dir
+	test_hotfix_set_hotfix_name
 
 	tear_down
 }
@@ -43,6 +48,31 @@ function test_hotfix_compare_jars {
 	_test_hotfix_compare_jars "osgi/modules/com.liferay.test.portal.bootstrap.changed.jar" "0"
 	_test_hotfix_compare_jars "osgi/modules/com.liferay.test.portal.bootstrap.rebuilt.jar" "1"
 	_test_hotfix_compare_jars "osgi/modules/com.liferay.test.rebuilt.impl.jar" "1"
+}
+
+function test_hotfix_get_release_dir_name {
+	_test_hotfix_get_release_dir_name "2026.q4.0" "liferay-dxp"
+	_test_hotfix_get_release_dir_name "2026.q4.0-cms-standalone" "liferay-cms"
+}
+
+function test_hotfix_get_release_url {
+	_test_hotfix_get_release_url "2026.q4.0" "https://releases-cdn.liferay.com/dxp/2026.q4.0"
+	_test_hotfix_get_release_url "2026.q4.0-cms-standalone" "https://releases-cdn.liferay.com/dxp/cms-standalone/2026.q4.0-cms-standalone"
+	_test_hotfix_get_release_url "2027.q1.0-lts" "https://releases-cdn.liferay.com/dxp/2027.q1.0-lts"
+	_test_hotfix_get_release_url "2027.q1.0-lts-cms-standalone" "https://releases-cdn.liferay.com/dxp/cms-standalone/2027.q1.0-lts-cms-standalone"
+}
+
+function test_hotfix_prepare_release_dir {
+	_test_hotfix_prepare_release_dir "2026.q4.0" "liferay-dxp" "liferay-dxp-tomcat-2026.q4.0-1234567890"
+	_test_hotfix_prepare_release_dir "2026.q4.0-cms-standalone" "liferay-cms" "liferay-dxp-tomcat-2026.q4.0-cms-standalone-1234567890"
+}
+
+function test_hotfix_set_hotfix_name {
+	_test_hotfix_set_hotfix_name "2026.q4.0" "liferay-dxp-2026.q4.0-hotfix-12.zip"
+	_test_hotfix_set_hotfix_name "2026.q4.0-cms-standalone" "liferay-cms-2026.q4.0-hotfix-12.zip"
+	_test_hotfix_set_hotfix_name "2027.q1.0-lts" "liferay-dxp-2027.q1.0-lts-hotfix-12.zip"
+	_test_hotfix_set_hotfix_name "2027.q1.0-lts-cms-standalone" "liferay-cms-2027.q1.0-lts-hotfix-12.zip"
+	_test_hotfix_set_hotfix_name "7.4.13-u154" "liferay-dxp-7.4.13-u154-hotfix-12.zip"
 }
 
 function _create_module_jar {
@@ -89,6 +119,75 @@ function _test_hotfix_compare_jars {
 	compare_jars "${1}" &> /dev/null
 
 	assert_equals "${?}" "${2}"
+}
+
+function _test_hotfix_get_release_dir_name {
+	_PRODUCT_VERSION="${1}"
+
+	assert_equals "$(_get_release_dir_name)" "${2}"
+
+	unset _PRODUCT_VERSION
+}
+
+function _test_hotfix_get_release_url {
+	_PRODUCT_VERSION="${1}"
+
+	assert_equals "$(_get_release_url)" "${2}"
+
+	unset _PRODUCT_VERSION
+}
+
+function _test_hotfix_prepare_release_dir {
+	_PRODUCT_VERSION="${1}"
+
+	local release_file_dir=$(mktemp --directory)
+
+	mkdir --parents "${release_file_dir}/${2}/tomcat"
+
+	echo "test" > "${release_file_dir}/${2}/tomcat/test.txt"
+
+	_RELEASES_DIR="${_BUILD_DIR}/releases"
+	_TEST_RELEASE_DIR="${_BUILD_DIR}/test_release"
+
+	mkdir --parents "${_TEST_RELEASE_DIR}"
+
+	(
+		cd "${release_file_dir}" &&
+		7z a "${_TEST_RELEASE_DIR}/${3}.7z" "${2}"
+	) &> /dev/null
+
+	(prepare_release_dir) &> /dev/null
+
+	assert_equals \
+		"$(cat "${_RELEASES_DIR}/${3}/tomcat/test.txt")" \
+		"test" \
+		"$(find "${_RELEASES_DIR}/${3}" -mindepth 1 -maxdepth 1 -name "liferay-*" | wc --lines)" \
+		"0"
+
+	rm --force --recursive "${_RELEASES_DIR}" "${_TEST_RELEASE_DIR}" "${release_file_dir}"
+
+	unset _PRODUCT_VERSION
+	unset _RELEASES_DIR
+	unset _TEST_RELEASE_DIR
+}
+
+function _test_hotfix_set_hotfix_name {
+	_PRODUCT_VERSION="${1}"
+
+	LIFERAY_RELEASE_HOTFIX_ID="12"
+
+	set_hotfix_name
+
+	assert_equals \
+		"${_HOTFIX_FILE_NAME}" \
+		"${2}" \
+		"${_HOTFIX_NAME}" \
+		"hotfix-12"
+
+	unset LIFERAY_RELEASE_HOTFIX_ID
+	unset _HOTFIX_FILE_NAME
+	unset _HOTFIX_NAME
+	unset _PRODUCT_VERSION
 }
 
 main "${@}"

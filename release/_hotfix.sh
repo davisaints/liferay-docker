@@ -623,30 +623,34 @@ function prepare_release_dir {
 
 	lc_cd "${_RELEASE_DIR}.tmp"
 
+	local release_dir_name=$(_get_release_dir_name)
+
 	if [ -n "${release7z}" ]
 	then
 		7z x "${release7z}"
 	else
-		lc_download "https://releases-cdn.liferay.com/dxp/${_PRODUCT_VERSION}/$(lc_curl "https://releases-cdn.liferay.com/dxp/${_PRODUCT_VERSION}/.lfrrelease-tomcat-bundle")" liferay-dxp.7z
+		local release_url=$(_get_release_url)
 
-		7z x ./liferay-dxp.7z
+		lc_download "${release_url}/$(lc_curl "${release_url}/.lfrrelease-tomcat-bundle")" "${release_dir_name}.7z"
 
-		rm --force ./liferay-dxp.7z
+		7z x "./${release_dir_name}.7z"
+
+		rm --force "./${release_dir_name}.7z"
 	fi
 
 	shopt -s dotglob
 
-	mv liferay-dxp/* .
+	mv "${release_dir_name}"/* .
 
 	shopt -u dotglob
 
-	rm --force --recursive liferay-dxp
+	rm --force --recursive "${release_dir_name}"
 
 	mv "${_RELEASE_DIR}.tmp" "${_RELEASE_DIR}"
 }
 
 function set_hotfix_name {
-	_HOTFIX_FILE_NAME="liferay-dxp-${_PRODUCT_VERSION}-hotfix-${LIFERAY_RELEASE_HOTFIX_ID}.zip"
+	_HOTFIX_FILE_NAME="$(_get_release_dir_name)-${_PRODUCT_VERSION%-cms-standalone}-hotfix-${LIFERAY_RELEASE_HOTFIX_ID}.zip"
 	_HOTFIX_NAME="hotfix-${LIFERAY_RELEASE_HOTFIX_ID}"
 }
 
@@ -686,4 +690,22 @@ function transform_file_name {
 	fi
 
 	echo "${file_name}"
+}
+
+function _get_release_dir_name {
+	if is_cms_standalone_release
+	then
+		echo "liferay-cms"
+	else
+		echo "liferay-dxp"
+	fi
+}
+
+function _get_release_url {
+	if is_cms_standalone_release
+	then
+		echo "https://releases-cdn.liferay.com/dxp/cms-standalone/${_PRODUCT_VERSION}"
+	else
+		echo "https://releases-cdn.liferay.com/dxp/${_PRODUCT_VERSION}"
+	fi
 }
