@@ -57,9 +57,9 @@ function test_hotfix_get_release_dir_name {
 
 function test_hotfix_get_release_url {
 	_test_hotfix_get_release_url "2026.q4.0" "https://releases-cdn.liferay.com/dxp/2026.q4.0"
-	_test_hotfix_get_release_url "2026.q4.0-cms-standalone" "https://releases-cdn.liferay.com/dxp/cms-standalone/2026.q4.0-cms-standalone"
+	_test_hotfix_get_release_url "2026.q4.0-cms-standalone" "https://releases-cdn.liferay.com/dxp/cms-standalone-weekly"
 	_test_hotfix_get_release_url "2027.q1.0-lts" "https://releases-cdn.liferay.com/dxp/2027.q1.0-lts"
-	_test_hotfix_get_release_url "2027.q1.0-lts-cms-standalone" "https://releases-cdn.liferay.com/dxp/cms-standalone/2027.q1.0-lts-cms-standalone"
+	_test_hotfix_get_release_url "2027.q1.0-lts-cms-standalone" "https://releases-cdn.liferay.com/dxp/cms-standalone-weekly"
 }
 
 function test_hotfix_prepare_release_dir {

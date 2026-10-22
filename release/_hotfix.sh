@@ -704,7 +704,7 @@ function _get_release_dir_name {
 function _get_release_url {
 	if is_cms_standalone_release
 	then
-		echo "https://releases-cdn.liferay.com/dxp/cms-standalone/${_PRODUCT_VERSION}"
+		echo "https://releases-cdn.liferay.com/dxp/cms-standalone-weekly"
 	else
 		echo "https://releases-cdn.liferay.com/dxp/${_PRODUCT_VERSION}"
 	fi
