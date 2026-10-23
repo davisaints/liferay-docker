@@ -192,7 +192,7 @@ function update_portal_repository {
 		LIFERAY_RELEASE_GIT_REF=$( \
 			git ls-remote upstream | \
 			grep "${LIFERAY_RELEASE_GIT_REF}" | \
-			grep refs/tags/fix-pack-fix- | \
+			grep --extended-regexp "refs/tags/(test-)?fix-pack-fix-" | \
 			head --lines=1 | \
 			sed --expression "s#.*/##")
 
