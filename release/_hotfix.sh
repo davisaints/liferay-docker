@@ -451,10 +451,8 @@ function create_hotfix {
 	echo "Comparing ${_BUNDLES_DIR} and ${_RELEASE_DIR}."
 
 	diff --brief --recursive "${_BUNDLES_DIR}" "${_RELEASE_DIR}" | \
-		grep --invert-match /work/Catalina
-
-	diff --brief --recursive "${_BUNDLES_DIR}" "${_RELEASE_DIR}" | \
 		grep --invert-match /work/Catalina | \
+		head --lines=20 | \
 		while read -r change
 		do
 			if echo "${change}" | grep "^Only in ${_RELEASE_DIR}" &> /dev/null
@@ -629,7 +627,12 @@ function prepare_release_dir {
 	then
 		7z x "${release7z}"
 	else
-		local release_url="https://releases-cdn.liferay.com/$(get_release_dir_name)"
+		local release_url="https://releases-cdn.liferay.com/dxp/${_PRODUCT_VERSION}"
+
+		if is_cms_standalone_release
+		then
+			release_url="https://releases-cdn.liferay.com/cms-standalone-weekly"
+		fi
 
 		lc_download "${release_url}/$(lc_curl "${release_url}/.lfrrelease-tomcat-bundle")" "${package_dir_name}.7z"
 

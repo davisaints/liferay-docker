@@ -27,9 +27,11 @@ function report_jenkins_url {
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	mkdir --parents "${_BUILD_DIR}/patcher-status/production/osbPatcherStatus/build/jenkins"
+	local patcher_status_dir="${_BUILD_DIR}/patcher-status/$(_get_patcher_environment)"
 
-	lc_cd "${_BUILD_DIR}/patcher-status/production/osbPatcherStatus/build/jenkins"
+	mkdir --parents "${patcher_status_dir}/osbPatcherStatus/build/jenkins"
+
+	lc_cd "${patcher_status_dir}/osbPatcherStatus/build/jenkins"
 
 	(
 		echo "{"
@@ -43,7 +45,7 @@ function report_jenkins_url {
 		--preserve \
 		--recursive \
 		--verbose \
-		"${_BUILD_DIR}/patcher-status/production/" \
+		"${patcher_status_dir}/" \
 		/mnt/patcher-shared/patcher/
 }
 
@@ -60,7 +62,9 @@ function report_patcher_status {
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	lc_cd "${_BUILD_DIR}/patcher-status/production/osbPatcherStatus/build/jenkins"
+	local patcher_status_dir="${_BUILD_DIR}/patcher-status/$(_get_patcher_environment)"
+
+	lc_cd "${patcher_status_dir}/osbPatcherStatus/build/jenkins"
 
 	(
 		echo "{"
@@ -85,6 +89,10 @@ function report_patcher_status {
 		--preserve \
 		--recursive \
 		--verbose \
-		"${_BUILD_DIR}/patcher-status/production/" \
+		"${patcher_status_dir}/" \
 		/mnt/patcher-shared/patcher/
+}
+
+function _get_patcher_environment {
+	echo "${LIFERAY_RELEASE_PATCHER_ENVIRONMENT:-production}"
 }
