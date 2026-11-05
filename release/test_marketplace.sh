@@ -212,6 +212,8 @@ function test_marketplace_not_deploy_liferay_marketplace_product_activation_key 
 function test_marketplace_not_set_liferay_marketplace_products_compatibility_properties {
 	_test_marketplace_not_set_liferay_marketplace_products_compatibility_properties "nightly" "true" "7.4.13-u155"
 	_test_marketplace_not_set_liferay_marketplace_products_compatibility_properties "release-candidate" "false" "2026.q4.0"
+	_test_marketplace_not_set_liferay_marketplace_products_compatibility_properties "release-candidate" "true" "2025.q1.30-lts"
+	_test_marketplace_not_set_liferay_marketplace_products_compatibility_properties "release-candidate" "true" "7.4.13-u155-cms-standalone"
 }
 
 function test_marketplace_set_liferay_marketplace_products_compatibility_properties {
