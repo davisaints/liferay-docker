@@ -2,6 +2,7 @@
 
 source ../_liferay_common.sh
 source ../_release_common.sh
+source ./_jdk.sh
 source ./_product.sh
 
 function check_liferay_marketplace_products_compatibility {
@@ -115,6 +116,60 @@ function check_liferay_marketplace_products_compatibility {
 	done
 
 	stop_tomcat &> /dev/null
+}
+
+function check_usage {
+	if [ -z "${LIFERAY_RELEASE_RC_BUILD_TIMESTAMP}" ] || [ -z "${LIFERAY_RELEASE_VERSION}" ]
+	then
+		print_help
+	fi
+
+	_BUILD_DIR="${PWD}/release-data/check-liferay-marketplace-products-compatibility"
+
+	LIFERAY_COMMON_LOG_DIR=${_BUILD_DIR}
+	LIFERAY_RELEASE_PRODUCT_NAME=dxp
+	_BUILD_TIMESTAMP=${LIFERAY_RELEASE_RC_BUILD_TIMESTAMP}
+	_BUNDLES_DIR="${_BUILD_DIR}/bundles"
+
+	rm --force --recursive "${_BUILD_DIR}"
+
+	set_product_version "${LIFERAY_RELEASE_VERSION}" "${LIFERAY_RELEASE_RC_BUILD_TIMESTAMP}"
+}
+
+function main {
+	if [[ "${BASH_SOURCE[0]}" != "${0}" ]]
+	then
+		return
+	fi
+
+	check_usage
+
+	lc_time_run set_jdk_version_and_parameters
+
+	lc_time_run _prepare_bundles_dir
+
+	lc_time_run check_liferay_marketplace_products_compatibility
+}
+
+function print_help {
+	echo "Usage: LIFERAY_RELEASE_RC_BUILD_TIMESTAMP=<timestamp> LIFERAY_RELEASE_VERSION=<version> ${0}"
+	echo ""
+	echo "The script reads the following environment variables:"
+	echo ""
+	echo "    LIFERAY_CMP_ACTIVATION_KEY_<year>: *.xml file containing the Content Marketing Platform activation key"
+	echo "    LIFERAY_DSR_ACTIVATION_KEY_<year>: *.xml file containing the Digital Sales Room activation key"
+	echo "    LIFERAY_MARKETPLACE_CSRF_TOKEN: CSRF token used to call the Liferay Marketplace headless APIs"
+	echo "    LIFERAY_MARKETPLACE_OAUTH2_CLIENT_ID: OAuth2 client ID used to authenticate with the Liferay Marketplace"
+	echo "    LIFERAY_MARKETPLACE_OAUTH2_CLIENT_SECRET: OAuth2 client secret used to authenticate with the Liferay Marketplace"
+	echo "    LIFERAY_PUNCHOUT2GO_ACTIVATION_KEY_<year>: *.xml file containing the Liferay Commerce Connector to PunchOut2Go activation key"
+	echo "    LIFERAY_RELEASE_CMS_STANDALONE (optional): Set this to \"true\" to check the CMS standalone bundle instead of a regular release"
+	echo "    LIFERAY_RELEASE_RC_BUILD_TIMESTAMP: Timestamp of the build to check"
+	echo "    LIFERAY_RELEASE_UPLOAD (optional): Set this to \"true\" to update the supported versions of the compatible Liferay Marketplace products"
+	echo "    LIFERAY_RELEASE_VERSION: DXP version of the release to check"
+	echo ""
+	echo "Example: LIFERAY_RELEASE_RC_BUILD_TIMESTAMP=1695892964 LIFERAY_RELEASE_VERSION=2026.q3.0 ${0}"
+
+	exit "${LIFERAY_COMMON_EXIT_CODE_HELP}"
 }
 
 function _check_liferay_marketplace_product_activation_key {
@@ -571,6 +626,36 @@ function _get_punchout2go_activation_key {
 	fi
 }
 
+function _prepare_bundles_dir {
+	mkdir --parents "${_BUILD_DIR}"
+
+	lc_cd "${_BUILD_DIR}"
+
+	local tomcat_bundle_file_name="$(get_tomcat_bundle_name).7z"
+
+	local tomcat_bundle_url="gs://liferay-releases-candidates/${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}/${tomcat_bundle_file_name}"
+
+	lc_log INFO "Downloading ${tomcat_bundle_url}."
+
+	if ! gcloud storage cp "${tomcat_bundle_url}" "${tomcat_bundle_file_name}"
+	then
+		lc_log ERROR "Unable to download ${tomcat_bundle_url}."
+
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
+
+	if ! 7z x "${tomcat_bundle_file_name}"
+	then
+		lc_log ERROR "Unable to extract ${tomcat_bundle_file_name}."
+
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
+
+	rm --force "${tomcat_bundle_file_name}"
+
+	mv "$(get_package_dir_name)" "${_BUNDLES_DIR}"
+}
+
 function _set_liferay_marketplace_oauth2_token {
 	local http_code_file=$(mktemp)
 
@@ -690,3 +775,5 @@ function _update_product_supported_versions {
 		lc_log INFO "The supported versions list for product ${product_name} already contains the ${product_virtual_file_entry_target_version} release.\n"
 	fi
 }
+
+main
